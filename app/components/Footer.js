@@ -216,7 +216,7 @@ function Footer() {
           }}
         />
 
-        <Stack
+        {/* <Stack
           direction={{ xs: "column", sm: "row" }}
           spacing={{ xs: 1, sm: 2 }}
           alignItems="center"
@@ -231,7 +231,7 @@ function Footer() {
             <CodeIcon sx={{ fontSize: 16 }} />
             Developed by NataliaKi
           </CreditLink>
-        </Stack>
+        </Stack> */}
 
         <Typography
           sx={{
