@@ -1,5 +1,5 @@
 /**
- * SEO Configuration — Le Monde Suites
+ * SEO Configuration — V Luxury Suites (Pefkohori)
  * Centralized SEO constants to avoid duplication
  * Can accept companyData from DB or fallback to config
  */
@@ -7,39 +7,39 @@
 import { getBaseUrl } from "@config/domain";
 
 const fallbackCompanyData = {
-  name: "Le Monde Suites",
+  name: "V Luxury Suites",
   tel: "+30 000 000 0000",
   tel2: "",
-  email: "stay@lemondesuites.com",
-  address: "Greece",
-  coords: { lat: "40.311273589340836", lon: "23.06426516796098" },
+  email: "admin@bbqr.site",
+  address: "Xoris Odo 0, Pefkochori, Kassandra, Halkidiki, Greece",
+  coords: { lat: "39.982398", lon: "23.635154" },
 };
 
 /** Single source of truth for production base URL. */
 export const PRODUCTION_BASE_URL = getBaseUrl();
 
 export const multilingualDescriptions = {
-  en: "Le Monde Suites — refined apartment stays in Nea Kallikratia, Halkidiki. Calm interiors and attentive hospitality. Book your suite online.",
-  ru: "Le Monde Suites — апартаменты в Неа Калликратии, Халкидики. Изысканный интерьер и внимательный сервис. Бронируйте сьют онлайн.",
-  uk: "Le Monde Suites — апартаменти в Неа Каллікратії, Халкідіки. Вишуканий інтер'єр та уважний сервіс. Бронюйте сьют онлайн.",
-  de: "Le Monde Suites — elegante Apartments in Nea Kallikratia, Chalkidiki. Ruhiges Interieur und aufmerksame Gastfreundschaft. Suite online buchen.",
-  sr: "Le Monde Suites — elegantni apartmani u Nea Kalikratiji, Halkidiki. Smiren enterijer i pažljivo gostoprimstvo. Rezervišite suite online.",
-  ro: "Le Monde Suites — apartamente rafinate în Nea Kallikratia, Halkidiki. Interior calm și ospitalitate atentă. Rezervați suite-ul online.",
-  bg: "Le Monde Suites — изискани апартаменти в Неа Каликратия, Халкидики. Спокоен интериор и внимателно гостоприемство. Резервирайте онлайн.",
-  el: "Le Monde Suites — εκλεπτυσμένα διαμερίσματα στη Νέα Καλλικράτεια, Χαλκιδική. Ήρεμοι εσωτερικοί χώροι και προσεκτική φιλοξενία. Κλείστε online.",
-  pl: "Le Monde Suites — wyrafinowane apartamenty w Nea Kallikratia, Chalkidiki. Spokojne wnętrze i uważna gościnność. Zarezerwuj online.",
+  en: "V Luxury Suites — stylish suites in Pefkohori, Kassandra, Halkidiki. Infinity pool, sea-view terraces, free parking and Wi‑Fi. Book online.",
+  ru: "V Luxury Suites — стильные сьюты в Пефкохори, Кассандра, Халкидики. Infinity pool, террасы с видом на море, бесплатная парковка и Wi‑Fi. Бронируйте онлайн.",
+  uk: "V Luxury Suites — стильні сьюті в Пефкохорі, Кассандра, Халкідіки. Infinity pool, тераси з видом на море, безкоштовна парковка та Wi‑Fi. Бронюйте онлайн.",
+  de: "V Luxury Suites — stilvolle Suiten in Pefkohori, Kassandra, Chalkidiki. Infinity-Pool, Meerblick-Terrassen, kostenlose Parkplätze und WLAN. Online buchen.",
+  sr: "V Luxury Suites — elegantni apartmani u Pefkohoriju, Kasandra, Halkidiki. Infinity pool, terase sa pogledom na more, besplatan parking i Wi‑Fi. Rezervišite online.",
+  ro: "V Luxury Suites — suite elegante în Pefkohori, Kassandra, Halkidiki. Piscină infinity, terase cu vedere la mare, parcare gratuită și Wi‑Fi. Rezervați online.",
+  bg: "V Luxury Suites — стилни апартаменти в Пефкохори, Касандра, Халкидики. Infinity pool, тераси с морска гледка, безплатен паркинг и Wi‑Fi. Резервирайте онлайн.",
+  el: "V Luxury Suites — κομψά suites στο Πευκοχώρι, Κασσάνδρα, Χαλκιδική. Infinity pool, βεράντες με θέα στη θάλασσα, δωρεάν πάρκινγκ και Wi‑Fi. Κλείστε online.",
+  pl: "V Luxury Suites — stylowe apartamenty w Pefkohori, Kassandra, Chalkidiki. Infinity pool, tarasy z widokiem na morze, darmowy parking i Wi‑Fi. Rezerwuj online.",
 };
 
 export const multilingualTitles = {
-  en: "Le Monde Suites — Apartments in Nea Kallikratia, Halkidiki",
-  ru: "Le Monde Suites — Апартаменты в Неа Калликратии, Халкидики",
-  uk: "Le Monde Suites — Апартаменти в Неа Каллікратії, Халкідіки",
-  de: "Le Monde Suites — Apartments in Nea Kallikratia, Chalkidiki",
-  sr: "Le Monde Suites — Apartmani u Nea Kalikratiji, Halkidiki",
-  ro: "Le Monde Suites — Apartamente în Nea Kallikratia, Halkidiki",
-  bg: "Le Monde Suites — Апартаменти в Неа Каликратия, Халкидики",
-  el: "Le Monde Suites — Διαμερίσματα στη Νέα Καλλικράτεια, Χαλκιδική",
-  pl: "Le Monde Suites — Apartamenty w Nea Kallikratia, Chalkidiki",
+  en: "V Luxury Suites — Pefkohori, Kassandra, Halkidiki",
+  ru: "V Luxury Suites — Пефкохори, Кассандра, Халкидики",
+  uk: "V Luxury Suites — Пефкохорі, Кассандра, Халкідіки",
+  de: "V Luxury Suites — Pefkohori, Kassandra, Chalkidiki",
+  sr: "V Luxury Suites — Pefkohori, Kasandra, Halkidiki",
+  ro: "V Luxury Suites — Pefkohori, Kassandra, Halkidiki",
+  bg: "V Luxury Suites — Пефкохори, Касандра, Халкидики",
+  el: "V Luxury Suites — Πευκοχώρι, Κασσάνδρα, Χαλκιδική",
+  pl: "V Luxury Suites — Pefkohori, Kassandra, Chalkidiki",
 };
 
 /**
@@ -49,7 +49,8 @@ export const multilingualTitles = {
  */
 export function getSeoConfig(dbCompanyData = null) {
   const companyData = dbCompanyData || fallbackCompanyData;
-  const siteName = companyData?.name || fallbackCompanyData.name || "Le Monde Suites";
+  const siteName =
+    companyData?.name || fallbackCompanyData.name || "V Luxury Suites";
 
   return {
     siteName,
@@ -68,7 +69,7 @@ export function getSeoConfig(dbCompanyData = null) {
       linkedin: "",
     },
     contact: {
-      email: companyData?.email || fallbackCompanyData.email || "stay@lemondesuites.com",
+      email: companyData?.email || fallbackCompanyData.email || "admin@bbqr.site",
       phone: companyData?.tel || fallbackCompanyData.tel || "",
       address:
         companyData?.address ||
@@ -79,11 +80,11 @@ export function getSeoConfig(dbCompanyData = null) {
       lat:
         companyData?.coords?.lat ||
         fallbackCompanyData.coords?.lat ||
-        "40.311273589340836",
+        "39.982398",
       lon:
         companyData?.coords?.lon ||
         fallbackCompanyData.coords?.lon ||
-        "23.06426516796098",
+        "23.635154",
     },
     heroImageUrl:
       (Array.isArray(companyData?.assets?.heroImages) &&
@@ -118,3 +119,5 @@ function getHeroImages(dbCompanyData = null) {
 }
 
 export const seoConfig = getSeoConfig();
+
+export default getSeoConfig;

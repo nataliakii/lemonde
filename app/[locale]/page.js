@@ -23,24 +23,24 @@ export const dynamic = "force-dynamic";
 
 const HERO_COPY = {
   en: {
-    tagline: "Refined apartment stays — calm interiors, attentive hospitality.",
-    cta: "View apartments",
+    tagline: "Suites in Pefkohori — infinity pool, sea views, calm Kassandra stays.",
+    cta: "View rooms",
   },
   ru: {
-    tagline: "Изысканные апартаменты — спокойный интерьер и внимательный сервис.",
-    cta: "Смотреть апартаменты",
+    tagline: "Сьюты в Пефкохори — infinity pool, вид на море, спокойный отдых на Кассандре.",
+    cta: "Смотреть номера",
   },
   uk: {
-    tagline: "Вишукані апартаменти — спокійний інтер'єр та уважний сервіс.",
-    cta: "Дивитися апартаменти",
+    tagline: "Сьюті в Пефкохорі — infinity pool, вид на море, спокійний відпочинок на Кассандрі.",
+    cta: "Дивитися номери",
   },
   de: {
-    tagline: "Elegante Apartments — ruhige Interieurs, aufmerksame Gastfreundschaft.",
-    cta: "Apartments ansehen",
+    tagline: "Suiten in Pefkohori — Infinity-Pool, Meerblick, ruhige Kassandra-Aufenthalte.",
+    cta: "Zimmer ansehen",
   },
   el: {
-    tagline: "Εκλεπτυσμένα διαμερίσματα — ήρεμοι χώροι, προσεκτική φιλοξενία.",
-    cta: "Δείτε τα διαμερίσματα",
+    tagline: "Suites στο Πευκοχώρι — infinity pool, θέα στη θάλασσα, ήρεμη διαμονή στην Κασσάνδρα.",
+    cta: "Δείτε τα δωμάτια",
   },
 };
 

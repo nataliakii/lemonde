@@ -398,7 +398,7 @@ export function renderCustomerOfficialConfirmationEmail(payload) {
   const title = withTestOrderEmailSubject(baseOfficialTitle, fromLocalhost);
   const intro =
     t.officialIntro ||
-    "Your reservation has been officially confirmed by Le Monde Suites.";
+    "Your reservation has been officially confirmed by V Luxury Suites.";
   const pdfNote =
     t.officialPdfNote ||
     "The official confirmation PDF is attached to this email.";
@@ -501,7 +501,7 @@ export function renderCustomerOfficialConfirmationEmail(payload) {
     .join("\n");
 
   const filePart = toSafeFilePart(orderNum || payload.orderId);
-  const pdfFileName = `LeMondeSuites-Confirmation-${filePart}.pdf`;
+  const pdfFileName = `VLuxurySuites-Confirmation-${filePart}.pdf`;
 
   const pdfData = {
     title,

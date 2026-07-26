@@ -24,9 +24,9 @@ const APARTMENTS_ALTERNATES = Object.fromEntries(
 
 export async function generateMetadata({ params }) {
   const locale = normalizeLocale(params.locale);
-  const title = "Apartments | Le Monde Suites";
+  const title = "Rooms | V Luxury Suites";
   const description =
-    "Browse our suites and apartments. Choose dates and request your stay with Le Monde Suites.";
+    "Browse our suites and rooms in Pefkohori. Choose dates and request your stay with V Luxury Suites.";
   const path = `/${locale}/apartments`;
   return {
     title,
@@ -73,7 +73,7 @@ export default async function ApartmentsIndexPage({ params }) {
             mb: 1,
           }}
         >
-          Five suites
+          Nine rooms
         </Typography>
         <Typography
           component="h1"

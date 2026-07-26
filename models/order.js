@@ -43,11 +43,11 @@ const OrderSchema = new mongoose.Schema({
   },
   placeIn: {
     type: String,
-    default: "Nea Kallikratia",
+    default: "Pefkohori",
   },
   placeOut: {
     type: String,
-    default: "Nea Kallikratia",
+    default: "Pefkohori",
   },
   placeInDetail: {
     type: String,

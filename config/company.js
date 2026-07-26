@@ -11,6 +11,7 @@
  *   3. Set Cloudinary/SMTP secrets for the new account (env)
  */
 
+/** Default = V Luxury Suites (Pefkohori). Override via env. Never use Le Monde id here. */
 export const COMPANY_ID =
   String(process.env.COMPANY_ID || process.env.NEXT_PUBLIC_COMPANY_ID || "").trim() ||
-  "679903bd10e6c8a8c0f027bc";
+  "686f0a1b2c3d4e5f67890123";

@@ -90,23 +90,23 @@ function Footer() {
   const { t } = useTranslation();
 
   const name = SINGLE_PROPERTY_MODE
-    ? "Le Monde Suites"
-    : company?.name || "Le Monde Suites";
+    ? "V Luxury Suites"
+    : company?.name || "V Luxury Suites";
   const rawSlogan = company?.slogan || "";
   const slogan = SINGLE_PROPERTY_MODE
     ? rawSlogan && !/car rental|aggregator/i.test(rawSlogan)
       ? rawSlogan
-      : "Apartment stays · Nea Kallikratia · Halkidiki"
-    : rawSlogan || "Nea Kallikratia · Halkidiki";
+      : "Suites · Pefkohori · Kassandra · Halkidiki"
+    : rawSlogan || "Pefkohori · Halkidiki";
   const tel = company?.tel || "";
   const tel2 = company?.tel2 || "";
-  const email = company?.email || "lemonde@bbqr.site";
+  const email = company?.email || "admin@bbqr.site";
   const address = SINGLE_PROPERTY_MODE
-    ? company?.address && !/Antonioy Kelesi/i.test(company.address)
+    ? company?.address && !/Antonioy Kelesi|Nea Kallikratia/i.test(company.address)
       ? company.address
-      : "Leoforos Nikis, Kato Galini, Nea Kallikratia 630 80, Greece"
+      : "Xoris Odo 0, Pefkochori, Kassandra, Halkidiki, Greece"
     : company?.address ||
-      "Leoforos Nikis, Kato Galini, Nea Kallikratia 630 80, Greece";
+      "Xoris Odo 0, Pefkochori, Kassandra, Halkidiki, Greece";
 
   const localeLink = (path) => withLocalePrefix(lang || "en", path);
   const homeHref = localeLink("/");

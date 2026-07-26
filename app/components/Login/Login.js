@@ -50,13 +50,13 @@ const LoginForm = () => {
       <div className={styles.brand}>
         <Image
           src="/logo-mark.png"
-          alt="Le Monde Suites"
+          alt="V Luxury Suites"
           width={56}
           height={56}
           className={styles.logo}
           priority
         />
-        <h1 className={styles.title}>Le Monde Suites</h1>
+        <h1 className={styles.title}>V Luxury Suites</h1>
         <p className={styles.subtitle}>Staff login</p>
       </div>
       <input

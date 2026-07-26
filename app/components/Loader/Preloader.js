@@ -50,7 +50,7 @@ export default function Preloader({ loading }) {
           >
             <Image
               src="/logo-mark.png"
-              alt="Le Monde Suites"
+              alt="V Luxury Suites"
               width={96}
               height={96}
               priority

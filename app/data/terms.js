@@ -1,20 +1,20 @@
 /**
- * Stay Terms & Conditions — Le Monde Suites
- * Short-term apartment rental (Nea Kallikratia / Halkidiki, Greece).
+ * Stay Terms & Conditions — V Luxury Suites
+ * Short-term apartment rental (Pefkohori / Kassandra / Halkidiki, Greece).
  * Consumed by RentalTermsContent (sections[] shape).
  */
 
 const CONTACT =
-  "Le Monde Suites, Leoforos Nikis, Kato Galini, Nea Kallikratia 630 80, Greece. Please use the email and phone numbers shown in the website footer / Contacts page.";
+  "V Luxury Suites, Xoris Odo 0, Pefkochori, Kassandra, Halkidiki, Greece. Please use the email and phone numbers shown in the website footer / Contacts page.";
 
 export const terms = {
   en: {
-    title: "Stay Terms & Conditions — Le Monde Suites",
+    title: "Stay Terms & Conditions — V Luxury Suites",
     sections: [
       {
         heading: "1. Who we are",
         body:
-          "These terms apply to short-term stays in apartments operated by Le Monde Suites (“we”, “us”) in Nea Kallikratia, Halkidiki, Greece. By submitting a booking request or staying in an apartment, you accept these terms.",
+          "These terms apply to short-term stays in apartments operated by V Luxury Suites (“we”, “us”) in Pefkohori, Kassandra, Halkidiki, Greece. By submitting a booking request or staying in an apartment, you accept these terms.",
       },
       {
         heading: "2. Booking request & confirmation",
@@ -84,12 +84,12 @@ export const terms = {
   },
 
   ru: {
-    title: "Условия проживания — Le Monde Suites",
+    title: "Условия проживания — V Luxury Suites",
     sections: [
       {
         heading: "1. Кто мы",
         body:
-          "Настоящие условия применяются к краткосрочному проживанию в апартаментах Le Monde Suites («мы») в Неа Калликратии, Халкидики, Греция. Отправляя заявку на бронирование или заселяясь, вы принимаете эти условия.",
+          "Настоящие условия применяются к краткосрочному проживанию в апартаментах V Luxury Suites («мы») в Пефкохори, Кассандра, Халкидики, Греция. Отправляя заявку на бронирование или заселяясь, вы принимаете эти условия.",
       },
       {
         heading: "2. Заявка и подтверждение",
@@ -154,18 +154,18 @@ export const terms = {
       {
         heading: "14. Контакты",
         body:
-          "Le Monde Suites, Leoforos Nikis, Kato Galini, Nea Kallikratia 630 80, Greece. Контакты — email и телефоны в подвале сайта / на странице Contacts.",
+          "V Luxury Suites, Xoris Odo 0, Pefkochori, Kassandra, Halkidiki, Greece. Контакты — email и телефоны в подвале сайта / на странице Contacts.",
       },
     ],
   },
 
   el: {
-    title: "Όροι διαμονής — Le Monde Suites",
+    title: "Όροι διαμονής — V Luxury Suites",
     sections: [
       {
         heading: "1. Ποιοι είμαστε",
         body:
-          "Οι παρόντες όροι ισχύουν για βραχυχρόνια διαμονή σε διαμερίσματα της Le Monde Suites («εμείς») στη Νέα Καλλικράτεια, Χαλκιδική. Με την υποβολή αιτήματος κράτησης ή τη διαμονή σας αποδέχεστε τους όρους αυτούς.",
+          "Οι παρόντες όροι ισχύουν για βραχυχρόνια διαμονή σε διαμερίσματα της V Luxury Suites («εμείς») στο Πευκοχώρι, Κασσάνδρα, Χαλκιδική. Με την υποβολή αιτήματος κράτησης ή τη διαμονή σας αποδέχεστε τους όρους αυτούς.",
       },
       {
         heading: "2. Αίτημα & επιβεβαίωση",
@@ -230,7 +230,7 @@ export const terms = {
       {
         heading: "14. Επικοινωνία",
         body:
-          "Le Monde Suites, Leoforos Nikis, Kato Galini, Nea Kallikratia 630 80, Greece. Επικοινωνία: email και τηλέφωνα στο υποσέλιδο / στη σελίδα Contacts.",
+          "V Luxury Suites, Xoris Odo 0, Pefkochori, Kassandra, Halkidiki, Greece. Επικοινωνία: email και τηλέφωνα στο υποσέλιδο / στη σελίδα Contacts.",
       },
     ],
   },

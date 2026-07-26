@@ -23,7 +23,7 @@ function Error({ error, reset }) {
       ) : null}
       <Image
         src="/logo-mark.png"
-        alt="Le Monde Suites"
+        alt="V Luxury Suites"
         width={130}
         height={130}
         unoptimized

@@ -2,17 +2,8 @@ import { COMPANY_ID } from "@config/company";
 import { seasons } from "@utils/companyData";
 import mongoose from "mongoose";
 
-/** Curated property gallery (Cloudinary URLs) — home page carousel. */
-export const DEFAULT_PROPERTY_GALLERY = [
-  "https://res.cloudinary.com/dn513dy1y/image/upload/v1778342496/NK-site/listings/apartment-rent/ext-db-64abf11051d4/gotup85kawvwgtbcwd77.jpg",
-  "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530482/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/jkpbjezq0ujcxpxojfxu.jpg",
-  "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530481/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/laurom3hdqecvfjxpy2x.jpg",
-  "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530486/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/tombq0lhvblmbyucsclz.jpg",
-  "https://res.cloudinary.com/dn513dy1y/image/upload/v1778342506/NK-site/listings/apartment-rent/ext-db-64abf11051d4/ks0r84tpxhaigxn1sjdl.jpg",
-  "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530484/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/w4klswub7f8mp3w2f39v.jpg",
-  "https://res.cloudinary.com/dn513dy1y/image/upload/v1778342513/NK-site/listings/apartment-rent/ext-db-64abf11051d4/qpjp8p9ag7729rpfraqp.jpg",
-  "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530487/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/merwwpxyqpz5hj8hlmzx.jpg",
-];
+/** Property gallery — upload V Luxury photos via admin; empty until then. */
+export const DEFAULT_PROPERTY_GALLERY = [];
 
 /**
  * Default company document for empty / new databases.
@@ -20,25 +11,25 @@ export const DEFAULT_PROPERTY_GALLERY = [
  */
 export function getCarsNkCompanyDefaults() {
   return {
-    name: "Le Monde Suites",
+    name: "V Luxury Suites",
     tel: "+380 68 100 3771",
     tel2: "+353 85 270 96 05",
     email: "nataliakireewa@gmail.com",
-    address: "Leoforos Nikis, Kato Galini, Nea Kallikratia 630 80, Greece",
-    slogan: "Apartment stays · Nea Kallikratia · Halkidiki",
-    coords: { lat: "40.31059163454398", lon: "23.063829408712166" },
+    address: "Xoris Odo 0, Pefkochori, Kassandra, Halkidiki, Greece",
+    slogan: "Suites · Pefkohori · Kassandra · Halkidiki",
+    coords: { lat: "39.982398", lon: "23.635154" },
     hoursDiffForStart: 1,
     hoursDiffForEnd: -1,
     bufferTime: 2,
     defaultStart: "15:00",
-    defaultEnd: "11:00",
+    defaultEnd: "10:00",
     seasons,
     useSeasons: true,
     langAdmin: "en",
     langSuperadmin: "en",
     useEmail: true,
     locations: [
-      { name: "Nea Kallikratia", coords: { lat: "40.31", lon: "23.06" } },
+      { name: "Pefkohori", coords: { lat: "39.982398", lon: "23.635154" } },
     ],
     notSendIP1: "",
     notSendIP2: "",
@@ -54,7 +45,7 @@ export function getCarsNkCompanyDefaults() {
       secondary: "#1A1612",
       secondaryLight: "#3A322A",
       secondaryDark: "#0E0C0A",
-      accent: "#B85C38",
+      accent: "#2E5A4C",
       ink: "#2A2520",
     },
     assets: {
@@ -66,10 +57,9 @@ export function getCarsNkCompanyDefaults() {
       galleryImages: DEFAULT_PROPERTY_GALLERY,
     },
     cloudinary: {
-      rootFolder: "lemondesuites",
+      rootFolder: "vluxurysuites",
       apartmentsFolder: "apartments",
       ordersFolder: "orders",
-      // Keep existing CarsNK placeholder until a Le Monde asset is uploaded
       placeholderPublicId: "carsnk/NO_PHOTO",
     },
     galleryTitle: {
@@ -78,9 +68,9 @@ export function getCarsNkCompanyDefaults() {
       el: "Το κατάλυμα",
     },
     gallerySubtitle: {
-      en: "Spaces designed for calm Mediterranean stays.",
-      ru: "Пространства для спокойного средиземноморского отдыха.",
-      el: "Χώροι σχεδιασμένοι για ήρεμη μεσογειακή διαμονή.",
+      en: "Infinity pool, sea-view terraces, and calm stays in Pefkohori.",
+      ru: "Infinity pool, террасы с видом на море и спокойный отдых в Пефкохори.",
+      el: "Infinity pool, βεράντες με θέα στη θάλασσα και ήρεμη διαμονή στο Πευκοχώρι.",
     },
   };
 }

@@ -44,7 +44,7 @@ function MinimalFooter() {
         }}
       >
         <p style={{ margin: "0 0 16px 0", fontSize: "14px" }}>
-          © {new Date().getFullYear()} Le Monde Suites. All rights reserved.
+          © {new Date().getFullYear()} V Luxury Suites. All rights reserved.
         </p>
         <div style={{ display: "flex", justifyContent: "center", gap: "24px", flexWrap: "wrap" }}>
           <a

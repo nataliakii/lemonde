@@ -1,15 +1,17 @@
 /**
- * Domain / canonical URL for Le Monde Suites.
+ * Domain / canonical URL for V Luxury Suites (Pefkohori).
  *
- * Production canonical: https://lemonde.kalikratia.com
+ * Production default: https://vluxury.kalikratia.com
  * Override anytime with NEXT_PUBLIC_SITE_URL.
  * Local fallback when unset in development: http://localhost:3026
+ *
+ * Le Monde stays on main with lemonde.kalikratia.com — do not merge casually.
  */
 
-const PRODUCTION_CANONICAL_URL = "https://lemonde.kalikratia.com";
+const PRODUCTION_CANONICAL_URL = "https://vluxury.kalikratia.com";
 const LOCAL_DEV_FALLBACK = "http://localhost:3026";
 
-/** Le Monde Suites: single-property apartment mode */
+/** V Luxury Suites: single-property apartment mode */
 export const SINGLE_PROPERTY_MODE = true;
 
 /**
@@ -50,7 +52,7 @@ export const DEFAULT_CANONICAL_URL = PRODUCTION_CANONICAL_URL;
 
 function wwwToApexMap() {
   return {
-    "www.lemonde.kalikratia.com": "lemonde.kalikratia.com",
+    "www.vluxury.kalikratia.com": "vluxury.kalikratia.com",
   };
 }
 
@@ -61,8 +63,8 @@ export const DOMAIN_CONFIG = {
   get servingHosts() {
     const hosts = new Set([
       "localhost",
-      "lemonde.kalikratia.com",
-      "www.lemonde.kalikratia.com",
+      "vluxury.kalikratia.com",
+      "www.vluxury.kalikratia.com",
     ]);
     try {
       const host = normalizeHost(new URL(getBaseUrl()).host);
@@ -93,7 +95,7 @@ export function getCanonicalHost() {
   try {
     return new URL(getBaseUrl()).host.toLowerCase();
   } catch {
-    return "lemonde.kalikratia.com";
+    return "vluxury.kalikratia.com";
   }
 }
 
@@ -102,7 +104,7 @@ export function getAllowedDomainHosts() {
 }
 
 export function getServingApexHosts() {
-  return ["lemonde.kalikratia.com", "localhost"].map(normalizeHost);
+  return ["vluxury.kalikratia.com", "localhost"].map(normalizeHost);
 }
 
 export function getApexHostFor(hostname) {

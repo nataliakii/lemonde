@@ -1,12 +1,12 @@
 /**
- * Email configuration — Le Monde Suites
+ * Email configuration — V Luxury Suites
  */
 
 import { getBaseUrl } from "@config/domain";
 
 /** Display name in From: header */
 export const MAIL_FROM_NAME =
-  String(process.env.MAIL_FROM_NAME || "").trim() || "Le Monde Suites";
+  String(process.env.MAIL_FROM_NAME || "").trim() || "V Luxury Suites";
 
 /**
  * Primary inbox for admin/dev notifications (CC / fallback To).
@@ -27,12 +27,12 @@ export function getEmailSiteUrl() {
   return getBaseUrl();
 }
 
-/** Host label for footers, e.g. lemonde.kalikratia.com */
+/** Host label for footers, e.g. vluxury.kalikratia.com */
 export function getEmailSiteHost() {
   try {
     return new URL(getEmailSiteUrl()).host;
   } catch {
-    return "lemonde.kalikratia.com";
+    return "vluxury.kalikratia.com";
   }
 }
 

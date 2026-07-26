@@ -1,5 +1,5 @@
 {
-  "name": "le-monde-suites",
+  "name": "v-luxury-suites",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -17,6 +17,7 @@
     "seed:company-not-send-ips": "node scripts/seedCompanyNotSendIps.js",
     "seed:delivery-zones": "node scripts/seedDeliveryZones.js",
     "seed:lemond-apartments": "node scripts/seedLeMondeApartments.js",
+    "seed:vluxury-apartments": "node scripts/seedVLuxuryApartments.js",
     "migrate:cars-to-apartments": "node scripts/migrateCarsCollectionToApartments.js",
     "seed:carsnk-company": "node scripts/seedCarsNkCompany.js",
     "seed:owners": "node scripts/seedOwners.js",

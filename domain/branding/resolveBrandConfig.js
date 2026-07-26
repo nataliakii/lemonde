@@ -27,7 +27,7 @@ const DEFAULT_ASSETS = {
 };
 
 const DEFAULT_CLOUDINARY = {
-  rootFolder: "lemondesuites",
+  rootFolder: "vluxurysuites",
   apartmentsFolder: "apartments",
   ordersFolder: "orders",
   placeholderPublicId: "carsnk/NO_PHOTO",
@@ -124,7 +124,7 @@ export function resolveBrandConfig(company, locale = "en") {
   const subtitleMap = company?.gallerySubtitle || DEFAULT_GALLERY_COPY.subtitle;
 
   return {
-    name: pickString(company?.name, "Le Monde Suites"),
+    name: pickString(company?.name, "V Luxury Suites"),
     slogan: pickString(company?.slogan, ""),
     branding,
     assets,

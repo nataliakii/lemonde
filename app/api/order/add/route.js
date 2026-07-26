@@ -391,7 +391,7 @@ async function postOrderAddHandler(request) {
       const propertyPlace =
         placeInToSave ||
         placeOutToSave ||
-        "Le Monde Suites, Nea Kallikratia";
+        "V Luxury Suites, Pefkohori";
       placeInToSave = propertyPlace;
       placeOutToSave = placeOutToSave || propertyPlace;
       placeInDetailToSave = placeInDetailToSave || "";
