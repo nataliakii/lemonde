@@ -7,10 +7,10 @@ import { connectToDB } from "@lib/database";
 import Company from "@models/company";
 import { COMPANY_ID } from "@config/company";
 import { ensureCarsNkCompany } from "./ensureCarsNkCompany";
+import { toPlain } from "./toPlain";
 
 function toPlainCompanyData(company) {
-  if (!company) return null;
-  return JSON.parse(JSON.stringify(company));
+  return toPlain(company);
 }
 
 /**

@@ -8,6 +8,7 @@ import { connectToDB } from "@lib/database";
 import { Order } from "@models/order";
 import { applyVisibilityToOrders } from "@/domain/orders/orderVisibility";
 import { buildOrdersOwnerFilter } from "@/domain/owners/ownerScope";
+import { toPlain } from "./toPlain";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -42,7 +43,7 @@ export async function getActiveOrders(options = {}) {
     .select(ORDER_SELECT)
     .lean();
   const user = options?.session?.user ?? null;
-  return applyVisibilityToOrders(orders ?? [], user);
+  return toPlain(applyVisibilityToOrders(orders ?? [], user));
 }
 
 /**
@@ -55,5 +56,5 @@ export async function getAllOrders(options = {}) {
   const ownerFilter = buildOrdersOwnerFilter(options?.session ?? null);
   const orders = await Order.find(ownerFilter).select(ORDER_SELECT).lean();
   const user = options?.session?.user ?? null;
-  return applyVisibilityToOrders(orders ?? [], user);
+  return toPlain(applyVisibilityToOrders(orders ?? [], user));
 }

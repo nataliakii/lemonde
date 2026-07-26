@@ -9,13 +9,14 @@ import {
   buildCarsOwnerFilter,
   canAccessOwnedDoc,
 } from "@/domain/owners/ownerScope";
+import { toPlain } from "./toPlain";
 
 export async function getApartments(options = {}) {
   await connectToDB();
   const session = options?.session ?? null;
   const filter = buildCarsOwnerFilter(session);
   const apartments = await Apartment.find(filter).lean();
-  return apartments ?? [];
+  return toPlain(apartments ?? []);
 }
 
 /** @deprecated Use getApartments */
@@ -32,7 +33,7 @@ export async function getApartmentById(id, options = {}) {
   if (apartment.orders && Array.isArray(apartment.orders)) {
     apartment.orders = applyVisibilityToOrders(apartment.orders, user);
   }
-  return apartment;
+  return toPlain(apartment);
 }
 
 /** @deprecated Use getApartmentById */
@@ -52,7 +53,7 @@ export async function getApartmentBySlug(slug, options = {}) {
   if (apartment.orders && Array.isArray(apartment.orders)) {
     apartment.orders = applyVisibilityToOrders(apartment.orders, user);
   }
-  return apartment;
+  return toPlain(apartment);
 }
 
 /** @deprecated Use getApartmentBySlug */
