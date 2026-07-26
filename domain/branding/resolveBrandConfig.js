@@ -5,16 +5,16 @@
  * Do not put API secrets in the company document.
  */
 
-/** Defaults mirror theme.js Le Monde palette (keep in sync). */
+/** Defaults mirror theme.js V Luxury silver palette (keep in sync). */
 const DEFAULT_BRANDING = {
-  primary: "#C9A227",
-  primaryLight: "#E8D5A3",
-  primaryDark: "#9A7B2E",
-  secondary: "#1A1612",
-  secondaryLight: "#3A322A",
-  secondaryDark: "#0E0C0A",
-  accent: "#B85C38",
-  ink: "#2A2520",
+  primary: "#9AA3AD",
+  primaryLight: "#D0D5DB",
+  primaryDark: "#6B737C",
+  secondary: "#1B1E24",
+  secondaryLight: "#3A404A",
+  secondaryDark: "#0E1014",
+  accent: "#7A8B9A",
+  ink: "#2C3138",
 };
 
 const DEFAULT_ASSETS = {

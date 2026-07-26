@@ -3,6 +3,8 @@
 import { useLayoutEffect, useState } from "react";
 import Image from "next/image";
 import { Backdrop, Fade, Box, keyframes } from "@mui/material";
+import { useMainContext } from "@app/Context";
+import { resolveBrandConfig } from "@/domain/branding/resolveBrandConfig";
 
 const softPulse = keyframes`
   0%, 100% { opacity: 0.72; transform: scale(0.96); }
@@ -11,6 +13,9 @@ const softPulse = keyframes`
 
 export default function Preloader({ loading }) {
   const [visible, setVisible] = useState(true);
+  const { company } = useMainContext();
+  const brand = resolveBrandConfig(company);
+  const logoSrc = brand.assets.logoMark || "/logo-mark.png";
 
   useLayoutEffect(() => {
     if (!loading) {
@@ -49,8 +54,8 @@ export default function Preloader({ loading }) {
             }}
           >
             <Image
-              src="/logo-mark.png"
-              alt="V Luxury Suites"
+              src={logoSrc}
+              alt={brand.name || "Logo"}
               width={96}
               height={96}
               priority

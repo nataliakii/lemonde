@@ -1,113 +1,113 @@
 "use client";
 import { createTheme, alpha } from "@mui/material/styles";
 /**
- * Le Monde Suites brand palette
+ * V Luxury Suites (Pefkohori) — silver / platinum brand palette
  *
- * Espresso:  #1A1612  — deep surfaces / nav
- * Gold:      #C9A227  — primary brand (shimmer accents)
- * Champagne: #E8D5A3  — light gold
- * Ink:       #2A2520  — body text
+ * Slate:     #1B1E24  — deep surfaces / nav
+ * Silver:    #9AA3AD  — primary brand
+ * Platinum:  #D0D5DB  — light silver accents
+ * Ink:       #2C3138  — body text
  */
 // ============================================
 // БАЗОВЫЕ ЦВЕТА ПАЛИТРЫ
 // ============================================
 export const palette = {
-  /** Brand gold — links, focus, primary CTAs */
+  /** Brand silver — links, focus, primary CTAs */
   primary: {
-    main: "#C9A227",
-    light: "#E8D5A3",
-    dark: "#9A7B2E",
-    contrastText: "#1A1612",
+    main: "#9AA3AD",
+    light: "#D0D5DB",
+    dark: "#6B737C",
+    contrastText: "#1B1E24",
   },
-  /** Espresso — footer, nav, secondary surfaces */
+  /** Cool slate — footer, nav, secondary surfaces */
   secondary: {
-    main: "#1A1612",
-    light: "#3A322A",
-    dark: "#0E0C0A",
+    main: "#1B1E24",
+    light: "#3A404A",
+    dark: "#0E1014",
     contrastText: "#ffffff",
   },
   brand: {
-    espresso: "#1A1612",
-    gold: "#C9A227",
-    champagne: "#E8D5A3",
-    ink: "#2A2520",
+    espresso: "#1B1E24",
+    gold: "#9AA3AD",
+    champagne: "#D0D5DB",
+    ink: "#2C3138",
     /** legacy aliases used across calendar/order UI */
-    navy: "#1A1612",
-    cyan: "#C9A227",
-    red: "#B85C38",
-    yellow: "#E0C56A",
+    navy: "#1B1E24",
+    cyan: "#9AA3AD",
+    red: "#8B5A5A",
+    yellow: "#B8C0C8",
   },
   analogous: {
-    rose: "#B85C38",
-    roseLight: "#D4896A",
-    roseDark: "#8A3F24",
-    amber: "#E0C56A",
-    amberLight: "#F0DFA0",
-    amberDark: "#B8963A",
+    rose: "#8B5A5A",
+    roseLight: "#A87878",
+    roseDark: "#6A4040",
+    amber: "#B8C0C8",
+    amberLight: "#D8DDE2",
+    amberDark: "#8A949E",
   },
   triadic: {
-    olive: "#6B6B4A",
-    oliveLight: "#8A8A68",
-    oliveDark: "#4A4A32",
+    olive: "#6B737C",
+    oliveLight: "#8A929A",
+    oliveDark: "#4A525A",
     green: "#3D7A5A",
     greenLight: "#5A9A78",
     greenDark: "#2A5540",
-    yellowBright: "#E0C56A",
-    yellow: "#E0C56A",
-    yellowLight: "#F0DFA0",
+    yellowBright: "#B8C0C8",
+    yellow: "#B8C0C8",
+    yellowLight: "#D8DDE2",
   },
   neutral: {
     white: "#ffffff",
     black: "#0a0a0a",
-    gray50: "#F2F1EF",
-    gray100: "#E8E6E2",
-    gray200: "#D4D0C8",
-    gray300: "#B8B2A8",
-    gray400: "#8F887C",
-    gray500: "#6B655C",
-    gray600: "#524C44",
-    gray700: "#3C3832",
-    gray800: "#2A2622",
-    gray900: "#1A1612",
+    gray50: "#F4F5F7",
+    gray100: "#E8EAED",
+    gray200: "#D2D6DB",
+    gray300: "#B0B6BE",
+    gray400: "#8A919A",
+    gray500: "#6B727C",
+    gray600: "#525860",
+    gray700: "#3A4048",
+    gray800: "#2A2E34",
+    gray900: "#1B1E24",
   },
   status: {
     success: "#3D7A5A",
-    warning: "#E0C56A",
-    error: "#B85C38",
-    info: "#C9A227",
+    warning: "#B8C0C8",
+    error: "#8B5A5A",
+    info: "#9AA3AD",
   },
   // ============================================
   // КОНТРАСТНЫЕ ФОНЫ С ПРЕДОПРЕДЕЛЁННЫМИ ЦВЕТАМИ
   // ============================================
   backgroundDark1: {
-    bg: "#1A1612",
+    bg: "#1B1E24",
     text: "#ffffff",
-    textSecondary: "#C8BFB0",
-    primary: "#D4896A",
-    secondary: "#E8D5A3",
-    accent: "#C9A227",
+    textSecondary: "#C5CDD6",
+    primary: "#D0D5DB",
+    secondary: "#D0D5DB",
+    accent: "#9AA3AD",
     success: "#5A9A78",
-    warning: "#E0C56A",
+    warning: "#B8C0C8",
   },
   backgroundDark2: {
-    bg: "#0E0C0A",
+    bg: "#0E1014",
     text: "#ffffff",
-    textSecondary: "#8F887C",
-    primary: "#D4896A",
-    secondary: "#C9A227",
-    accent: "#E0C56A",
+    textSecondary: "#8A919A",
+    primary: "#D0D5DB",
+    secondary: "#9AA3AD",
+    accent: "#B8C0C8",
     success: "#5A9A78",
-    warning: "#F0DFA0",
+    warning: "#D8DDE2",
   },
   backgroundLight: {
     bg: "#ffffff",
-    text: "#1A1612",
-    textSecondary: "#524C44",
-    primary: "#C9A227",
-    secondary: "#1A1612",
-    accent: "#B85C38",
+    text: "#1B1E24",
+    textSecondary: "#525860",
+    primary: "#9AA3AD",
+    secondary: "#1B1E24",
+    accent: "#7A8B9A",
     success: "#3D7A5A",
-    warning: "#9A7B2E",
+    warning: "#6B737C",
   },
 };
 
@@ -116,10 +116,10 @@ export const palette = {
 // ============================================
 const lightThemeColors = {
   background: {
-    default: "#F2F1EF",
+    default: "#F4F5F7",
     paper: "#ffffff",
     subtle: palette.neutral.gray50,
-    accent: alpha(palette.primary.main, 0.06),
+    accent: alpha(palette.primary.main, 0.08),
   },
   text: {
     primary: palette.neutral.gray900,

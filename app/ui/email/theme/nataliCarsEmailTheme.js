@@ -1,19 +1,19 @@
 /**
- * Le Monde Suites email theme — inline styles for email clients.
+ * V Luxury Suites email theme — silver / platinum inline styles.
  */
 
 export const EMAIL_STYLE = {
-  bgPage: "#F2F1EF",
-  bgCard: "#FFFCFA",
-  bgDetailsCard: "#F7F5F1",
-  bgPriceBlock: "#F5F0E6",
-  text: "#1A1612",
-  muted: "#6B655C",
-  accent: "#C9A227",
-  border: "#E8E6E2",
-  /** Espresso header */
-  headerTeal: "#1A1612",
-  headerText: "#E8D5A3",
+  bgPage: "#F4F5F7",
+  bgCard: "#FFFFFF",
+  bgDetailsCard: "#F0F2F4",
+  bgPriceBlock: "#E8EBEE",
+  text: "#1B1E24",
+  muted: "#6B727C",
+  accent: "#9AA3AD",
+  border: "#D2D6DB",
+  /** Slate header */
+  headerTeal: "#1B1E24",
+  headerText: "#D0D5DB",
   fontFamily: "Georgia, 'Times New Roman', serif",
   fontSans: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
 };

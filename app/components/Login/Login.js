@@ -3,6 +3,8 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import styles from "./loginForm.module.css";
+import { useMainContext } from "@app/Context";
+import { resolveBrandConfig } from "@/domain/branding/resolveBrandConfig";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -11,6 +13,10 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { company } = useMainContext();
+  const brand = resolveBrandConfig(company);
+  const logoSrc = brand.assets.logoMark || "/logo-mark.png";
+  const brandName = brand.name || "V Luxury Suites";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,14 +55,14 @@ const LoginForm = () => {
     <form onSubmit={handleSubmit} className={styles.form}>
       <div className={styles.brand}>
         <Image
-          src="/logo-mark.png"
-          alt="V Luxury Suites"
+          src={logoSrc}
+          alt={brandName}
           width={56}
           height={56}
           className={styles.logo}
           priority
         />
-        <h1 className={styles.title}>V Luxury Suites</h1>
+        <h1 className={styles.title}>{brandName}</h1>
         <p className={styles.subtitle}>Staff login</p>
       </div>
       <input
