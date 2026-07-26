@@ -18,6 +18,9 @@ import { buildHubMetadata } from "@/services/seo/metadataBuilder";
 import { resolveBrandConfig } from "@/domain/branding/resolveBrandConfig";
 import { DEFAULT_PROPERTY_GALLERY } from "@/domain/services/ensureCarsNkCompany";
 
+/** Always render with live Mongo data — avoid baking failed builds into static HTML. */
+export const dynamic = "force-dynamic";
+
 const HERO_COPY = {
   en: {
     tagline: "Refined apartment stays — calm interiors, attentive hospitality.",

@@ -16,6 +16,8 @@ import { toAbsoluteUrl } from "@/services/seo/urlBuilder";
 import { Box, Typography } from "@mui/material";
 import StayDateSearch from "@app/components/StayDateSearch";
 
+export const dynamic = "force-dynamic";
+
 const APARTMENTS_ALTERNATES = Object.fromEntries(
   getSupportedLocales().map((l) => [l, `/${l}/apartments`])
 );

@@ -14,7 +14,6 @@ import { useSnackbar } from "notistack";
 import { useMainContext } from "@app/Context";
 import { ActionButton } from "@app/components/ui/buttons";
 import sendEmail from "@utils/sendEmail";
-import { DEVELOPER_EMAIL } from "@config/email";
 
 function Contacts() {
   const { t } = useTranslation();
@@ -28,7 +27,10 @@ function Contacts() {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const companyEmail = DEVELOPER_EMAIL;
+  // Prefer company inbox from DB; avoid importing server email config into the client bundle.
+  const companyEmail =
+    String(company?.email || company?.email2 || "").trim() ||
+    "admin@bbqr.site";
 
   const validateEmail = (email) => {
     if (!email) return true;
