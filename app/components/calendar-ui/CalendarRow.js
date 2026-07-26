@@ -19,8 +19,9 @@ import { useSnackbar } from "notistack";
 // Импорт helpers и hooks
 // ============================================
 import { getOrderColor } from "@/domain/orders/getOrderColor";
+import { useTranslation } from "react-i18next";
 import { isOrderDateBlocking } from "@/domain/orders/isOrderDateBlocking";
-import { MOVE_MODE_COLORS, getOfflineHatchBackground } from "@/config/orderColors";
+import { MOVE_MODE_COLORS, getOfflineHatchBackground, getOrderFillBackground } from "@/config/orderColors";
 import OrderHoverPreview from "./OrderHoverPreview";
 import { getCarAvailability, isOrderOnCar } from "@/domain/calendar";
 import {
@@ -145,6 +146,10 @@ CarTableRow.propTypes = {
   onRowDragOver: PropTypes.func,
   onRowDragLeave: PropTypes.func,
   onRowDrop: PropTypes.func,
+  rangeSelectDraft: PropTypes.shape({
+    carId: PropTypes.string,
+    start: PropTypes.string,
+  }),
   /** Root Box with .bigcalendar-root — column hover highlight; avoids document.querySelector for multi-calendar safety */
   calendarRef: PropTypes.shape({ current: PropTypes.any }),
 };
@@ -178,7 +183,9 @@ export default function CarTableRow({
   onRowDragOver,
   onRowDragLeave,
   onRowDrop,
+  rangeSelectDraft = null,
 }) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [hoveredOrderId, setHoveredOrderId] = useState(null);
@@ -347,6 +354,11 @@ export default function CarTableRow({
 
   // ИСПРАВЛЕННЫЕ обработчики для длинного нажатия
   const handleLongPressStart = useCallback((dateStr) => {
+    // Перемещение только через drag-and-drop — long-press не включает click-to-move
+    if (enableOrderDrag) {
+      beginPress({ enableLongPress: false, delayMs: 0, onLongPress: undefined });
+      return;
+    }
     // Запрещаем длинное нажатие, если уже активен режим перемещения
     if (moveMode) {
       // ✅ FIX: Всё равно вызываем beginPress для работы кликов
@@ -429,7 +441,7 @@ export default function CarTableRow({
         }
       },
     });
-  }, [moveMode, startEndDates, startEndOverlapDates, ordersByDateMap, hasOrder, isLastDateForOrder, onLongPress, beginPress]);
+  }, [moveMode, enableOrderDrag, startEndDates, startEndOverlapDates, ordersByDateMap, hasOrder, isLastDateForOrder, onLongPress, beginPress]);
 
   // Старый handleLongPressEnd теперь не отменяет таймер при mouseLeave
   const handleLongPressEnd = () => {
@@ -491,7 +503,7 @@ export default function CarTableRow({
             );
             if (prevOrder) {
               // Используем getOrderColor для получения цвета заказа
-              const prevColor = getOrderColor(prevOrder).main;
+              const prevColor = getOrderFillBackground(getOrderColor(prevOrder));
               // console.log(
               //   `[BigCalendar][${dateStr}] EDGE-CASE: Первый день выделенного заказа. Левая половина ${
               //     prevOrder.my_order ? "зелёная" : "красная"
@@ -511,7 +523,7 @@ export default function CarTableRow({
                     sx={{
                       width: "50%",
                       height: "100%",
-                      backgroundColor: prevColor,
+                      background: prevColor,
                       borderRadius: "0 50% 50% 0",
                     }}
                   />
@@ -519,7 +531,7 @@ export default function CarTableRow({
                     sx={{
                       width: "50%",
                       height: "100%",
-                      backgroundColor: MOVE_MODE_COLORS.BLUE_SELECTED, // Синий из палитры
+                      background: MOVE_MODE_COLORS.BLUE_SELECTED, // Синий из палитры
                       borderRadius: "50% 0 0 50%",
                     }}
                   />
@@ -538,7 +550,7 @@ export default function CarTableRow({
             );
             if (nextOrder) {
               // Используем getOrderColor для получения цвета заказа
-              const nextColor = getOrderColor(nextOrder).main;
+              const nextColor = getOrderFillBackground(getOrderColor(nextOrder));
               // console.log(
               //   `[BigCalendar][${dateStr}] EDGE-CASE: Последний день выделенного заказа. Левая половина синяя, правая ${
               //     nextOrder.my_order ? "зелёная" : "красная"
@@ -566,7 +578,7 @@ export default function CarTableRow({
                     sx={{
                       width: "50%",
                       height: "100%",
-                      backgroundColor: nextColor,
+                      background: nextColor,
                       borderRadius: "50% 0 0 50%",
                     }}
                   />
@@ -665,15 +677,19 @@ export default function CarTableRow({
         return null;
       };
 
-      const singleOrderForDrag =
-        enableOrderDrag &&
-        !moveMode &&
-        ordersForDate.length === 1 &&
-        !cellState.isPastDay &&
-        !cellState.isOverlapDate &&
-        !cellState.isStartEndOverlap
-          ? ordersForDate[0]
-          : null;
+      const orderForDrag = (() => {
+        if (!enableOrderDrag || cellState.isPastDay || !ordersForDate.length) {
+          return null;
+        }
+        if (ordersForDate.length === 1) return ordersForDate[0];
+        const startOrder = ordersForDate.find(
+          (o) => formatDate(o.rentalStartDate, "YYYY-MM-DD") === dateStr
+        );
+        const endOrder = ordersForDate.find(
+          (o) => formatDate(o.rentalEndDate, "YYYY-MM-DD") === dateStr
+        );
+        return startOrder || endOrder || ordersForDate[0];
+      })();
       const previewOrderCandidate = (() => {
         if (!ordersForDate.length) return null;
         const startOrder = ordersForDate.find(
@@ -692,13 +708,13 @@ export default function CarTableRow({
           : 1;
 
       const orderDragProps =
-        singleOrderForDrag && onOrderDragStart && onOrderDragEnd
+        orderForDrag && onOrderDragStart && onOrderDragEnd
           ? {
               draggable: true,
               onDragStart: (e) => {
                 e.stopPropagation();
                 endPress({});
-                onOrderDragStart(e, singleOrderForDrag, dateStr);
+                onOrderDragStart(e, orderForDrag, dateStr);
               },
               onDragEnd: () => onOrderDragEnd(),
             }
@@ -852,8 +868,12 @@ export default function CarTableRow({
           // Используем toString() для корректного сравнения ObjectId и строки
           const orderForColor = carOrders?.find((order) => order._id?.toString() === startEndInfo?.orderId?.toString());
           if (orderForColor) {
-            backgroundColor = getOrderColor(orderForColor).main;
+            const oc = getOrderColor(orderForColor);
+            backgroundColor = oc.main;
             color = "common.white";
+            if (oc.hatch) {
+              hatchBackground = getOfflineHatchBackground(oc.main);
+            }
           }
         }
       }
@@ -872,8 +892,12 @@ export default function CarTableRow({
           // Используем toString() для корректного сравнения ObjectId и строки
           const orderForColor = carOrders?.find((order) => order._id?.toString() === startEndInfo?.orderId?.toString());
           if (orderForColor) {
-            backgroundColor = getOrderColor(orderForColor).main;
+            const oc = getOrderColor(orderForColor);
+            backgroundColor = oc.main;
             color = "common.white";
+            if (oc.hatch) {
+              hatchBackground = getOfflineHatchBackground(oc.main);
+            }
           }
         }
       }
@@ -1084,7 +1108,7 @@ export default function CarTableRow({
               onMouseUp={handleLongPressEnd}
               onMouseLeave={handleLongPressEnd}
               onContextMenu={(e) => e.preventDefault()}
-              title="Нажмите для перемещения заказа"
+              title={t("suites.clickToMoveOrder")}
               sx={{
                 border: border,
                 position: "relative",
@@ -1118,7 +1142,7 @@ export default function CarTableRow({
               onMouseUp={handleLongPressEnd}
               onMouseLeave={handleLongPressEnd}
               onContextMenu={(e) => e.preventDefault()}
-              title="Нажмите для перемещения заказа"
+              title={t("suites.clickToMoveOrder")}
               sx={{
                 border: border,
                 position: "relative",
@@ -1152,11 +1176,11 @@ export default function CarTableRow({
             onContextMenu={(e) => e.preventDefault()}
             title={
               moveMode && isInMoveModeDateRange
-                ? "Нажмите для перемещения заказа"
+                ? t("suites.clickToMoveOrder")
                 : !moveMode
                 ? cellState.isPastDay
-                  ? "Дата в прошлом — клик недоступен"
-                  : "Нажмите для создания нового заказа"
+                  ? t("suites.pastDateDisabled")
+                  : t("suites.clickToCreateOrder")
                 : undefined
             }
             sx={{
@@ -1229,7 +1253,7 @@ export default function CarTableRow({
               (order) => order.confirmed
             );
             if (confirmedOrder) {
-              overlapBackgroundColor = getOrderColor(confirmedOrder).main;
+              overlapBackgroundColor = getOrderFillBackground(getOrderColor(confirmedOrder));
             }
           } else if (circlesPending > 0) {
             // Только pending заказы - проверяем есть ли клиентские
@@ -1237,7 +1261,7 @@ export default function CarTableRow({
               (order) => !order.confirmed
             );
             if (pendingOrder) {
-              overlapBackgroundColor = getOrderColor(pendingOrder).main;
+              overlapBackgroundColor = getOrderFillBackground(getOrderColor(pendingOrder));
             }
           }
         }
@@ -1251,11 +1275,11 @@ export default function CarTableRow({
             title={
               moveMode
                 ? isPartOfSelectedOrder(dateStr)
-                  ? "Нажмите для выхода из режима перемещения"
+                  ? t("suites.clickToExitMove")
                   : undefined
                 : cellState.isCompletedCell || cellState.isPastDay
-                ? "Нажмите для просмотра заказа"
-                : "Длинное нажатие для режима перемещения заказа, обычный клик для просмотра всех заказов"
+                ? t("suites.clickToViewOrder")
+                : t("suites.dragHintOpen")
             }
             sx={{
               border: border,
@@ -1267,15 +1291,15 @@ export default function CarTableRow({
               color: isPartOfSelectedOrder(dateStr)
                 ? "common.white"
                 : (() => {
-                    // Находим заказ для этой даты
                     const orderForDate = ordersForDate?.[0];
                     return orderForDate && orderForDate.confirmed
-                      ? getOrderColor(orderForDate).main
+                      ? "common.white"
                       : "text.primary";
                   })(),
-              backgroundColor: isPartOfSelectedOrder(dateStr)
+              background: isPartOfSelectedOrder(dateStr)
                 ? MOVE_MODE_COLORS.BLUE_SELECTED
                 : overlapBackgroundColor,
+              backgroundColor: "transparent",
               cursor: "pointer",
               width: "100%",
             }}
@@ -1411,13 +1435,13 @@ export default function CarTableRow({
             title={
               moveMode
                 ? shouldShowFirstMoveDay || shouldShowLastMoveDay
-                  ? "Нажмите для перемещения заказа"
+                  ? t("suites.clickToMoveOrder")
                   : isPartOfSelectedOrder(dateStr)
-                  ? "Нажмите для выхода из режима перемещения"
+                  ? t("suites.clickToExitMove")
                   : undefined
                 : cellState.isCompletedCell || cellState.isPastDay
-                ? "Нажмите для просмотра заказа"
-                : "Длинное нажатие для режима перемещения заказа, обычный клик для просмотра и редактирования заказов"
+                ? t("suites.clickToViewOrder")
+                : t("suites.dragHintOpen")
             }
             sx={{
               border: border,
@@ -1436,7 +1460,7 @@ export default function CarTableRow({
               sx={{
                 width: "50%",
                 height: "100%",
-                backgroundColor: shouldShowLastMoveDay
+                background: shouldShowLastMoveDay
                   ? MOVE_MODE_COLORS.YELLOW_SOLID // Желтый цвет для режима перемещения
                   : shouldHighlightLeft
                   ? MOVE_MODE_COLORS.BLUE_SELECTED
@@ -1450,7 +1474,7 @@ export default function CarTableRow({
                       );
                       // my_order=true → клиентский (красный), my_order=false → внутренний (янтарный)
                       return endingOrder
-                        ? getOrderColor(endingOrder).main
+                        ? getOrderFillBackground(getOrderColor(endingOrder))
                         : "transparent";
                     })()
                   : (() => {
@@ -1461,7 +1485,7 @@ export default function CarTableRow({
                           !order.confirmed
                       );
                       return endingPendingOrder
-                        ? getOrderColor(endingPendingOrder).main
+                        ? getOrderFillBackground(getOrderColor(endingPendingOrder))
                         : "transparent";
                     })(),
                 borderRadius: "0 50% 50% 0",
@@ -1475,7 +1499,7 @@ export default function CarTableRow({
               sx={{
                 width: "50%",
                 height: "100%",
-                backgroundColor: shouldShowFirstMoveDay
+                background: shouldShowFirstMoveDay
                   ? MOVE_MODE_COLORS.YELLOW_SOLID // Желтый цвет для режима перемещения
                   : shouldHighlightRight
                   ? MOVE_MODE_COLORS.BLUE_SELECTED
@@ -1488,7 +1512,7 @@ export default function CarTableRow({
                             dateStr && order.confirmed === true
                       );
                       return startingOrder
-                        ? getOrderColor(startingOrder).main
+                        ? getOrderFillBackground(getOrderColor(startingOrder))
                         : "transparent";
                     })()
                   : (() => {
@@ -1499,7 +1523,7 @@ export default function CarTableRow({
                           !order.confirmed
                       );
                       return startingPendingOrder
-                        ? getOrderColor(startingPendingOrder).main
+                        ? getOrderFillBackground(getOrderColor(startingPendingOrder))
                         : "transparent";
                     })(),
                 borderRadius: "50% 0 0 50%",
@@ -1573,15 +1597,15 @@ export default function CarTableRow({
             title={
               moveMode
                 ? shouldShowFirstMoveDay
-                  ? "Нажмите для перемещения заказа в первый день"
+                  ? t("suites.clickToMoveOrder")
                   : shouldHighlightRight
-                  ? "Нажмите для выхода из режима перемещения"
+                  ? t("suites.clickToExitMove")
                   : undefined
                 : cellState.isCompletedCell
-                ? "Нажмите для просмотра заказа"
-                : singleOrderForDrag
-                ? "Перетащите на другую строку (машину) или длинное нажатие для режима перемещения"
-                : "Длинное нажатие для режима перемещения, обычный клик для просмотра и редактирования заказа"
+                ? t("suites.clickToViewOrder")
+                : orderForDrag
+                ? t("suites.dragHintShort")
+                : t("suites.dragHintOpen")
             }
             sx={{
               border: border,
@@ -1612,7 +1636,7 @@ export default function CarTableRow({
                 width: "50%",
                 height: "100%",
                 borderRadius: "50% 0 0 50%",
-                backgroundColor: shouldShowFirstMoveDay
+                background: shouldShowFirstMoveDay
                   ? MOVE_MODE_COLORS.YELLOW_SOLID // Желтый цвет для режима перемещения
                   : shouldHighlightRight
                   ? MOVE_MODE_COLORS.BLUE_SELECTED
@@ -1623,7 +1647,7 @@ export default function CarTableRow({
                         (order) => order._id?.toString() === startEndInfo.orderId?.toString()
                       );
                       return orderForStartEnd
-                        ? getOrderColor(orderForStartEnd).main
+                        ? getOrderFillBackground(getOrderColor(orderForStartEnd))
                         : "transparent";
                     })()
                   : (() => {
@@ -1632,7 +1656,7 @@ export default function CarTableRow({
                         (order) => order._id?.toString() === startEndInfo.orderId?.toString()
                       );
                       return orderForStartEnd
-                        ? getOrderColor(orderForStartEnd).main
+                        ? getOrderFillBackground(getOrderColor(orderForStartEnd))
                         : "transparent";
                     })(),
                 display: "flex",
@@ -1710,15 +1734,15 @@ export default function CarTableRow({
             title={
               moveMode
                 ? shouldShowLastMoveDay
-                  ? "Нажмите для перемещения заказа в последний день"
+                  ? t("suites.clickToMoveOrder")
                   : shouldHighlightLeft || shouldHighlightRight
-                  ? "Нажмите для выхода из режима перемещения"
+                  ? t("suites.clickToExitMove")
                   : undefined
                 : cellState.isCompletedCell || cellState.isPastDay
-                ? "Нажмите для просмотра заказа"
-                : singleOrderForDrag
-                ? "Перетащите на другую строку (машину) или длинное нажатие для режима перемещения"
-                : "Длинное нажатие для режима перемещения, обычный клик для просмотра и редактирования заказа"
+                ? t("suites.clickToViewOrder")
+                : orderForDrag
+                ? t("suites.dragHintShort")
+                : t("suites.dragHintOpen")
             }
             sx={{
               border: border,
@@ -1743,7 +1767,7 @@ export default function CarTableRow({
                 width: "50%",
                 height: "100%",
                 borderRadius: "0 50% 50% 0",
-                backgroundColor: shouldShowLastMoveDay
+                background: shouldShowLastMoveDay
                   ? MOVE_MODE_COLORS.YELLOW_SOLID // Желтый цвет для режима перемещения
                   : shouldHighlightLeft
                   ? MOVE_MODE_COLORS.BLUE_SELECTED
@@ -1754,7 +1778,7 @@ export default function CarTableRow({
                         (order) => order._id?.toString() === startEndInfo.orderId?.toString()
                       );
                       return orderForStartEnd
-                        ? getOrderColor(orderForStartEnd).main
+                        ? getOrderFillBackground(getOrderColor(orderForStartEnd))
                         : "transparent";
                     })()
                   : (() => {
@@ -1763,7 +1787,7 @@ export default function CarTableRow({
                         (order) => order._id?.toString() === startEndInfo.orderId?.toString()
                       );
                       return orderForStartEnd
-                        ? getOrderColor(orderForStartEnd).main
+                        ? getOrderFillBackground(getOrderColor(orderForStartEnd))
                         : "transparent";
                     })(),
                 display: "flex",
@@ -1813,7 +1837,7 @@ export default function CarTableRow({
             onMouseUp={handleLongPressEnd}
             onMouseLeave={handleLongPressEnd}
             onContextMenu={(e) => e.preventDefault()}
-            title="Нажмите для перемещения заказа"
+            title={t("suites.clickToMoveOrder")}
             sx={{
               border: border,
               position: "relative",
@@ -1876,13 +1900,13 @@ export default function CarTableRow({
           title={
             moveMode
               ? isPartOfSelectedOrder(dateStr)
-                ? "Нажмите для выхода из режима перемещения"
+                ? t("suites.clickToExitMove")
                 : undefined
               : cellState.isCompletedCell
-              ? "Нажмите для просмотра заказа"
-              : singleOrderForDrag
-              ? "Перетащите на другую строку (машину) или длинное нажатие для режима перемещения"
-              : "Длинное нажатие для режима перемещения, обычный клик для просмотра и редактирования заказа"
+              ? t("suites.clickToViewOrder")
+              : orderForDrag
+              ? t("suites.dragHintShort")
+              : t("suites.dragHintOpen")
           }
           sx={{
             position: "relative",
@@ -1962,6 +1986,10 @@ export default function CarTableRow({
         const dayConflict = conflictByDay?.[dayKey];
         const hasDayConflict = Boolean(dayConflict?.hasConflict);
         const dayConflictCount = Number(dayConflict?.conflictCount || 0);
+        const isRangeCheckIn =
+          rangeSelectDraft &&
+          String(rangeSelectDraft.carId) === String(car?._id) &&
+          rangeSelectDraft.start === dayKey;
 
         return (
         <TableCell
@@ -1971,7 +1999,7 @@ export default function CarTableRow({
           onFocus={() => onCellFocus?.(rowIndex, colIndex)}
           onDragOver={
             onRowDragOver && enableOrderDrag
-              ? (e) => onRowDragOver(e, car, dateStr)
+              ? (e) => onRowDragOver(e, car, dayKey)
               : undefined
           }
           onDragLeave={
@@ -1979,7 +2007,7 @@ export default function CarTableRow({
           }
           onDrop={
             onRowDrop && enableOrderDrag
-              ? (e) => onRowDrop(e, car, dateStr)
+              ? (e) => onRowDrop(e, car, dayKey)
               : undefined
           }
           sx={{
@@ -1999,6 +2027,11 @@ export default function CarTableRow({
               : rowDropValid
               ? {
                   boxShadow: `inset 0 0 0 2px ${theme.palette.success.main}`,
+                }
+              : isRangeCheckIn
+              ? {
+                  boxShadow: `inset 0 0 0 2px ${theme.palette.warning?.main || "#E8C547"}`,
+                  backgroundColor: "rgba(232, 197, 71, 0.18)",
                 }
               : hasDayConflict
               ? {
@@ -2050,7 +2083,7 @@ export default function CarTableRow({
                   textAlign: "center",
                   pointerEvents: "none",
                 }}
-                title="Конфликтующие бронирования"
+                title={t("suites.conflictBookings")}
               >
                 {dayConflictCount > 1 ? `+${dayConflictCount}` : ""}
               </Box>

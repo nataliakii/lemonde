@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import Image from "next/image";
 import styles from "./loginForm.module.css";
 
 const isDev = process.env.NODE_ENV === "development";
@@ -46,7 +47,18 @@ const LoginForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
-      <h1>Login</h1>
+      <div className={styles.brand}>
+        <Image
+          src="/logo-mark.png"
+          alt="Le Monde Suites"
+          width={56}
+          height={56}
+          className={styles.logo}
+          priority
+        />
+        <h1 className={styles.title}>Le Monde Suites</h1>
+        <p className={styles.subtitle}>Staff login</p>
+      </div>
       <input
         type={isDev ? "text" : "email"}
         placeholder={isDev ? "email (empty = superadmin)" : "email"}
@@ -66,7 +78,7 @@ const LoginForm = () => {
       <button type="submit" disabled={isLoading}>
         {isLoading ? "Logging in..." : "Login"}
       </button>
-      {error && <h2 style={{ color: "red" }}>{error}</h2>}
+      {error && <p className={styles.error}>{error}</p>}
     </form>
   );
 };

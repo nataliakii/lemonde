@@ -29,13 +29,13 @@ export const seasons = {
  */
 export const companyData = {
   companyId: COMPANY_ID,
-  name: "CarsNK",
+  name: "Le Monde Suites",
   tel: "+380 68 100 3771",
   tel2: "+353 85 270 96 05",
-  email: "admin@bbqr.site",
-  address: "Antonioy Kelesi 12, Nea Kallikratia 630 80",
-  slogan: "Car rental aggregator in Greece",
-  coords: { lat: "40.311273589340836", lon: "23.06426516796098" },
+  email: "nataliakireewa@gmail.com",
+  address: "Leoforos Nikis, Kato Galini, Nea Kallikratia 630 80, Greece",
+  slogan: "Apartment stays · Nea Kallikratia · Halkidiki",
+  coords: { lat: "40.31059163454398", lon: "23.063829408712166" },
   defaultStart: "15:00",
   defaultEnd: "11:00",
   hoursDiffForStart: 1,
@@ -43,6 +43,5 @@ export const companyData = {
   seasons,
   locations: [
     { name: "Nea Kalikratia", coords: { lat: "40.31", lon: "23.06" } },
-    { name: "Airport", coords: { lat: "40.31", lon: "23.06" } },
   ],
 };

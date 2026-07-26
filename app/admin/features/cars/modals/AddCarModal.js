@@ -29,7 +29,7 @@ import {
   RenderTextField,
   RenderSelectField,
 } from "@/app/components/ui/inputs/Fields";
-import CarImageUpload from "@/app/components/ui/media/AddImageComponent";
+import SuiteGalleryEditor from "@/app/components/ui/media/SuiteGalleryEditor";
 import { useTranslation } from "react-i18next";
 import { useSession } from "next-auth/react";
 import { ROLE } from "@/domain/orders/admin-rbac";
@@ -40,17 +40,14 @@ const AddCarModal = ({
   onClose,
   setUpdateStatus,
 }) => {
-  const DEFAULT_IMAGE = "/images/carsnk-NO_PHOTO.png";
   const { resubmitCars, company } = useMainContext();
   const { data: session } = useSession();
   const isSuperAdmin = session?.user?.role === ROLE.SUPERADMIN;
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState(false);
-  const [imagePreview, setImagePreview] = useState(DEFAULT_IMAGE);
   const [companies, setCompanies] = useState([]);
   const [ownerId, setOwnerId] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
   const [dbCarModels, setDbCarModels] = useState([]);
   const [carData, setCarData] = useState({
     model: "Suite",
@@ -67,6 +64,7 @@ const AddCarModal = ({
     engine: "0",
     pricingTiers: defaultPrices,
     photoUrl: CLOUDINARY_PLACEHOLDER_PUBLIC_ID,
+    gallery: [],
     deposit: 0,
     bathrooms: 1,
     sizeSqm: 45,
@@ -81,6 +79,14 @@ const AddCarModal = ({
     if (carData[name] !== newValue) {
       setCarData((prevData) => ({ ...prevData, [name]: newValue }));
     }
+  };
+
+  const handleGalleryChange = async ({ photoUrl, gallery }) => {
+    setCarData((prev) => ({
+      ...prev,
+      photoUrl: photoUrl || CLOUDINARY_PLACEHOLDER_PUBLIC_ID,
+      gallery: Array.isArray(gallery) ? gallery : [],
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -113,12 +119,11 @@ const AddCarModal = ({
       if (carData.floor != null) formData.append("floor", String(carData.floor));
       formData.append("description", carData.description || "");
       formData.append("amenities", JSON.stringify(carData.amenities || []));
+      formData.append("photoUrl", carData.photoUrl || CLOUDINARY_PLACEHOLDER_PUBLIC_ID);
+      formData.append("gallery", JSON.stringify(carData.gallery || []));
 
       if (isSuperAdmin && ownerId && !SINGLE_PROPERTY_MODE) {
         formData.append("ownerId", ownerId);
-      }
-      if (selectedImage) {
-        formData.append("image", selectedImage);
       }
 
       const response = await fetch("/api/apartment/addOne", {
@@ -146,7 +151,6 @@ const AddCarModal = ({
       setUpdateStatus({ message: result.message || "OK", type: 200 });
       await resubmitCars();
       onClose();
-      setSelectedImage(null);
     } catch (error) {
       setUpdateStatus({
         message: error?.message || "Unknown error",
@@ -154,18 +158,6 @@ const AddCarModal = ({
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setImagePreview(URL.createObjectURL(file));
-      setSelectedImage(file);
-      setCarData({ ...carData, photoUrl: file.name });
-    } else {
-      setImagePreview(DEFAULT_IMAGE);
-      setCarData({ ...carData, photoUrl: CLOUDINARY_PLACEHOLDER_PUBLIC_ID });
     }
   };
 
@@ -295,9 +287,12 @@ const AddCarModal = ({
                   onChange={(_, newValue) =>
                     handleChange({ target: { name: "model", value: newValue || "" } })
                   }
-                  onInputChange={(_, inputValue) =>
-                    handleChange({ target: { name: "model", value: inputValue } })
-                  }
+                  onInputChange={(_, inputValue, reason) => {
+                    if (reason !== "input" && reason !== "clear") return;
+                    handleChange({
+                      target: { name: "model", value: inputValue },
+                    });
+                  }}
                   renderInput={(params) => (
                     <TextField
                       {...params}
@@ -359,14 +354,16 @@ const AddCarModal = ({
                   updatedCar={carData}
                   handleChange={handleChange}
                 />
-                <RenderTextField
-                  type="number"
-                  name="deposit"
-                  label={t("car.deposit") || "Deposit, €"}
-                  defaultValue={carData.deposit || 0}
-                  updatedCar={carData}
-                  handleChange={handleChange}
-                />
+                {!SINGLE_PROPERTY_MODE && (
+                  <RenderTextField
+                    type="number"
+                    name="deposit"
+                    label={t("car.deposit") || "Deposit, €"}
+                    defaultValue={carData.deposit || 0}
+                    updatedCar={carData}
+                    handleChange={handleChange}
+                  />
+                )}
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -401,12 +398,12 @@ const AddCarModal = ({
                     <TextField {...params} label="Amenities" />
                   )}
                 />
-                <CarImageUpload
+                <SuiteGalleryEditor
                   photoUrl={carData.photoUrl}
-                  handleChange={handleChange}
-                  handleImageChange={handleImageChange}
-                  imagePreview={imagePreview}
-                  required
+                  gallery={carData.gallery}
+                  onChange={handleGalleryChange}
+                  disabled={loading}
+                  compact
                 />
               </Stack>
             </Grid>

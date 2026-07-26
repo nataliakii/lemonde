@@ -112,6 +112,10 @@ const GradientAppBar = styled(AppBar, {
   color: theme.palette.backgroundDark1?.text || "#ffffff",
   boxShadow: "none",
   backdropFilter: scrolled ? "blur(10px)" : "none",
+  borderBottom: "none",
+  border: "none",
+  "&::after": { display: "none" },
+  "&::before": { display: "none" },
 }));
 
 const Logo = styled(Typography)(({ theme }) => ({
@@ -702,10 +706,13 @@ export default function NavBar({
               <LanguageSwitcher color="inherit" onClick={handleLanguageClick}>
                 <Typography
                   sx={{
-                    fontStretch: "extra-condensed",
+                    fontFamily: "var(--font-body)",
                     textTransform: "none",
                     fontSize: "0.8rem",
-                    opacity: 0.86,
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
+                    opacity: 0.75,
+                    "&:hover": { opacity: 1, color: "primary.light" },
                   }}
                 >
                   {LANG_LABELS[effectiveLocale] || effectiveLocale}
@@ -725,7 +732,7 @@ export default function NavBar({
 
               <Stack
                 direction="row"
-                spacing={{ md: 0.25, lg: 0.5 }}
+                spacing={{ md: 2.5, lg: 3.5 }}
                 alignItems="center"
                 sx={{
                   display: { xs: "none", md: "flex" },
@@ -739,21 +746,21 @@ export default function NavBar({
               >
                 {!isAdmin && (
                   <>
-                    <Link href={homeHref}>
+                    <Link
+                      href={withLocalePrefix(effectiveLocale, "/apartments")}
+                      style={{ textDecoration: "none" }}
+                    >
                       <Typography
                         sx={{
-                          fontStretch: "extra-condensed",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {t("header.main")}
-                      </Typography>
-                    </Link>
-                    <Link href={withLocalePrefix(effectiveLocale, "/apartments")}>
-                      <Typography
-                        sx={{
-                          fontStretch: "extra-condensed",
-                          textTransform: "uppercase",
+                          fontFamily: "var(--font-display)",
+                          fontStyle: "italic",
+                          fontWeight: 500,
+                          fontSize: { md: "1.15rem", lg: "1.25rem" },
+                          letterSpacing: "0.02em",
+                          textTransform: "none",
+                          color: "rgba(245,240,230,0.9)",
+                          transition: "color 0.25s ease",
+                          "&:hover": { color: "primary.light" },
                         }}
                       >
                         {t("header.cars") || "Apartments"}
@@ -775,67 +782,78 @@ export default function NavBar({
                       }
                       sx={{
                         minWidth: 0,
-                        px: { md: 0.8, lg: 1.5 },
+                        px: 0,
                         color: "inherit",
-                        textTransform: "uppercase",
-                        fontStretch: "extra-condensed",
+                        textTransform: "none",
                         "&:hover": { backgroundColor: "transparent" },
                       }}
                     >
                       <Typography
                         component="span"
                         sx={{
-                          fontStretch: "extra-condensed",
-                          textTransform: "uppercase",
+                          fontFamily: "var(--font-display)",
+                          fontStyle: "italic",
+                          fontWeight: 500,
+                          fontSize: { md: "1.15rem", lg: "1.25rem" },
+                          letterSpacing: "0.02em",
+                          color: "rgba(245,240,230,0.9)",
+                          transition: "color 0.25s ease",
+                          ".MuiButton-root:hover &": { color: "#E8D5A3" },
                         }}
                       >
                         {t("header.locations") || "Locations"}
                       </Typography>
-                      <KeyboardArrowDownIcon sx={{ fontSize: 18, ml: 0.25 }} />
+                      <KeyboardArrowDownIcon
+                        sx={{ fontSize: 18, ml: 0.25, color: "rgba(232,213,163,0.7)" }}
+                      />
                     </Button>
                     )}
-                    <Link href={rentalTermsHref}>
+                    <Link href={contactsHref} style={{ textDecoration: "none" }}>
                       <Typography
                         sx={{
-                          fontStretch: "extra-condensed",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {t("header.terms")}
-                      </Typography>
-                    </Link>
-                    <Link href={contactsHref}>
-                      <Typography
-                        sx={{
-                          fontStretch: "extra-condensed",
-                          textTransform: "uppercase",
+                          fontFamily: "var(--font-display)",
+                          fontStyle: "italic",
+                          fontWeight: 500,
+                          fontSize: { md: "1.15rem", lg: "1.25rem" },
+                          letterSpacing: "0.02em",
+                          textTransform: "none",
+                          color: "rgba(245,240,230,0.9)",
+                          transition: "color 0.25s ease",
+                          "&:hover": { color: "primary.light" },
                         }}
                       >
                         {t("header.contacts")}
                       </Typography>
                     </Link>
+                    {!SINGLE_PROPERTY_MODE && (
                     <Button
                       type="button"
                       onClick={() => setTransferModalOpen(true)}
                       sx={{
                         minWidth: 0,
-                        px: { md: 0.8, lg: 1.5 },
+                        px: 0,
                         color: "inherit",
-                        textTransform: "uppercase",
-                        fontStretch: "extra-condensed",
+                        textTransform: "none",
                         "&:hover": { backgroundColor: "transparent" },
                       }}
                     >
                       <Typography
                         component="span"
                         sx={{
-                          fontStretch: "extra-condensed",
-                          textTransform: "uppercase",
+                          fontFamily: "var(--font-display)",
+                          fontStyle: "italic",
+                          fontWeight: 500,
+                          fontSize: { md: "1.15rem", lg: "1.25rem" },
+                          letterSpacing: "0.02em",
+                          color: "rgba(245,240,230,0.9)",
+                          transition: "color 0.25s ease",
+                          ".MuiButton-root:hover &": { color: "#E8D5A3" },
                         }}
                       >
                         {t("header.transfer")}
                       </Typography>
                     </Button>
+                    )}
                   </>
                 )}
                 {isAdmin && (
@@ -1320,16 +1338,23 @@ export default function NavBar({
           <List>
             {!isAdmin ? (
               <>
-                <ListItem button component={Link} href={homeHref}>
-                  <ListItemText primary={t("header.main")} />
-                </ListItem>
                 <ListItem
                   button
                   component={Link}
                   href={withLocalePrefix(effectiveLocale, "/apartments")}
                   onClick={() => setDrawerOpen(false)}
                 >
-                  <ListItemText primary={t("header.cars") || "Apartments"} />
+                  <ListItemText
+                    primary={t("header.cars") || "Apartments"}
+                    primaryTypographyProps={{
+                      sx: {
+                        fontFamily: "var(--font-display)",
+                        fontStyle: "italic",
+                        fontSize: "1.25rem",
+                        fontWeight: 500,
+                      },
+                    }}
+                  />
                 </ListItem>
                 {!SINGLE_PROPERTY_MODE && locationGroups?.length > 0 && (
                   <>
@@ -1350,12 +1375,20 @@ export default function NavBar({
                     ))}
                   </>
                 )}
-                <ListItem button component={Link} href={termsAliasHref}>
-                  <ListItemText primary={t("header.terms")} />
-                </ListItem>
                 <ListItem button component={Link} href={contactsHref}>
-                  <ListItemText primary={t("header.contacts")} />
+                  <ListItemText
+                    primary={t("header.contacts")}
+                    primaryTypographyProps={{
+                      sx: {
+                        fontFamily: "var(--font-display)",
+                        fontStyle: "italic",
+                        fontSize: "1.25rem",
+                        fontWeight: 500,
+                      },
+                    }}
+                  />
                 </ListItem>
+                {!SINGLE_PROPERTY_MODE && (
                 <ListItem
                   button
                   onClick={() => {
@@ -1363,8 +1396,19 @@ export default function NavBar({
                     setTransferModalOpen(true);
                   }}
                 >
-                  <ListItemText primary={t("header.transfer")} />
+                  <ListItemText
+                    primary={t("header.transfer")}
+                    primaryTypographyProps={{
+                      sx: {
+                        fontFamily: "var(--font-display)",
+                        fontStyle: "italic",
+                        fontSize: "1.25rem",
+                        fontWeight: 500,
+                      },
+                    }}
+                  />
                 </ListItem>
+                )}
               </>
             ) : (
               <>

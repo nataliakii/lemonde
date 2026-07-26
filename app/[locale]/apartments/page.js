@@ -14,6 +14,7 @@ import { buildHreflangAlternates } from "@/services/seo/hreflangBuilder";
 import { getRobotsForPath } from "@/services/seo/indexingPolicy";
 import { toAbsoluteUrl } from "@/services/seo/urlBuilder";
 import { Box, Typography } from "@mui/material";
+import StayDateSearch from "@app/components/StayDateSearch";
 
 const APARTMENTS_ALTERNATES = Object.fromEntries(
   getSupportedLocales().map((l) => [l, `/${l}/apartments`])
@@ -55,29 +56,48 @@ export default async function ApartmentsIndexPage({ params }) {
       locale={locale}
       isMain={false}
     >
-      <Box sx={{ px: { xs: 2, md: 4 }, pt: 2, pb: 1, textAlign: "left" }}>
+      <Box id="stay-date-search">
+        <StayDateSearch />
+      </Box>
+      <Box sx={{ px: { xs: 2, md: 4 }, pt: { xs: 2, md: 3 }, pb: 1, textAlign: "center" }}>
+        <Typography
+          sx={{
+            fontFamily: "var(--font-body)",
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+            color: "primary.dark",
+            mb: 1,
+          }}
+        >
+          Five suites
+        </Typography>
         <Typography
           component="h1"
           sx={{
             fontFamily: "var(--font-display)",
             fontStyle: "italic",
             fontWeight: 500,
-            fontSize: { xs: "2rem", md: "2.75rem" },
+            fontSize: { xs: "2.35rem", md: "3.25rem" },
             color: "secondary.main",
-            mb: 0.5,
+            mb: 1,
+            lineHeight: 1.1,
           }}
         >
-          Apartments
+          Our apartments
         </Typography>
         <Typography
           sx={{
             color: "text.secondary",
-            maxWidth: 520,
+            maxWidth: 480,
+            mx: "auto",
             fontSize: "1.05rem",
-            mb: 2,
+            mb: 1,
+            lineHeight: 1.55,
           }}
         >
-          Choose a suite and request your stay. We confirm every booking personally.
+          Each suite has its own light and view. Choose dates, then request the stay that fits you.
         </Typography>
       </Box>
       <CarGrid />

@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import dynamic from "next/dynamic";
 import LegendCalendarAdmin from "@/app/components/calendar-ui/LegendCalendarAdmin";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 
 const SettingsIcon = dynamic(() => import("@mui/icons-material/Settings"), {
   ssr: false,
@@ -30,6 +31,7 @@ export default function CalendarToolbar({
 }) {
   const showInlineLegend =
     Boolean(showLegend) && legendPlacement === "inline";
+  const showDelivery = !SINGLE_PROPERTY_MODE && Boolean(showDeliveryInLegend);
   const toggleGroupSx = {
     "& .MuiToggleButtonGroup-grouped": {
       minHeight: 26,
@@ -134,7 +136,7 @@ export default function CalendarToolbar({
           <LegendCalendarAdmin
             showLegendItems={false}
             showBufferControls={showBufferInLegend}
-            showDeliveryInfo={showDeliveryInLegend}
+            showDeliveryInfo={showDelivery}
             inToolbar
           />
         </Box>

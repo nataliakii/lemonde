@@ -26,5 +26,5 @@ export default async function LegacyCarsSlugRedirectPage({ params }) {
     notFound();
   }
 
-  permanentRedirect(`/${defaultLocale}/cars/${encodeURIComponent(raw)}`);
+  permanentRedirect(getCarPath(defaultLocale, raw));
 }

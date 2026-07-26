@@ -28,6 +28,7 @@ import {
 } from "@domain/locationSeo/locationSeoService";
 import { LOCATION_IDS } from "@domain/locationSeo/locationSeoKeys";
 import { COMPANY_ID } from "@config/company";
+import { SINGLE_PROPERTY_MODE } from "@config/domain";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@lib/authOptions";
 import {
@@ -89,6 +90,7 @@ function getPublicCars(cars) {
 }
 
 export async function generateStaticParams() {
+  if (SINGLE_PROPERTY_MODE) return [];
   const cars = await getCars().catch(() => []);
   const publicCars = getPublicCars(cars);
   const locales = getSupportedLocales();
@@ -127,6 +129,11 @@ export default async function LocalizedCarPage({ params }) {
   const locale = normalizeLocale(params.locale);
   if (!isSupportedLocale(locale)) {
     notFound();
+  }
+
+  // Le Monde Suites: unit pages live under /apartments/[slug]
+  if (SINGLE_PROPERTY_MODE) {
+    permanentRedirect(getCarPath(locale, params.slug));
   }
 
   const session = await getServerSession(authOptions);

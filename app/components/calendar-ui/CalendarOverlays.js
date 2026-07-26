@@ -23,6 +23,8 @@ import AddOrderModal from "@/app/admin/features/orders/modals/AddOrderModal";
 import OrderUnsavedCloseDialog from "@/app/admin/features/orders/components/OrderUnsavedCloseDialog";
 import EditCarModal from "@/app/admin/features/cars/modals/EditCarModal";
 import { isPast } from "@utils/businessTime";
+import { useTranslation } from "react-i18next";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 
 /**
  * Модалки и всплывающий UI календаря (вне корневого layout таблицы).
@@ -31,6 +33,7 @@ export default function CalendarOverlays({
   data,
   actions,
 }) {
+  const { t } = useTranslation();
   const {
     open,
     selectedOrders,
@@ -225,40 +228,43 @@ export default function CalendarOverlays({
       <ModalLayout
         open={confirmModal.open}
         onClose={handleCloseConfirmModal}
-        title="Подтверждение перемещения"
+        title={t("suites.confirmMoveTitle")}
         size="small"
         centerVertically={false}
       >
         <Typography sx={{ mb: 3, color: "text.primary" }}>
           {confirmModal.kind === "dates" ? (
-            <>
-              Перенести заказ с{" "}
-              <strong>{confirmModal.fromRange}</strong> на{" "}
-              <strong>{confirmModal.toRange}</strong>
-              {confirmModal.dayDelta
-                ? ` (${confirmModal.dayDelta > 0 ? "+" : ""}${
-                    confirmModal.dayDelta
-                  } дн.)`
-                : ""}
-              ?
-            </>
+            t("suites.confirmMoveDates", {
+              from: confirmModal.fromRange,
+              to: confirmModal.toRange,
+              delta: confirmModal.dayDelta
+                ? t("suites.dayDelta", {
+                    sign: confirmModal.dayDelta > 0 ? "+" : "",
+                    n: confirmModal.dayDelta,
+                  })
+                : "",
+            })
           ) : (
-            <>
-              Вы хотите сдвинуть заказ с апартамента{" "}
-              <strong>{confirmModal.oldCar?.model}</strong> (
-              {confirmModal.oldCar?.regNumber}) на апартамент{" "}
-              <strong>{confirmModal.newCar?.model}</strong> (
-              {confirmModal.newCar?.regNumber})?
-            </>
+            t(
+              SINGLE_PROPERTY_MODE
+                ? "suites.confirmMoveApartment"
+                : "suites.confirmMoveCar",
+              {
+                from: confirmModal.oldCar?.model,
+                fromReg: confirmModal.oldCar?.regNumber,
+                to: confirmModal.newCar?.model,
+                toReg: confirmModal.newCar?.regNumber,
+              }
+            )
           )}
         </Typography>
 
         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
-          <CancelButton onClick={handleCloseConfirmModal} label="НЕТ" />
+          <CancelButton onClick={handleCloseConfirmModal} label={t("suites.no")} />
           <ActionButton
             color="success"
             onClick={handleConfirmMove}
-            label="ДА"
+            label={t("suites.yes")}
           />
         </Box>
       </ModalLayout>
@@ -274,10 +280,13 @@ export default function CalendarOverlays({
           setUpdatedCar={setSelectedCarForEdit}
           updateCarInContext={updateCarInContext}
           handleChange={(e) =>
-            setSelectedCarForEdit((prev) => ({
-              ...prev,
-              [e.target.name]: e.target.value,
-            }))
+            setSelectedCarForEdit((prev) => {
+              if (!prev || prev[e.target.name] === e.target.value) return prev;
+              return {
+                ...prev,
+                [e.target.name]: e.target.value,
+              };
+            })
           }
           handleCheckboxChange={(e) =>
             setSelectedCarForEdit((prev) => ({
@@ -288,11 +297,11 @@ export default function CalendarOverlays({
           handleUpdate={async () => {
             const response = await updateCarInContext(selectedCarForEdit);
             if (response?.type === 200) {
-              enqueueSnackbar("Машина обновлена", { variant: "success" });
+              enqueueSnackbar(t("suites.apartmentUpdated"), { variant: "success" });
               fetchAndUpdateOrders();
               setIsEditCarOpen(false);
             } else {
-              enqueueSnackbar("Ошибка обновления", { variant: "error" });
+              enqueueSnackbar(t("suites.apartmentUpdateError"), { variant: "error" });
             }
           }}
         />

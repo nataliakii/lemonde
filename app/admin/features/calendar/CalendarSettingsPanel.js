@@ -13,6 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import dynamic from "next/dynamic";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 
 const CloseIcon = dynamic(() => import("@mui/icons-material/Close"), {
   ssr: false,
@@ -123,24 +124,28 @@ export default function CalendarSettingsPanel({
               }
               label={
                 <Typography variant="body2">
-                  Буфер между заказами в легенде
+                  {SINGLE_PROPERTY_MODE
+                    ? "Буфер между заездами в легенде"
+                    : "Буфер между заказами в легенде"}
                 </Typography>
               }
             />
 
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  checked={settings.showDeliveryInLegend}
-                  onChange={(e) => setShowDeliveryInLegend(e.target.checked)}
-                  disabled={!settings.showLegend}
-                />
-              }
-              label={
-                <Typography variant="body2">Тариф доставки в легенде</Typography>
-              }
-            />
+            {!SINGLE_PROPERTY_MODE && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    size="small"
+                    checked={settings.showDeliveryInLegend}
+                    onChange={(e) => setShowDeliveryInLegend(e.target.checked)}
+                    disabled={!settings.showLegend}
+                  />
+                }
+                label={
+                  <Typography variant="body2">Тариф доставки в легенде</Typography>
+                }
+              />
+            )}
 
             <Divider />
 
@@ -194,7 +199,7 @@ export default function CalendarSettingsPanel({
                 onClick={() => setBufferModalOpen(true)}
                 sx={{ alignSelf: "flex-start", mt: 1 }}
               >
-                Настройки буфера между заказами
+                Настройки буфера между заездами
               </Button>
             )}
 
@@ -207,7 +212,9 @@ export default function CalendarSettingsPanel({
                 <Box data-bigcalendar-legend sx={{ width: "100%" }}>
                   <LegendCalendarAdmin
                     showBufferControls={settings.showBufferInLegend}
-                    showDeliveryInfo={settings.showDeliveryInLegend}
+                    showDeliveryInfo={
+                      !SINGLE_PROPERTY_MODE && settings.showDeliveryInLegend
+                    }
                     inDrawer
                   />
                 </Box>

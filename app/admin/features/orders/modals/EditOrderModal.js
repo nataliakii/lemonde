@@ -38,6 +38,7 @@ import { useEditOrderPermissions } from "../hooks/useEditOrderPermissions";
 import { useEditOrderState } from "../hooks/useEditOrderState";
 import { useOrderAccess } from "../hooks/useOrderAccess";
 import { useSession } from "next-auth/react";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 // 🎯 Athens timezone utilities — ЕДИНСТВЕННЫЙ источник правды для времени
 import {
   ATHENS_TZ,
@@ -1862,16 +1863,89 @@ const EditOrderModal = ({
                         setEditedOrder((prev) => ({
                           ...prev,
                           offline,
-                          confirmed: offline ? true : prev.confirmed,
                           my_order: offline ? false : prev.my_order,
                         }));
                       }}
                       size="small"
                     />
                   }
-                  label="Офлайн (не через сайт)"
+                  label={
+                    SINGLE_PROPERTY_MODE
+                      ? t("suites.stubOffline")
+                      : t("suites.offlineOffSite")
+                  }
                   sx={{ mt: 1, mb: 0.5 }}
                 />
+                {SINGLE_PROPERTY_MODE && editedOrder && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" },
+                      gap: 1.5,
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      mb: 1,
+                      mt: 0.5,
+                    }}
+                  >
+                    <TextField
+                      label={t("suites.guestsCount")}
+                      type="number"
+                      size="small"
+                      value={editedOrder.guestsCount ?? 0}
+                      onChange={(e) =>
+                        updateField(
+                          "guestsCount",
+                          Math.max(0, Number(e.target.value) || 0)
+                        )
+                      }
+                      inputProps={{ min: 0, max: 20 }}
+                      disabled={isPaidAndClosed || permissions.viewOnly}
+                      sx={{ width: { xs: "100%", sm: 140 } }}
+                    />
+                    <TextField
+                      label={t("suites.childrenCount")}
+                      type="number"
+                      size="small"
+                      value={editedOrder.childrenCount ?? 0}
+                      onChange={(e) =>
+                        updateField(
+                          "childrenCount",
+                          Math.max(0, Number(e.target.value) || 0)
+                        )
+                      }
+                      inputProps={{ min: 0, max: 20 }}
+                      disabled={isPaidAndClosed || permissions.viewOnly}
+                      sx={{ width: { xs: "100%", sm: 140 } }}
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={Boolean(editedOrder.needsTransfer)}
+                          onChange={(e) =>
+                            updateField("needsTransfer", e.target.checked)
+                          }
+                          size="small"
+                          disabled={isPaidAndClosed || permissions.viewOnly}
+                        />
+                      }
+                      label={t("suites.needsTransfer")}
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={Boolean(editedOrder.needsBabyBed)}
+                          onChange={(e) =>
+                            updateField("needsBabyBed", e.target.checked)
+                          }
+                          size="small"
+                          disabled={isPaidAndClosed || permissions.viewOnly}
+                        />
+                      }
+                      label={t("suites.needsBabyBed")}
+                    />
+                  </Box>
+                )}
                 {/* 🔴 BLOCK: показываем сообщение о блокировке подтверждения (только если canConfirm === false) */}
                 {!editedOrder?.confirmed &&
                   confirmationCheck.message &&
@@ -2173,7 +2247,11 @@ const EditOrderModal = ({
                   }}
                 >
                   <TextField
-                    label={t("order.pickupDate")}
+                    label={
+                      SINGLE_PROPERTY_MODE
+                        ? "Дата заезда"
+                        : t("order.pickupDate")
+                    }
                     type="date"
                     value={
                       editedOrder?.rentalStartDate
@@ -2199,7 +2277,11 @@ const EditOrderModal = ({
                     inputProps={{ min: todayStr }}
                   />
                   <TextField
-                    label={t("order.pickupTime")}
+                    label={
+                      SINGLE_PROPERTY_MODE
+                        ? "Время заезда"
+                        : t("order.pickupTime")
+                    }
                     type="time"
                     value={formatTimeHHMM(startTime)}
                     onChange={(e) => {
@@ -2240,7 +2322,11 @@ const EditOrderModal = ({
                     size={formMetrics.fieldSize}
                   />
                   <TextField
-                    label={t("order.returnDate")}
+                    label={
+                      SINGLE_PROPERTY_MODE
+                        ? "Дата выезда"
+                        : t("order.returnDate")
+                    }
                     type="date"
                     value={
                       editedOrder?.rentalEndDate
@@ -2270,7 +2356,11 @@ const EditOrderModal = ({
                     }}
                   />
                   <TextField
-                    label={t("order.returnTime")}
+                    label={
+                      SINGLE_PROPERTY_MODE
+                        ? "Время выезда"
+                        : t("order.returnTime")
+                    }
                     type="time"
                     value={formatTimeHHMM(endTime)}
                     onChange={(e) => {
@@ -2375,6 +2465,7 @@ const EditOrderModal = ({
                 )}
 
                 {/* Строка 1: только место получения и место возврата. Строка 2: рейс / адреса при необходимости */}
+                {!SINGLE_PROPERTY_MODE && (
                 <Box
                   sx={{
                     display: "flex",
@@ -2589,8 +2680,10 @@ const EditOrderModal = ({
                     </Box>
                   )}
                 </Box>
+                )}
 
                 {/* Страховка/франшиза/детские кресла — по той же сетке */}
+                {!SINGLE_PROPERTY_MODE && (
                 <Box
                   sx={{
                     ...unifiedGridSx,
@@ -2743,6 +2836,7 @@ const EditOrderModal = ({
                     </Select>
                   </FormControl>
                 </Box>
+                )}
               </Box>
 
               {/* Блок данных клиента: visibility = canSeeClientPII, editability = canEditClientPII (orderAccessPolicy only) */}
@@ -2865,7 +2959,8 @@ const EditOrderModal = ({
                       }
                     />
                   </Box>
-                  {!permissions.viewOnly && access?.canEditClientPII ? (
+                  {!SINGLE_PROPERTY_MODE &&
+                    (!permissions.viewOnly && access?.canEditClientPII ? (
                     <Box sx={{ mt: 1, mb: 0.5 }}>
                       <DrivingLicenceUploadField
                         showGalleryPreviewHint={false}
@@ -2902,7 +2997,7 @@ const EditOrderModal = ({
                         />
                       </Box>
                     )
-                  )}
+                  ))}
                   <Box
                     sx={{
                       ...unifiedGridSx,
@@ -3012,6 +3107,7 @@ const EditOrderModal = ({
                         label="Telegram"
                       />
                     </Box>
+                    {!SINGLE_PROPERTY_MODE && (
                     <Box
                       sx={{
                         gridColumn: {
@@ -3073,6 +3169,7 @@ const EditOrderModal = ({
                         }
                       />
                     </Box>
+                    )}
                   </Box>
                   {isCurrentUserSuperAdmin && superadminClientContextContent ? (
                     <Typography
@@ -3091,7 +3188,7 @@ const EditOrderModal = ({
                 </Box>
               )}
 
-              {!access?.canSeeClientPII && (
+              {!SINGLE_PROPERTY_MODE && !access?.canSeeClientPII && (
                 <Box sx={{ mb: 0.5, mt: 0.5 }}>
                   <FormControlLabel
                     control={

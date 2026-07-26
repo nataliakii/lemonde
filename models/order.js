@@ -365,6 +365,28 @@ const OrderSchema = new mongoose.Schema({
     default: 0,
     select: false, // Don't include in queries by default
   },
+  /** Suite stay: number of adult/total guests */
+  guestsCount: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  /** Suite stay: number of children */
+  childrenCount: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  /** Suite stay: airport/hotel transfer needed */
+  needsTransfer: {
+    type: Boolean,
+    default: false,
+  },
+  /** Suite stay: baby cot / crib needed */
+  needsBabyBed: {
+    type: Boolean,
+    default: false,
+  },
   insurance: {
     type: String,
     default: "TPL", // "TPL", "CDW"

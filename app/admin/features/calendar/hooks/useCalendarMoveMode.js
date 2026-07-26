@@ -12,6 +12,8 @@ import {
   shiftOrderByDays,
 } from "./calendarDays";
 import { moveOrderToCar, changeRentalDates } from "@utils/action";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
+import { useTranslation } from "react-i18next";
 
 const ORDER_DRAG_MIME = "application/x-car-calendar-order-id";
 const BUSINESS_TZ = "Europe/Athens";
@@ -31,6 +33,7 @@ export function useCalendarMoveMode({
   showSingleSnackbar,
   scrollContainerRef,
 }) {
+  const { t } = useTranslation();
   const [moveMode, setMoveMode] = useState(false);
   const [selectedMoveOrder, setSelectedMoveOrder] = useState(null);
   const [confirmModal, setConfirmModal] = useState({
@@ -142,15 +145,16 @@ export function useCalendarMoveMode({
 
   const handleLongPress = useCallback(
     (order) => {
+      // Moves are drag-and-drop only — long-press no longer enters click-to-move mode.
       if (!order?._id) return;
-      setSelectedMoveOrder(order);
-      setMoveMode(true);
       showSingleSnackbar(
-        "Выберите другой автомобиль для перемещения заказа. Доступные автомобили выделены желтым. Либо перетащите заказ на другой день той же машины.",
-        { variant: "info", autoHideDuration: 8000 }
+        SINGLE_PROPERTY_MODE
+          ? t("suites.dragToApartmentOrDay")
+          : t("suites.dragToCarOrDay"),
+        { variant: "info", autoHideDuration: 5000 }
       );
     },
-    [showSingleSnackbar]
+    [showSingleSnackbar, t]
   );
 
   const handleOrderDragStart = useCallback((e, order, dateStr) => {
@@ -299,7 +303,7 @@ export function useCalendarMoveMode({
         if (delta === 0) return;
         if (!isDateShiftCompatible(selectedMoveOrder, delta, carId)) {
           showSingleSnackbar(
-            "Нельзя перенести на эти даты (прошлое или конфликт)",
+            t("suites.cannotMoveDates"),
             { variant: "warning", autoHideDuration: 4000 }
           );
           return;
@@ -351,9 +355,9 @@ export function useCalendarMoveMode({
     setDragSourceDate(null);
     setDragOverDate(null);
     if (wasLongPressMode) {
-      showSingleSnackbar("Режим перемещения отключён", { variant: "info" });
+      showSingleSnackbar(t("suites.moveModeOff"), { variant: "info" });
     }
-  }, [showSingleSnackbar]);
+  }, [showSingleSnackbar, t]);
 
   const cancelDragOnly = useCallback(() => {
     dropHandledRef.current = false;
@@ -444,7 +448,7 @@ export function useCalendarMoveMode({
     const shifted = confirmModal.shifted;
 
     if (!order?._id) {
-      showSingleSnackbar("❌ Нет данных для перемещения", { variant: "error" });
+      showSingleSnackbar(t("suites.noMoveData"), { variant: "error" });
       exitMoveMode();
       setConfirmModal({
         open: false,
@@ -471,7 +475,7 @@ export function useCalendarMoveMode({
     try {
       if (kind === "dates") {
         if (!shifted) {
-          showSingleSnackbar("Некорректный сдвиг дат", { variant: "error" });
+          showSingleSnackbar(t("suites.invalidDateShift"), { variant: "error" });
           return;
         }
 
@@ -491,28 +495,30 @@ export function useCalendarMoveMode({
           await fetchAndUpdateOrders();
           const conflictMsg =
             result.conflicts?.length > 0
-              ? " (есть конфликты с неподтвержденными заказами)"
+              ? t("suites.pendingConflictsHint")
               : "";
           showSingleSnackbar(
-            `Заказ перенесён на ${formatRangeRu(
-              shifted.rentalStartDate,
-              shifted.rentalEndDate
-            )}${conflictMsg}`,
+            t("suites.orderShiftedTo", {
+              range: formatRangeRu(
+                shifted.rentalStartDate,
+                shifted.rentalEndDate
+              ),
+            }) + conflictMsg,
             { variant: "success" }
           );
         } else if (result?.status === 409) {
           showSingleSnackbar(
             result.message ||
-              "Конфликт с подтвержденными заказами. Перенос невозможен.",
+              t("suites.conflictConfirmedNoMove"),
             { variant: "error", autoHideDuration: 5000 }
           );
         } else if (result?.status === 403) {
           showSingleSnackbar(
-            result.message || "Нет прав на изменение дат этого заказа",
+            result.message || t("suites.noPermissionChangeDates"),
             { variant: "error", autoHideDuration: 5000 }
           );
         } else {
-          showSingleSnackbar(result.message || "Ошибка переноса дат", {
+          showSingleSnackbar(result.message || t("suites.dateMoveError"), {
             variant: "error",
           });
         }
@@ -521,7 +527,7 @@ export function useCalendarMoveMode({
 
       // kind === 'car'
       if (!newCar?._id) {
-        showSingleSnackbar("❌ Нет данных для перемещения", {
+        showSingleSnackbar(t("suites.noMoveData"), {
           variant: "error",
         });
         return;
@@ -537,24 +543,25 @@ export function useCalendarMoveMode({
         await fetchAndUpdateOrders();
         const conflictMsg =
           result.conflicts?.length > 0
-            ? " (есть конфликты с неподтвержденными заказами)"
+            ? t("suites.pendingConflictsHint")
             : "";
-        showSingleSnackbar(`Заказ сдвинут на ${newCar.model}${conflictMsg}`, {
-          variant: "success",
-        });
+        showSingleSnackbar(
+          t("suites.orderMovedTo", { model: newCar.model }) + conflictMsg,
+          { variant: "success" }
+        );
       } else if (result?.status === 409) {
         showSingleSnackbar(
           result.message ||
-            "Конфликт с подтвержденными заказами. Перемещение невозможно.",
+            t("suites.conflictConfirmedNoMove"),
           { variant: "error", autoHideDuration: 5000 }
         );
       } else {
-        showSingleSnackbar(result.message || "Ошибка перемещения заказа", {
+        showSingleSnackbar(result.message || t("suites.orderMoveError"), {
           variant: "error",
         });
       }
     } catch (error) {
-      showSingleSnackbar(`Ошибка перемещения: ${error.message}`, {
+      showSingleSnackbar(t("suites.moveErrorWithMsg", { message: error.message }), {
         variant: "error",
       });
     } finally {

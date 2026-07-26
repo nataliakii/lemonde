@@ -52,6 +52,12 @@ function normalizeSettings(parsed) {
     merged.showLegend = true;
   }
 
+  const showDeliveryInLegend = SINGLE_PROPERTY_MODE
+    ? false
+    : typeof merged.showDeliveryInLegend === "boolean"
+      ? merged.showDeliveryInLegend
+      : DEFAULT_SETTINGS.showDeliveryInLegend;
+
   return {
     dayRange: VALID_DAY_RANGE.has(merged.dayRange)
       ? merged.dayRange
@@ -66,10 +72,7 @@ function normalizeSettings(parsed) {
       typeof merged.showBufferInLegend === "boolean"
         ? merged.showBufferInLegend
         : DEFAULT_SETTINGS.showBufferInLegend,
-    showDeliveryInLegend:
-      typeof merged.showDeliveryInLegend === "boolean"
-        ? merged.showDeliveryInLegend
-        : DEFAULT_SETTINGS.showDeliveryInLegend,
+    showDeliveryInLegend,
     showConflictBadges:
       typeof merged.showConflictBadges === "boolean"
         ? merged.showConflictBadges
@@ -117,6 +120,14 @@ export function useCalendarViewSettings() {
     setHydrated(true);
   }, []);
 
+  // Suites mode: never show car-delivery €/km, even if localStorage had it on.
+  useEffect(() => {
+    if (!hydrated || !SINGLE_PROPERTY_MODE) return;
+    setSettings((s) =>
+      s.showDeliveryInLegend ? { ...s, showDeliveryInLegend: false } : s
+    );
+  }, [hydrated]);
+
   useEffect(() => {
     if (!hydrated) return;
     writeToStorage(settings);
@@ -139,6 +150,7 @@ export function useCalendarViewSettings() {
   }, []);
 
   const setShowDeliveryInLegend = useCallback((showDeliveryInLegend) => {
+    if (SINGLE_PROPERTY_MODE) return;
     setSettings((s) => ({
       ...s,
       showDeliveryInLegend: Boolean(showDeliveryInLegend),

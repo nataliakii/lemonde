@@ -37,6 +37,7 @@ const CarTitle = muiStyled(Typography)(({ theme }) => ({
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SINGLE_PROPERTY_MODE } from "@config/domain";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import { CLOUDINARY_PLACEHOLDER_PUBLIC_ID } from "@config/cloudinary";
@@ -214,7 +215,9 @@ const CarItemComponent = React.memo(function CarItemComponent({
     ? localeFromUrl
     : (i18n.language || "en").split("-")[0];
   const slugForLink = car?.slug?.trim() || getSlugFromCar(car);
-  const carPageHref = slugForLink ? `/${locale}/cars/${encodeURIComponent(slugForLink)}` : null;
+  const carPageHref = slugForLink
+    ? `/${locale}/${SINGLE_PROPERTY_MODE ? "apartments" : "cars"}/${encodeURIComponent(slugForLink)}`
+    : null;
   const isHttpPhoto =
     typeof car?.photoUrl === "string" && /^https?:\/\//i.test(car.photoUrl);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();

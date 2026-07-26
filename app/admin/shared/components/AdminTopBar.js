@@ -5,6 +5,7 @@ import { Box, Stack, styled } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useMainContext } from "@app/Context";
 import DefaultButton from "@/app/components/ui/buttons/DefaultButton";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 
 const StyledTopBar = styled(Box)(({ theme }) => ({
   zIndex: 996,
@@ -62,10 +63,10 @@ export default function AdminTopBar({ feature, onAddClick, onBulkAddClick }) {
               maxWidth: 320,
             }}
           >
-            {t("carPark.addCar")}
+            {t("carPark.addCar") || "Add apartment"}
           </DefaultButton>
         )}
-        {onBulkAddClick && (
+        {onBulkAddClick && !SINGLE_PROPERTY_MODE && (
           <DefaultButton
             onClick={onBulkAddClick}
             relative

@@ -944,7 +944,11 @@ const BookingModal = ({
                       }}
                     >
                       <BookingDateField
-                        label={t("order.pickupDate") || "Дата получения"}
+                        label={
+                          SIMPLIFIED_CLIENT_BOOKING
+                            ? t("order.checkInDate") || "Check-in date"
+                            : t("order.pickupDate") || "Дата получения"
+                        }
                         value={
                           presetDates?.startDate
                             ? dayjs(presetDates.startDate).format("DD.MM.YYYY")
@@ -952,7 +956,11 @@ const BookingModal = ({
                         }
                       />
                       <BookingTimeField
-                        label={t("order.pickupTime")}
+                        label={
+                          SIMPLIFIED_CLIENT_BOOKING
+                            ? t("order.checkInTime") || "Check-in time"
+                            : t("order.pickupTime")
+                        }
                         value={startTime.format("HH:mm")}
                         inputProps={
                           timeLimits.minStart
@@ -985,7 +993,11 @@ const BookingModal = ({
                       }}
                     >
                       <BookingDateField
-                        label={t("order.returnDate") || "Дата возврата"}
+                        label={
+                          SIMPLIFIED_CLIENT_BOOKING
+                            ? t("order.checkOutDate") || "Check-out date"
+                            : t("order.returnDate") || "Дата возврата"
+                        }
                         value={
                           presetDates?.endDate
                             ? dayjs(presetDates.endDate).format("DD.MM.YYYY")
@@ -993,7 +1005,11 @@ const BookingModal = ({
                         }
                       />
                       <BookingTimeField
-                        label={t("order.returnTime")}
+                        label={
+                          SIMPLIFIED_CLIENT_BOOKING
+                            ? t("order.checkOutTime") || "Check-out time"
+                            : t("order.returnTime")
+                        }
                         value={endTime.format("HH:mm")}
                         inputProps={
                           timeLimits.maxEnd ? { max: timeLimits.maxEnd } : {}

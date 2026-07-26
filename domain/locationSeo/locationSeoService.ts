@@ -1,4 +1,5 @@
 import {
+  APARTMENTS_ROUTE_SEGMENT,
   CARS_ROUTE_SEGMENT,
   DEFAULT_LOCALE,
   HUB_NAV_LOCATION_IDS,
@@ -11,6 +12,8 @@ import {
   type StaticPageKey,
   type SupportedLocale,
 } from "./locationSeoKeys";
+import { SINGLE_PROPERTY_MODE } from "@config/domain";
+import { getSeoConfig } from "@config/seo";
 
 /** Query param on homepage for preselected pickup location (canonical slug). */
 export const HOMEPAGE_PICKUP_PARAM = "pickup" as const;
@@ -311,6 +314,18 @@ export function getLocaleDictionary(localeCandidate: string | undefined | null) 
 
 export function getHubSeo(localeCandidate: string | undefined | null) {
   const locale = normalizeLocale(localeCandidate);
+  if (SINGLE_PROPERTY_MODE) {
+    const seo = getSeoConfig();
+    const title = seo.titles?.[locale] || seo.defaultTitle;
+    const description = seo.descriptions?.[locale] || seo.defaultDescription;
+    return {
+      locale,
+      h1: seo.siteName,
+      seoTitle: title,
+      seoDescription: description,
+      introText: description,
+    };
+  }
   return {
     locale,
     ...localeSeoDictionary[locale].hub,
@@ -322,6 +337,36 @@ export function getStaticPageSeo(
   staticPageKey: StaticPageKey
 ) {
   const locale = normalizeLocale(localeCandidate);
+  if (SINGLE_PROPERTY_MODE) {
+    const seo = getSeoConfig();
+    const site = seo.siteName;
+    const suitesStatic: Record<string, { seoTitle: string; seoDescription: string }> = {
+      contacts: {
+        seoTitle: `Contact | ${site}`,
+        seoDescription: `Contact ${site} for apartment stays and booking support.`,
+      },
+      "privacy-policy": {
+        seoTitle: `Privacy Policy | ${site}`,
+        seoDescription: `Privacy policy for ${site}.`,
+      },
+      "terms-of-service": {
+        seoTitle: `Terms of Service | ${site}`,
+        seoDescription: `Terms of service for ${site}.`,
+      },
+      "cookie-policy": {
+        seoTitle: `Cookie Policy | ${site}`,
+        seoDescription: `Cookie policy for ${site}.`,
+      },
+      "rental-terms": {
+        seoTitle: `Stay Terms | ${site}`,
+        seoDescription: `Stay and booking terms for ${site}.`,
+      },
+    };
+    const override = suitesStatic[staticPageKey];
+    if (override) {
+      return { locale, ...override };
+    }
+  }
   const pageSeo = localeSeoDictionary[locale].staticPages[staticPageKey];
   if (!pageSeo) {
     throw new Error(`[locationSeoService] Missing static page seo: ${staticPageKey}`);
@@ -520,7 +565,17 @@ export function getHubAlternates(): LocationAlternateMap {
   }, {} as LocationAlternateMap);
 }
 
+export function getApartmentAlternates(apartmentSlug: string): LocationAlternateMap {
+  return SUPPORTED_LOCALES.reduce((acc, locale) => {
+    acc[locale] = getApartmentPath(locale, apartmentSlug);
+    return acc;
+  }, {} as LocationAlternateMap);
+}
+
 export function getCarAlternates(carSlug: string): LocationAlternateMap {
+  if (SINGLE_PROPERTY_MODE) {
+    return getApartmentAlternates(carSlug);
+  }
   return SUPPORTED_LOCALES.reduce((acc, locale) => {
     acc[locale] = getCarPath(locale, carSlug);
     return acc;
@@ -628,7 +683,18 @@ export function getLocationByPath(
   return null;
 }
 
+export function getApartmentPath(
+  localeCandidate: string | undefined | null,
+  apartmentSlug: string
+): string {
+  const locale = normalizeLocale(localeCandidate);
+  return `/${locale}/${APARTMENTS_ROUTE_SEGMENT}/${encodeURIComponent(apartmentSlug)}`;
+}
+
 export function getCarPath(localeCandidate: string | undefined | null, carSlug: string): string {
+  if (SINGLE_PROPERTY_MODE) {
+    return getApartmentPath(localeCandidate, carSlug);
+  }
   const locale = normalizeLocale(localeCandidate);
   return `/${locale}/${CARS_ROUTE_SEGMENT}/${encodeURIComponent(carSlug)}`;
 }

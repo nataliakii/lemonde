@@ -19,6 +19,7 @@ export const LOCALE_REQUEST_HEADER_NAME = "x-site-locale" as const;
 
 export const LOCATION_ROUTE_SEGMENT = "locations" as const;
 export const CARS_ROUTE_SEGMENT = "cars" as const;
+export const APARTMENTS_ROUTE_SEGMENT = "apartments" as const;
 
 export const LOCATION_TYPES = ["city", "airport", "region", "subRegion"] as const;
 

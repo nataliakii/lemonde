@@ -271,6 +271,10 @@ async function postOrderAddHandler(request) {
       totalPrice: totalPriceFromClient,
       locale: clientLocale,
       drivingLicenceUrls: drivingLicenceUrlsRaw,
+      guestsCount,
+      childrenCount,
+      needsTransfer,
+      needsBabyBed,
     } = await request.json();
 
     // Check if request comes from admin session
@@ -293,9 +297,8 @@ async function postOrderAddHandler(request) {
     // Иначе в JSON default my_order=false / подделка confirmed=true отключали уведомления CREATE.
     const myOrderToSave = isAdminSession ? Boolean(my_order) : true;
     const offlineToSave = isAdminSession ? Boolean(offline) : false;
-    const confirmedToSave = isAdminSession
-      ? Boolean(confirmed) || offlineToSave
-      : false;
+    // Offline stubs may be confirmed or pending — do not force confirmed from offline.
+    const confirmedToSave = isAdminSession ? Boolean(confirmed) : false;
 
     // Явно присваиваем email пустую строку, если он не передан или undefined/null
     const safeEmail = typeof email === "string" ? email : "";
@@ -352,7 +355,11 @@ async function postOrderAddHandler(request) {
 
     const normalizedPhone =
       typeof phone === "string" ? phone.trim() : String(phone ?? "").trim();
-    if (!normalizedPhone || !isValidInternationalPhone(normalizedPhone)) {
+    // Offline stubs from admin may omit a real phone — use a reserved placeholder.
+    const phoneForSave =
+      normalizedPhone ||
+      (isAdminSession && offlineToSave ? "+306999999999" : "");
+    if (!phoneForSave || !isValidInternationalPhone(phoneForSave)) {
       return new Response(
         JSON.stringify({
           message: "Invalid phone number",
@@ -556,8 +563,10 @@ async function postOrderAddHandler(request) {
     const newOrder = new Order({
       carNumber: existingCar.carNumber,
       regNumber: existingCar.regNumber || "",
-      customerName,
-      phone: normalizedPhone,
+      customerName:
+        String(customerName || "").trim() ||
+        (offlineToSave ? "Заглушка" : ""),
+      phone: phoneForSave,
       email: safeEmail,
       rentalStartDate: toStoredBusinessDate(startDate),
       rentalEndDate: toStoredBusinessDate(endDate),
@@ -589,6 +598,10 @@ async function postOrderAddHandler(request) {
       Viber: Boolean(Viber),
       Whatsapp: Boolean(Whatsapp),
       Telegram: Boolean(Telegram),
+      guestsCount: Number(guestsCount) || 0,
+      childrenCount: Number(childrenCount) || 0,
+      needsTransfer: Boolean(needsTransfer),
+      needsBabyBed: Boolean(needsBabyBed),
       // Permission tracking: store who created this order
       createdByRole,
       createdByAdminId,

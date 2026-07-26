@@ -68,6 +68,7 @@ import {
   resolveOrderOwnerId,
   summarizeFilteredOrders,
 } from "@/domain/orders/ordersTableStats";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 
 // Dayjs plugins
 dayjs.extend(utc);
@@ -653,7 +654,11 @@ export default function OrdersTableSection() {
       }
 
       if (!carNumber) {
-        throw new Error("Не удалось определить номер автомобиля");
+        throw new Error(
+          SINGLE_PROPERTY_MODE
+            ? t("suites.apartmentNotResolved")
+            : t("suites.carNotResolved")
+        );
       }
 
       const rentalStartDate = order.rentalStartDate
@@ -664,7 +669,7 @@ export default function OrdersTableSection() {
         : null;
 
       if (!rentalStartDate || !rentalEndDate) {
-        throw new Error("Не указаны даты аренды");
+        throw new Error(t("suites.rentalDatesRequired"));
       }
 
       const data = await calculateTotalPrice(
@@ -683,7 +688,7 @@ export default function OrdersTableSection() {
       );
 
       if (!data.ok) {
-        throw new Error(data.error || "Ошибка расчёта цены");
+        throw new Error(data.error || t("suites.priceCalcError"));
       }
 
       setAutoPricePreviewById((prev) => ({
@@ -701,10 +706,10 @@ export default function OrdersTableSection() {
         [orderId]: {
           loading: false,
           live: null,
-          error: error.message || "Ошибка расчёта",
+          error: error.message || t("suites.priceCalcError"),
         },
       }));
-      enqueueSnackbar(error.message || "Ошибка расчёта цены", {
+      enqueueSnackbar(error.message || t("suites.priceCalcError"), {
         variant: "error",
       });
     }
@@ -824,13 +829,17 @@ export default function OrdersTableSection() {
         t("table.carModel"),
         t("table.pickup"),
         t("table.return"),
-        t("table.customerName"),
+        t("table.customerName") || t("table.customer"),
         t("table.phone"),
         t("table.email"),
+        ...(SINGLE_PROPERTY_MODE
+          ? [t("suites.guests"), t("suites.children"), t("suites.transfer"), t("suites.babyBed")]
+          : []),
         t("table.price"),
         t("table.days"),
         t("table.confirm"),
         t("table.origin"),
+        ...(SINGLE_PROPERTY_MODE ? [t("suites.stub")] : []),
       ];
       const rows = filteredOrders.map((order) => [
         order.confirmed ? t("table.confirmed") : t("table.pending"),
@@ -841,14 +850,24 @@ export default function OrdersTableSection() {
         order.customerName || "",
         order.phone || "",
         order.email || "",
+        ...(SINGLE_PROPERTY_MODE
+          ? [
+              Number(order.guestsCount) || 0,
+              Number(order.childrenCount) || 0,
+              order.needsTransfer ? t("suites.yesShort") : t("suites.noShort"),
+              order.needsBabyBed ? t("suites.yesShort") : t("suites.noShort"),
+            ]
+          : []),
         getEffectivePrice(order),
         getOrderNumberOfDaysOrZero(order),
         order.confirmed ? t("table.confirmed") : t("table.pending"),
         order.my_order ? t("table.clientOrder") : t("table.adminOrder"),
+        ...(SINGLE_PROPERTY_MODE ? [order.offline ? t("suites.yesShort") : t("suites.noShort")] : []),
       ]);
-      const totalRow = Array(12).fill("");
+      const colCount = headers.length;
+      const totalRow = Array(colCount).fill("");
       totalRow[0] = t("table.sumTotal");
-      totalRow[8] = filteredSum;
+      totalRow[SINGLE_PROPERTY_MODE ? 12 : 8] = filteredSum;
       const aoa = [headers, ...rows, totalRow];
       const stamp = dayjs().tz(ATHENS_TZ).format("YYYY-MM-DD_HH-mm");
       await downloadOrdersTableXlsx(aoa, {
@@ -1146,6 +1165,11 @@ export default function OrdersTableSection() {
                 <TableCell sx={{ fontWeight: 700, minWidth: 150 }}>
                   {t("table.customer")}
                 </TableCell>
+                {SINGLE_PROPERTY_MODE && (
+                  <TableCell sx={{ fontWeight: 700, minWidth: 110 }}>
+                    {t("suites.guests")}
+                  </TableCell>
+                )}
                 <TableCell sx={{ fontWeight: 700, minWidth: 80, textAlign: "right" }}>
                   {t("table.price")}
                 </TableCell>
@@ -1157,7 +1181,7 @@ export default function OrdersTableSection() {
             <TableBody>
               {showTableSkeleton ? (
                 <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={SINGLE_PROPERTY_MODE ? 10 : 9} align="center" sx={{ py: 4 }}>
                     <CircularProgress size={32} />
                     <Typography variant="body2" sx={{ mt: 1 }}>
                       {t("table.loadingOrders")}
@@ -1166,7 +1190,7 @@ export default function OrdersTableSection() {
                 </TableRow>
               ) : paginatedOrders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={SINGLE_PROPERTY_MODE ? 10 : 9} align="center" sx={{ py: 4 }}>
                     <Typography variant="body2" color="text.secondary">
                       {t("table.noOrders")}
                     </Typography>
@@ -1441,6 +1465,30 @@ export default function OrdersTableSection() {
                         )}
                       </TableCell>
 
+                      {SINGLE_PROPERTY_MODE && (
+                        <TableCell>
+                          <Typography variant="body2">
+                            {Number(order.guestsCount) || 0}
+                            {Number(order.childrenCount) > 0
+                              ? t("suites.childrenShort", {
+                                  count: Number(order.childrenCount),
+                                })
+                              : ""}
+                          </Typography>
+                          <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
+                            {order.needsTransfer ? (
+                              <Chip size="small" label={t("suites.transfer")} sx={{ height: 20, fontSize: 11 }} />
+                            ) : null}
+                            {order.needsBabyBed ? (
+                              <Chip size="small" label={t("suites.babyBed")} sx={{ height: 20, fontSize: 11 }} />
+                            ) : null}
+                            {order.offline ? (
+                              <Chip size="small" label={t("suites.stub")} color="default" sx={{ height: 20, fontSize: 11 }} />
+                            ) : null}
+                          </Stack>
+                        </TableCell>
+                      )}
+
                       {/* Price - effective (editable override) + stored auto + live preview (no overwrite) */}
                       <TableCell align="right">
                         <Stack spacing={0.5} alignItems="flex-end">
@@ -1538,7 +1586,7 @@ export default function OrdersTableSection() {
                                 </>
                               );
                             })()}
-                            <Tooltip title="Показать автоматическую цену (без сохранения в заказ)">
+                            <Tooltip title={t("suites.showAutoPrice")}>
                               <IconButton
                                 size="small"
                                 onClick={() => handlePreviewAutoPrice(order)}

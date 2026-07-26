@@ -4,7 +4,7 @@
     "locations": "Locații",
     "terms": "Condiții",
     "contacts": "Contact",
-    "cars": "Mașini",
+    "cars": "Apartamente",
     "calendars": "Calendare",
     "table": "Tabel comenzi",
     "calendar": "Calendar",
@@ -163,7 +163,11 @@
     "unsavedChangesMessage": "Datele comenzii au fost modificate. Ieșire fără salvare, rămânere sau salvare și ieșire?",
     "leaveWithoutSaving": "Ieșire fără salvare",
     "leaveWithSaving": "Salvează și ieși",
-    "unsavedSaveBlocked": "Nu se poate salva: remediați conflictele sau erorile de validare."
+    "unsavedSaveBlocked": "Nu se poate salva: remediați conflictele sau erorile de validare.",
+    "checkInDate": "Data check-in",
+    "checkOutDate": "Data check-out",
+    "checkInTime": "Ora check-in",
+    "checkOutTime": "Ora check-out"
   },
   "car": {
     "viewDetails": "Mai multe detalii",
@@ -372,5 +376,11 @@
     ],
     "swap": "Inversează destinațiile",
     "distanceApprox": "Aprox.: ~{{km}} km · ~{{minutes}} min"
+  },
+  "table": {
+    "carModel": "Apartament",
+    "pickup": "Check-in",
+    "return": "Check-out",
+    "filterByCar": "Filtrează după apartament"
   }
 }

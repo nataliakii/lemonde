@@ -7,15 +7,18 @@ import React, {
   useRef,
   useDeferredValue,
 } from "react";
-import { Grid, Container, Typography } from "@mui/material";
+import { Grid, Container, Typography, Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
 import { useMainContext } from "../Context";
 import CarItemComponent from "./CarComponent/CarItemComponent";
+import ApartmentCard from "./ApartmentCard";
 import { carMatchesSearchQuery } from "@utils/carSearch";
+import { isApartmentAvailableForStay } from "@utils/stayAvailability";
+import { SINGLE_PROPERTY_MODE } from "@config/domain";
 
-const Section = styled("section")(({ theme }) => ({
+const Section = styled("section")(() => ({
   backgroundColor: "transparent",
   textAlign: "center",
 }));
@@ -30,8 +33,12 @@ function CarGrid() {
     selectedTransmission,
     selectedSeats,
     carSearchQuery,
+    stayCheckIn,
+    stayCheckOut,
+    ordersByCarId,
   } = useMainContext();
   const deferredSearchQuery = useDeferredValue(carSearchQuery || "");
+  const suitesMode = SINGLE_PROPERTY_MODE;
 
   const skipScrollOnFilterMount = useRef(true);
 
@@ -42,16 +49,19 @@ function CarGrid() {
     }
     if (typeof window === "undefined") return;
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-  }, [selectedClass, selectedTransmission, selectedSeats, deferredSearchQuery]);
+  }, [
+    selectedClass,
+    selectedTransmission,
+    selectedSeats,
+    deferredSearchQuery,
+    stayCheckIn,
+    stayCheckOut,
+  ]);
 
-  // --- Состояния для скидки ---
   const [discount, setDiscount] = useState(null);
   const [discountStart, setDiscountStart] = useState(null);
   const [discountEnd, setDiscountEnd] = useState(null);
-  
 
-  // Defer discount fetch to avoid blocking initial render
-  // Discount is non-critical for first paint (optional feature)
   const fetchDiscount = useCallback(async () => {
     try {
       const res = await fetch("/api/discount");
@@ -60,39 +70,39 @@ function CarGrid() {
       setDiscount(data.discount || null);
       setDiscountStart(data.startDate ? dayjs(data.startDate) : null);
       setDiscountEnd(data.endDate ? dayjs(data.endDate) : null);
-    } catch (err) {
-      // Ошибка загрузки скидки - тихо игнорируем
+    } catch {
+      /* optional */
     }
   }, []);
 
   useEffect(() => {
-    // Defer non-critical discount fetch after initial paint
-    // Use requestIdleCallback if available, otherwise setTimeout
     let timer;
-    if (typeof window !== 'undefined' && window.requestIdleCallback) {
-      timer = window.requestIdleCallback(() => {
-        fetchDiscount().catch(() => {
-          // Silently ignore errors - discount is optional
-        });
-      }, { timeout: 2000 });
+    if (typeof window !== "undefined" && window.requestIdleCallback) {
+      timer = window.requestIdleCallback(
+        () => {
+          fetchDiscount().catch(() => {});
+        },
+        { timeout: 2000 }
+      );
     } else {
       timer = setTimeout(() => {
-        fetchDiscount().catch(() => {
-          // Silently ignore errors - discount is optional
-        });
+        fetchDiscount().catch(() => {});
       }, 100);
     }
-    
+
     return () => {
-      if (typeof window !== 'undefined' && window.requestIdleCallback && typeof timer === 'number') {
+      if (
+        typeof window !== "undefined" &&
+        window.requestIdleCallback &&
+        typeof timer === "number"
+      ) {
         window.cancelIdleCallback(timer);
-      } else if (typeof timer !== 'undefined') {
+      } else if (typeof timer !== "undefined") {
         clearTimeout(timer);
       }
     };
   }, [fetchDiscount]);
 
-  // Мемоизируем фильтрацию и сортировку машин
   const filteredCars = useMemo(() => {
     return cars
       .filter((car) => {
@@ -103,25 +113,97 @@ function CarGrid() {
         const seatsOk =
           selectedSeats === "All" ||
           (seatCount != null && String(seatCount) === selectedSeats);
-        return (
+        const basicOk =
           (selectedClass === "All" || car.class === selectedClass) &&
           (selectedTransmission === "All" ||
             car.transmission === selectedTransmission) &&
           seatsOk &&
-          carMatchesSearchQuery(car, deferredSearchQuery)
-        );
+          carMatchesSearchQuery(car, deferredSearchQuery);
+
+        if (!basicOk) return false;
+
+        if (suitesMode && stayCheckIn && stayCheckOut) {
+          return isApartmentAvailableForStay(
+            ordersByCarId(car._id),
+            stayCheckIn,
+            stayCheckOut
+          );
+        }
+        return true;
       })
-      .sort((a, b) => a.model.localeCompare(b.model));
+      .sort((a, b) => {
+        const sa = Number(a.sort) || 0;
+        const sb = Number(b.sort) || 0;
+        if (sa !== sb) return sa - sb;
+        return String(a.model || "").localeCompare(String(b.model || ""));
+      });
   }, [
     selectedClass,
     selectedTransmission,
     selectedSeats,
     deferredSearchQuery,
     cars,
+    suitesMode,
+    stayCheckIn,
+    stayCheckOut,
+    ordersByCarId,
   ]);
 
   const noCarsMatchFilters =
     Array.isArray(cars) && cars.length > 0 && filteredCars.length === 0;
+
+  if (suitesMode) {
+    return (
+      <Box
+        sx={{
+          maxWidth: 1120,
+          mx: "auto",
+          mt: { xs: 1, md: 2 },
+          mb: 8,
+          px: { xs: 2, md: 3 },
+        }}
+      >
+        <Section>
+          {noCarsMatchFilters ? (
+            <Box sx={{ py: 6, px: 2, maxWidth: 520, mx: "auto" }}>
+              <Typography
+                component="p"
+                role="status"
+                aria-live="polite"
+                sx={{
+                  color: "text.secondary",
+                  textAlign: "center",
+                  lineHeight: 1.55,
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                {stayCheckIn && stayCheckOut
+                  ? "No suites available for these dates. Try different check-in or check-out."
+                  : t("catalog.noCarsMatchFilters")}
+              </Typography>
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: { xs: 3, md: 4.5 },
+              }}
+            >
+              {filteredCars?.map((car, index) => (
+                <ApartmentCard
+                  key={car._id}
+                  apartment={car}
+                  isFirst={index === 0}
+                  index={index}
+                />
+              ))}
+            </Box>
+          )}
+        </Section>
+      </Box>
+    );
+  }
 
   return (
     <Container sx={{ mt: 5 }}>

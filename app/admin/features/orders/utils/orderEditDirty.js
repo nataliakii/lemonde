@@ -151,7 +151,12 @@ export function buildAddOrderSnapshot(bookDates, orderDetails, startTime, endTim
     numberOfDays: Number(orderDetails.numberOfDays) || 0,
     confirmed: Boolean(orderDetails.confirmed),
     my_order: Boolean(orderDetails.my_order),
+    offline: Boolean(orderDetails.offline),
     ChildSeats: Number(orderDetails.ChildSeats) || 0,
+    guestsCount: Number(orderDetails.guestsCount) || 0,
+    childrenCount: Number(orderDetails.childrenCount) || 0,
+    needsTransfer: Boolean(orderDetails.needsTransfer),
+    needsBabyBed: Boolean(orderDetails.needsBabyBed),
     insurance: String(orderDetails.insurance || ""),
     franchiseOrder:
       orderDetails.franchiseOrder !== undefined &&

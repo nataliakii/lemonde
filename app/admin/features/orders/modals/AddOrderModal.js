@@ -12,6 +12,8 @@ import {
   Select,
   MenuItem,
   IconButton,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import {
@@ -65,10 +67,13 @@ import {
   buildAddOrderSnapshot,
   isAddOrderDirty,
 } from "@/app/admin/features/orders/utils/orderEditDirty";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 
 // Extend dayjs with plugins
 dayjs.extend(utc);
 dayjs.extend(timezone);
+
+const SUITES_STUB_PHONE = "+306999999999";
 
 const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
   const { fetchAndUpdateOrders, company } =
@@ -96,7 +101,7 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
       placeOut: "Nea Kallikratia",
       placeInDetail: "",
       placeOutDetail: "",
-      customerName: "",
+      customerName: SINGLE_PROPERTY_MODE ? t("suites.stubDefaultName") : "",
       phone: "",
       email: "",
       secondDriver: false,
@@ -107,17 +112,26 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
       numberOfDays: 0,
       confirmed: false,
       my_order: false,
-      offline: false,
+      // Suites: default to stub (offline) so phone is not required
+      offline: Boolean(SINGLE_PROPERTY_MODE),
       ChildSeats: 0,
+      guestsCount: 2,
+      childrenCount: 0,
+      needsTransfer: false,
+      needsBabyBed: false,
       insurance: "TPL",
       franchiseOrder: car?.franchise ?? 0,
       orderNumber: generateOrderNumber(),
       flightNumber: "",
       drivingLicenceUrls: [],
     }),
-    [car?.franchise]
+    [car?.franchise, t]
   );
 
+  /** @type {'stub' | 'real'} */
+  const [bookingKind, setBookingKind] = useState(
+    SINGLE_PROPERTY_MODE ? "stub" : "real"
+  );
   const [bookDates, setBookedDates] = useState({ start: null, end: null });
   const [orderDetails, setOrderDetails] = useState(() => getInitialOrderDetails());
   // Состояние для расчета стоимости
@@ -339,6 +353,7 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
     setDaysAndTotal(createEmptyBookingPriceSummary());
     setCalcLoading(false);
     setOrderDetails(getInitialOrderDetails());
+    setBookingKind(SINGLE_PROPERTY_MODE ? "stub" : "real");
   }, [
     open,
     getInitialBookDates,
@@ -404,12 +419,25 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
       return {
         ...prev,
         offline: nextOffline,
-        // Offline bookings should block dates like confirmed internal orders.
-        confirmed: nextOffline ? true : prev.confirmed,
         my_order: nextOffline ? false : prev.my_order,
       };
     });
   }, []);
+
+  const handleBookingKindChange = useCallback((_, next) => {
+    if (!next) return;
+    setBookingKind(next);
+    setOrderDetails((prev) => ({
+      ...prev,
+      offline: next === "stub",
+      my_order: false,
+      confirmed: next === "stub" ? prev.confirmed : prev.confirmed,
+      customerName:
+        next === "stub" && !String(prev.customerName || "").trim()
+          ? t("suites.stubDefaultName")
+          : prev.customerName,
+    }));
+  }, [t]);
 
   const parseTimeInput = useCallback((value, baseDate, fallbackTime) => {
     const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value || "");
@@ -439,6 +467,10 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
   );
 
 
+  const isStubMode =
+    SINGLE_PROPERTY_MODE &&
+    (bookingKind === "stub" || Boolean(orderDetails.offline));
+
   /**
    * @param {{ immediateCloseOnSuccess?: boolean }} [options]
    * @returns {Promise<boolean>} true если заказ успешно создан
@@ -449,10 +481,10 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
     setStatusMessage({ type: null, message: "" });
     
     // Валидация: цена должна быть рассчитана
-    if (calcLoading) {
+    if (calcLoading && !isStubMode) {
       setStatusMessage({
         type: "error",
-        message: "Дождитесь расчёта стоимости",
+        message: t("suites.waitPriceCalc"),
       });
       setLoadingState(false);
       return false;
@@ -462,49 +494,65 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
     if (bookDates.start && dayjs(bookDates.start).isBefore(dayjs(), "day")) {
       setStatusMessage({
         type: "error",
-        message: "Дата начала аренды не может быть раньше сегодняшнего дня",
+        message: SINGLE_PROPERTY_MODE
+          ? t("suites.checkInNotInPast")
+          : t("suites.rentalStartNotInPast"),
       });
       setLoadingState(false);
       return false;
     }
+
+    const isStub = isStubMode;
 
     const phoneTrim = (orderDetails.phone || "").trim();
-    if (!phoneTrim || !isValidInternationalPhone(phoneTrim)) {
+    // Stub: phone optional (placeholder applied on submit / API)
+    if (!isStub) {
+      if (!phoneTrim || !isValidInternationalPhone(phoneTrim)) {
+        setStatusMessage({
+          type: "error",
+          message: phoneTrim ? t("order.phoneInvalid") : t("order.required"),
+        });
+        setLoadingState(false);
+        return false;
+      }
+    } else if (phoneTrim && !isValidInternationalPhone(phoneTrim)) {
       setStatusMessage({
         type: "error",
-        message: phoneTrim ? t("order.phoneInvalid") : t("order.required"),
+        message: t("order.phoneInvalid"),
       });
       setLoadingState(false);
       return false;
     }
 
-    const pin = String(orderDetails.placeIn || "").trim();
-    const pout = String(orderDetails.placeOut || "").trim();
-    const cin = canonicalizeCustomerBookingLocation(pin);
-    const cout = canonicalizeCustomerBookingLocation(pout);
-    if (
-      cin &&
-      isThessalonikiCityBookingLocation(cin) &&
-      String(orderDetails.placeInDetail || "").trim().length < 3
-    ) {
-      setStatusMessage({
-        type: "error",
-        message: t("order.thessalonikiDetailRequired"),
-      });
-      setLoadingState(false);
-      return false;
-    }
-    if (
-      cout &&
-      isThessalonikiCityBookingLocation(cout) &&
-      String(orderDetails.placeOutDetail || "").trim().length < 3
-    ) {
-      setStatusMessage({
-        type: "error",
-        message: t("order.thessalonikiDetailRequired"),
-      });
-      setLoadingState(false);
-      return false;
+    if (!SINGLE_PROPERTY_MODE) {
+      const pin = String(orderDetails.placeIn || "").trim();
+      const pout = String(orderDetails.placeOut || "").trim();
+      const cin = canonicalizeCustomerBookingLocation(pin);
+      const cout = canonicalizeCustomerBookingLocation(pout);
+      if (
+        cin &&
+        isThessalonikiCityBookingLocation(cin) &&
+        String(orderDetails.placeInDetail || "").trim().length < 3
+      ) {
+        setStatusMessage({
+          type: "error",
+          message: t("order.thessalonikiDetailRequired"),
+        });
+        setLoadingState(false);
+        return false;
+      }
+      if (
+        cout &&
+        isThessalonikiCityBookingLocation(cout) &&
+        String(orderDetails.placeOutDetail || "").trim().length < 3
+      ) {
+        setStatusMessage({
+          type: "error",
+          message: t("order.thessalonikiDetailRequired"),
+        });
+        setLoadingState(false);
+        return false;
+      }
     }
 
     // 🎯 Используем athensTime utilities для timezone-корректного создания времени
@@ -526,13 +574,20 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
     const finalTotalPrice = orderDetails.totalPrice > 0 
       ? orderDetails.totalPrice 
       : daysAndTotal.totalPrice;
+
+    const pin = String(orderDetails.placeIn || "").trim();
+    const pout = String(orderDetails.placeOut || "").trim();
+    const cin = canonicalizeCustomerBookingLocation(pin);
+    const cout = canonicalizeCustomerBookingLocation(pout);
     
     const data = {
       carId: car?._id?.toString?.() || "",
       regNumber: car?.regNumber,
       carNumber: car?.carNumber,
-      customerName: orderDetails.customerName,
-      phone: phoneTrim,
+      customerName:
+        String(orderDetails.customerName || "").trim() ||
+        (isStub ? t("suites.stubDefaultName") : ""),
+      phone: phoneTrim || (isStub ? SUITES_STUB_PHONE : ""),
       email: orderDetails.email,
       secondDriver: Boolean(orderDetails.secondDriver),
       Viber: orderDetails.Viber,
@@ -542,14 +597,18 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
       timeOut: timeOutUTC,
       rentalStartDate: dayjs(bookDates.start).toDate(), // Дата без времени
       rentalEndDate: dayjs(bookDates.end).toDate(), // Дата без времени
-      placeIn: cin || orderDetails.placeIn,
-      placeOut: cout || orderDetails.placeOut,
+      placeIn: cin || orderDetails.placeIn || "Nea Kallikratia",
+      placeOut: cout || orderDetails.placeOut || "Nea Kallikratia",
       placeInDetail: String(orderDetails.placeInDetail || "").trim(),
       placeOutDetail: String(orderDetails.placeOutDetail || "").trim(),
-      confirmed: orderDetails.confirmed,
+      confirmed: Boolean(orderDetails.confirmed),
       my_order: orderDetails.my_order,
-      offline: Boolean(orderDetails.offline),
+      offline: isStub || Boolean(orderDetails.offline),
       ChildSeats: orderDetails.ChildSeats,
+      guestsCount: Number(orderDetails.guestsCount) || 0,
+      childrenCount: Number(orderDetails.childrenCount) || 0,
+      needsTransfer: Boolean(orderDetails.needsTransfer),
+      needsBabyBed: Boolean(orderDetails.needsBabyBed),
       insurance: orderDetails.insurance,
       franchiseOrder: orderDetails.franchiseOrder,
       orderNumber: orderDetails.orderNumber,
@@ -565,7 +624,7 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
 
       // Унифицированная обработка ответов addOrderNew
       if (response.status === "success") {
-        const msg = response?.data?.message || "Заказ успешно добавлен";
+        const msg = response?.data?.message || t("suites.orderAdded");
         setStatusMessage({ type: "success", message: msg });
         setUpdateStatus({ type: 200, message: msg }); // type: 200 для обновления календаря
         // Явный вызов обновления заказов для BigCalendar
@@ -585,21 +644,21 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
       }
 
       if (response.status === "startEndConflict") {
-        const msg = response?.message || "Конфликт старт/финиш дат";
+        const msg = response?.message || t("suites.datesConflict");
         setStatusMessage({ type: "warning", message: msg });
         setUpdateStatus({ type: 200, message: msg });
         return false;
       }
 
       if (response.status === "pending") {
-        const msg = response?.message || "Есть неподтвержденные пересечения";
+        const msg = response?.message || t("suites.pendingOverlaps");
         setStatusMessage({ type: "warning", message: msg });
         setUpdateStatus({ type: 202, message: msg });
         return false;
       }
 
       if (response.status === "conflict") {
-        const msg = response?.message || "Даты уже заняты и недоступны";
+        const msg = response?.message || t("suites.datesUnavailable");
         setStatusMessage({ type: "error", message: msg });
         setUpdateStatus({ type: 409, message: msg });
         return false;
@@ -607,7 +666,7 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
 
       // status === 'error' или неожиданный статус
       {
-        const msg = response?.message || "Не удалось добавить заказ";
+        const msg = response?.message || t("suites.orderAddFailed");
         setStatusMessage({ type: "error", message: msg });
         setUpdateStatus({ type: 400, message: msg });
         return false;
@@ -619,12 +678,12 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
         type: "error",
         message:
           error?.message ||
-          "Не удалось добавить заказ. Пожалуйста, проверьте данные.",
+          t("suites.orderAddFailedCheck"),
       });
 
       setUpdateStatus({
         type: 400,
-        message: error?.message || "Ошибка сервера",
+        message: error?.message || t("suites.serverError"),
       });
       return false;
     } finally {
@@ -712,8 +771,33 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
       setBookedDates((dates) => ({ ...dates, end: normalized }));
     };
 
+    const startLabel = SINGLE_PROPERTY_MODE
+      ? t("suites.checkInDate")
+      : t("order.pickupDate");
+    const endLabel = SINGLE_PROPERTY_MODE
+      ? t("suites.checkOutDate")
+      : t("order.returnDate");
+    const startTimeLabel = SINGLE_PROPERTY_MODE
+      ? t("suites.checkInTime")
+      : t("order.pickupTime");
+    const endTimeLabel = SINGLE_PROPERTY_MODE
+      ? t("suites.checkOutTime")
+      : t("order.returnTime");
+
     return (
       <Box sx={{ mb: 2 }}>
+        {SINGLE_PROPERTY_MODE && (
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={bookingKind}
+            onChange={handleBookingKindChange}
+            sx={{ mb: 1.5 }}
+          >
+            <ToggleButton value="stub">{t("suites.stub")}</ToggleButton>
+            <ToggleButton value="real">{t("suites.realOrder")}</ToggleButton>
+          </ToggleButtonGroup>
+        )}
         {/* Date fields */}
         <Box
           sx={{
@@ -724,14 +808,14 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
           }}
         >
           <BookingEditableDateField
-            label={t("order.pickupDate")}
+            label={startLabel}
             value={bookDates.start || ""}
             onChange={(e) => handlePickupDateChange(e.target.value)}
             sx={{ flex: 1 }}
             inputProps={{ min: dayjs().format("YYYY-MM-DD") }}
           />
           <BookingEditableDateField
-            label={t("order.returnDate")}
+            label={endLabel}
             value={bookDates.end || ""}
             onChange={(e) => handleReturnDateChange(e.target.value)}
             sx={{ flex: 1 }}
@@ -745,30 +829,45 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
         {/* Time fields */}
         <Box sx={{ display: "flex", gap: 2, mb: 1 }}>
           <BookingTimeField
-            label={t("order.pickupTime")}
+            label={startTimeLabel}
             value={startTime.format("HH:mm")}
             onChange={(e) => handleStartTimeChange(e.target.value)}
             sx={{ flex: 1 }}
           />
           <BookingTimeField
-            label={t("order.returnTime")}
+            label={endTimeLabel}
             value={endTime.format("HH:mm")}
             onChange={(e) => handleEndTimeChange(e.target.value)}
             sx={{ flex: 1 }}
           />
         </Box>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={Boolean(orderDetails.offline)}
-              onChange={toggleOfflineStatus}
-              size="small"
-            />
-          }
-          label="Офлайн (не через сайт)"
-          sx={{ mb: 1, alignSelf: "flex-start" }}
-        />
-        {/* Location fields */}
+        {SINGLE_PROPERTY_MODE ? (
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={Boolean(orderDetails.confirmed)}
+                onChange={toggleConfirmedStatus}
+                size="small"
+              />
+            }
+            label={t("suites.confirmed")}
+            sx={{ mb: 1, alignSelf: "flex-start" }}
+          />
+        ) : (
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={Boolean(orderDetails.offline)}
+                onChange={toggleOfflineStatus}
+                size="small"
+              />
+            }
+            label={t("suites.offlineOffSite")}
+            sx={{ mb: 1, alignSelf: "flex-start" }}
+          />
+        )}
+        {/* Location fields — car rental only */}
+        {!SINGLE_PROPERTY_MODE && (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 1 }}>
           <Box
             sx={{
@@ -867,11 +966,109 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
               />
             )}
         </Box>
+        )}
       </Box>
     );
   };
 
   const renderCustomerSection = () => {
+    if (SINGLE_PROPERTY_MODE) {
+      const isStub = bookingKind === "stub";
+      return (
+        <Box sx={{ mb: 2, mt: 0 }}>
+          {!isStub && (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                gap: { xs: 1, sm: 2 },
+                mb: 1.5,
+                flexWrap: "wrap",
+              }}
+            >
+              <TextField
+                label={t("suites.guestsCount")}
+                type="number"
+                size="small"
+                value={orderDetails.guestsCount ?? 0}
+                onChange={(e) =>
+                  handleFieldChange("guestsCount", Math.max(0, Number(e.target.value) || 0))
+                }
+                inputProps={{ min: 0, max: 20 }}
+                sx={{ width: { xs: "100%", sm: 140 } }}
+              />
+              <TextField
+                label={t("suites.childrenCount")}
+                type="number"
+                size="small"
+                value={orderDetails.childrenCount ?? 0}
+                onChange={(e) =>
+                  handleFieldChange(
+                    "childrenCount",
+                    Math.max(0, Number(e.target.value) || 0)
+                  )
+                }
+                inputProps={{ min: 0, max: 20 }}
+                sx={{ width: { xs: "100%", sm: 140 } }}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={Boolean(orderDetails.needsTransfer)}
+                    onChange={(e) =>
+                      handleFieldChange("needsTransfer", e.target.checked)
+                    }
+                    size="small"
+                  />
+                }
+                label={t("suites.needsTransfer")}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={Boolean(orderDetails.needsBabyBed)}
+                    onChange={(e) =>
+                      handleFieldChange("needsBabyBed", e.target.checked)
+                    }
+                    size="small"
+                  />
+                }
+                label={t("suites.needsBabyBed")}
+              />
+            </Box>
+          )}
+          <TextField
+            label={isStub ? t("suites.noteOrName") : t("suites.guestName")}
+            size="small"
+            fullWidth
+            value={orderDetails.customerName || ""}
+            onChange={(e) => handleFieldChange("customerName", e.target.value)}
+            sx={{ mb: 1 }}
+          />
+          {!isStub && (
+            <>
+              <TextField
+                label={t("suites.phone")}
+                size="small"
+                fullWidth
+                value={orderDetails.phone || ""}
+                onChange={(e) => handleFieldChange("phone", e.target.value)}
+                sx={{ mb: 1 }}
+              />
+              <TextField
+                label={t("suites.email")}
+                size="small"
+                fullWidth
+                value={orderDetails.email || ""}
+                onChange={(e) => handleFieldChange("email", e.target.value)}
+                sx={{ mb: 1 }}
+              />
+            </>
+          )}
+        </Box>
+      );
+    }
+
     const insuranceOptions =
       t("order.insuranceOptions", { returnObjects: true }) || [];
 
@@ -1199,8 +1396,9 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
               !bookDates.end ||
               !startTime ||
               !endTime ||
-              !orderDetails.customerName ||
-              !orderDetails.phone
+              // Stub: name optional (defaults to «Заглушка»), phone never required
+              (!isStubMode && !String(orderDetails.customerName || "").trim()) ||
+              (!isStubMode && !String(orderDetails.phone || "").trim())
             }
             label={t("order.CompleteBook")}
           />

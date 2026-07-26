@@ -14,13 +14,23 @@ describe("offline order helpers", () => {
     expect(isOrderDateBlocking(null)).toBe(false);
   });
 
-  test("getOrderColor returns OFFLINE before confirmed matrix", () => {
+  test("getOrderColor returns OFFLINE for confirmed offline stub", () => {
     const color = getOrderColor({
       offline: true,
       confirmed: true,
       my_order: true,
     });
     expect(color.key).toBe(ORDER_COLORS.OFFLINE.key);
+    expect(color.hatch).toBe(true);
+  });
+
+  test("getOrderColor returns OFFLINE_PENDING with hatch for unconfirmed offline stub", () => {
+    const color = getOrderColor({
+      offline: true,
+      confirmed: false,
+      my_order: false,
+    });
+    expect(color.key).toBe(ORDER_COLORS.OFFLINE_PENDING.key);
     expect(color.hatch).toBe(true);
   });
 

@@ -26,13 +26,12 @@ function Feed({ children, ...props }) {
 
   const shouldShowFooter = !props.isAdmin; // Скрываем Footer, если isAdmin === true
 
-  // Admin AppBar is fixed at 60px — clear it so page titles are not hidden.
-  // Cars page still adds its own offset for the fixed AdminTopBar below.
+  // Public AppBar is fixed at 60px — keep content flush (no light gap under header).
   const mainPt = useMemo(
     () =>
       props.isAdmin
         ? { xs: "60px", md: "60px" }
-        : { xs: "110px", md: "90px" },
+        : { xs: "60px", md: "60px" },
     [props.isAdmin]
   );
 

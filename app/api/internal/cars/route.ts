@@ -176,7 +176,7 @@ export async function GET(request: NextRequest) {
           slug,
           priceFrom: getRepresentativePrice(doc.pricingTiers),
           image: typeof doc.photoUrl === "string" ? doc.photoUrl : null,
-          bookingUrl: `${baseUrl}/apartments/${encodeURIComponent(slug)}`,
+          bookingUrl: `${baseUrl}/en/apartments/${encodeURIComponent(slug)}`,
           transmission: transmission || "",
           fueltype:
             typeof doc.fueltype === "string" && doc.fueltype

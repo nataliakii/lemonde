@@ -4,10 +4,9 @@ import { useLayoutEffect, useState } from "react";
 import Image from "next/image";
 import { Backdrop, Fade, Box, keyframes } from "@mui/material";
 
-// 🔁 Вращение через MUI keyframes
-const spin = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+const softPulse = keyframes`
+  0%, 100% { opacity: 0.72; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1); }
 `;
 
 export default function Preloader({ loading }) {
@@ -28,8 +27,8 @@ export default function Preloader({ loading }) {
         open={loading || visible}
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 999,
-          backgroundColor: "rgba(255,255,255,0.85)",
-          color: "#000",
+          backgroundColor: "rgba(255, 252, 250, 0.92)",
+          color: "#1A1612",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -37,25 +36,25 @@ export default function Preloader({ loading }) {
           transition: "background-color 0.6s ease",
         }}
       >
-        {/* Контейнер с плавным появлением и вращением */}
         <Fade in={loading} timeout={400}>
           <Box
             sx={{
-              width: 100,
-              height: 100,
+              width: 112,
+              height: 112,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              animation: `${spin} 1.3s linear infinite`,
-              filter: "drop-shadow(0 0 6px rgba(0,0,0,0.3))",
+              animation: `${softPulse} 1.4s ease-in-out infinite`,
+              filter: "drop-shadow(0 4px 16px rgba(26,22,18,0.18))",
             }}
           >
             <Image
-              src="/favicon.png"
-              alt="CarsNK"
-              width={90}
-              height={90}
+              src="/logo-mark.png"
+              alt="Le Monde Suites"
+              width={96}
+              height={96}
               priority
+              style={{ objectFit: "contain" }}
             />
           </Box>
         </Fade>

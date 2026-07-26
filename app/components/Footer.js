@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useMainContext } from "@app/Context";
 import { withLocalePrefix } from "@domain/locationSeo/locationSeoService";
 import BrandLogo from "@app/components/BrandLogo";
+import { SINGLE_PROPERTY_MODE } from "@config/domain";
 
 const CallIcon = dynamic(() => import("@mui/icons-material/Call"), { ssr: false });
 const EmailIcon = dynamic(() => import("@mui/icons-material/Email"), { ssr: false });
@@ -88,14 +89,24 @@ function Footer() {
   const currentYear = new Date().getFullYear();
   const { t } = useTranslation();
 
-  const name = company?.name || "Le Monde Suites";
-  const slogan = company?.slogan || "Nea Kallikratia · Halkidiki";
+  const name = SINGLE_PROPERTY_MODE
+    ? "Le Monde Suites"
+    : company?.name || "Le Monde Suites";
+  const rawSlogan = company?.slogan || "";
+  const slogan = SINGLE_PROPERTY_MODE
+    ? rawSlogan && !/car rental|aggregator/i.test(rawSlogan)
+      ? rawSlogan
+      : "Apartment stays · Nea Kallikratia · Halkidiki"
+    : rawSlogan || "Nea Kallikratia · Halkidiki";
   const tel = company?.tel || "";
   const tel2 = company?.tel2 || "";
   const email = company?.email || "nataliakireewa@gmail.com";
-  const address =
-    company?.address ||
-    "Leoforos Nikis, Kato Galini, Nea Kallikratia 630 80, Greece";
+  const address = SINGLE_PROPERTY_MODE
+    ? company?.address && !/Antonioy Kelesi/i.test(company.address)
+      ? company.address
+      : "Leoforos Nikis, Kato Galini, Nea Kallikratia 630 80, Greece"
+    : company?.address ||
+      "Leoforos Nikis, Kato Galini, Nea Kallikratia 630 80, Greece";
 
   const localeLink = (path) => withLocalePrefix(lang || "en", path);
   const homeHref = localeLink("/");

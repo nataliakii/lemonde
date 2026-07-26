@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { getSeoConfig } from "@config/seo";
 import {
   buildCarSeoText,
+  getApartmentAlternates,
+  getApartmentPath,
   getCarAlternates,
+  getCarPath,
   getHubAlternates,
   getHubSeo,
   getLocationAlternatesById,
@@ -23,6 +26,7 @@ import { getAirportPrioritySeo, isPriorityAirportLocation } from "./airportPrior
 import { buildHreflangAlternates } from "./hreflangBuilder";
 import { getRobotsForPath } from "./indexingPolicy";
 import { toAbsoluteUrl } from "./urlBuilder";
+import { SINGLE_PROPERTY_MODE } from "@config/domain";
 
 const OG_LOCALE_MAP: Record<string, string> = {
   en: "en_US",
@@ -83,9 +87,9 @@ function buildBaseMetadata(input: {
       siteName: seoConfig.siteName,
       images: [
         {
-          url: `${seoConfig.baseUrl}/favicon.png`,
-          width: 1200,
-          height: 630,
+          url: `${seoConfig.baseUrl}/logo-mark.png`,
+          width: 1024,
+          height: 1024,
           alt: seoConfig.siteName,
         },
       ],
@@ -94,7 +98,7 @@ function buildBaseMetadata(input: {
       card: "summary_large_image",
       title: input.title,
       description: input.description,
-      images: [`${seoConfig.baseUrl}/favicon.png`],
+      images: [`${seoConfig.baseUrl}/logo-mark.png`],
     },
     robots,
   };
@@ -164,7 +168,16 @@ export function buildCarMetadata(input: {
   seats?: string;
 }): Metadata {
   const locale = normalizeLocale(input.localeCandidate);
-  const canonicalPath = `/${locale}/cars/${encodeURIComponent(input.carSlug)}`;
+  if (SINGLE_PROPERTY_MODE) {
+    return buildApartmentMetadata({
+      localeCandidate: locale,
+      apartmentSlug: input.carSlug,
+      apartmentName: input.carModel,
+      locationName: input.locationName,
+      guests: input.seats,
+    });
+  }
+  const canonicalPath = getCarPath(locale, input.carSlug);
   const carSeo = buildCarSeoText(locale, {
     carModel: input.carModel,
     locationName: input.locationName,
@@ -178,6 +191,30 @@ export function buildCarMetadata(input: {
     description: carSeo.seoDescription,
     canonicalPath,
     alternatePathsByLocale: getCarAlternates(input.carSlug),
+    locale,
+  });
+}
+
+export function buildApartmentMetadata(input: {
+  localeCandidate: string | undefined | null;
+  apartmentSlug: string;
+  apartmentName: string;
+  locationName: string;
+  guests?: string;
+}): Metadata {
+  const locale = normalizeLocale(input.localeCandidate);
+  const name = input.apartmentName || input.apartmentSlug;
+  const locationName = input.locationName || "Nea Kallikratia";
+  const guestsPart = input.guests ? ` · up to ${input.guests} guests` : "";
+  const title = name;
+  const description = `${name} at Le Monde Suites in ${locationName}${guestsPart}. Browse photos and request your stay.`;
+  const canonicalPath = getApartmentPath(locale, input.apartmentSlug);
+
+  return buildBaseMetadata({
+    title,
+    description,
+    canonicalPath,
+    alternatePathsByLocale: getApartmentAlternates(input.apartmentSlug),
     locale,
   });
 }

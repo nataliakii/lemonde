@@ -31,16 +31,16 @@ export default function BrandLogo({
           flexShrink: 0,
           borderRadius: "50%",
           overflow: "hidden",
-          boxShadow: "0 0 0 1.5px rgba(201,162,39,0.45)",
+          position: "relative",
         }}
       >
         <Image
-          src="/logo-mark.svg"
+          src="/logo-mark.png"
           alt="Le Monde Suites"
           width={markSize}
           height={markSize}
           priority
-          style={{ display: "block", width: "100%", height: "100%" }}
+          style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
         />
       </Box>
       {showWordmark && (

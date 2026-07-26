@@ -5,4 +5,5 @@
  */
 
 export { default as AddImageComponent } from "./AddImageComponent";
+export { default as SuiteGalleryEditor } from "./SuiteGalleryEditor";
 

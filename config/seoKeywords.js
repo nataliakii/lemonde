@@ -282,6 +282,20 @@ export function getKeywordsForLanguages(langs) {
     .flatMap((lang) => seoKeywords[lang]);
 }
 
+/** Le Monde Suites — apartment keywords for meta tags */
+const suitesPrimaryKeywords = [
+  "Le Monde Suites",
+  "apartments Nea Kallikratia",
+  "apartment stays Halkidiki",
+  "suites Nea Kallikratia",
+  "Halkidiki apartments",
+  "Le Monde Suites Halkidiki",
+  "апартаменты Неа Калликратия",
+  "апартаменти Халкідіки",
+  "Apartments Chalkidiki",
+  "διαμερίσματα Νέα Καλλικράτεια",
+];
+
 /**
  * Get primary keywords (limited set for meta tag)
  * Takes first N keywords from each language
@@ -289,6 +303,15 @@ export function getKeywordsForLanguages(langs) {
  * @returns {string[]} Primary keywords
  */
 export function getPrimaryKeywords(perLang = 5) {
+  try {
+    // eslint-disable-next-line global-require
+    const { SINGLE_PROPERTY_MODE } = require("@config/domain");
+    if (SINGLE_PROPERTY_MODE) {
+      return suitesPrimaryKeywords.slice(0, Math.max(8, perLang * 2));
+    }
+  } catch {
+    /* ignore */
+  }
   return Object.values(seoKeywords).flatMap((keywords) =>
     keywords.slice(0, perLang)
   );

@@ -1,4 +1,5 @@
 "use client";
+import { useTranslation } from "react-i18next";
 import React, { useMemo } from "react";
 import { Table, TableBody, TableRow, useTheme } from "@mui/material";
 import { CalendarFirstColumn } from "../ui";
@@ -9,6 +10,7 @@ import CalendarHeader from "./CalendarHeader";
  * Таблица календаря: sticky header, первая колонка, строки по машинам.
  */
 export default function CalendarGrid(props) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const data = props?.data ?? props;
   const actions = props?.actions ?? props;
@@ -48,6 +50,7 @@ export default function CalendarGrid(props) {
     selectedMoveOrder,
     selectedOrderDates,
     calendarRef,
+    rangeSelectDraft,
   } = data;
   const {
     handleEditCar,
@@ -103,7 +106,7 @@ export default function CalendarGrid(props) {
             <CalendarFirstColumn
               ref={index === 0 ? setMeasurementRef : null}
               onClick={() => handleEditCar(car)}
-              title="Нажмите для редактирования информации об апартаменте"
+              title={t("suites.editApartmentTitle")}
               onDragOver={
                 enableOrderDrag
                   ? (e) => handleRowDragOver(e, car)
@@ -169,6 +172,7 @@ export default function CalendarGrid(props) {
               onRowDragOver={handleRowDragOver}
               onRowDragLeave={handleRowDragLeave}
               onRowDrop={handleRowDrop}
+              rangeSelectDraft={rangeSelectDraft}
             />
           </TableRow>
         ))}

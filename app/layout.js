@@ -31,7 +31,7 @@ const organizationSchema = {
   "@type": "Organization",
   name: seoConfig.siteName,
   url: seoConfig.baseUrl,
-  logo: `${seoConfig.baseUrl}/favicon.png`,
+  logo: `${seoConfig.baseUrl}/logo-mark.png`,
   sameAs: [
     seoConfig.social.facebook,
     seoConfig.social.instagram,
@@ -67,9 +67,9 @@ export const metadata = {
     description: seoConfig.defaultDescription,
     images: [
       {
-        url: `${seoConfig.baseUrl}/favicon.png`,
-        width: 1200,
-        height: 630,
+        url: `${seoConfig.baseUrl}/logo-mark.png`,
+        width: 1024,
+        height: 1024,
         alt: seoConfig.siteName,
       },
     ],
@@ -78,7 +78,7 @@ export const metadata = {
     card: "summary_large_image",
     title: seoConfig.defaultTitle,
     description: seoConfig.defaultDescription,
-    images: [`${seoConfig.baseUrl}/favicon.png`],
+    images: [`${seoConfig.baseUrl}/logo-mark.png`],
   },
   robots: {
     index: true,
@@ -97,11 +97,11 @@ export const metadata = {
   icons: {
     icon: [
       { url: "/favicon.png", type: "image/png" },
-      { url: "/favicon.png", type: "image/png", sizes: "32x32" },
-      { url: "/favicon.png", type: "image/png", sizes: "16x16" },
+      { url: "/favicon-32.png", type: "image/png", sizes: "32x32" },
+      { url: "/logo-mark.png", type: "image/png", sizes: "192x192" },
     ],
     apple: [
-      { url: "/favicon.png", type: "image/png" },
+      { url: "/apple-icon.png", type: "image/png", sizes: "180x180" },
     ],
     shortcut: "/favicon.png",
   },

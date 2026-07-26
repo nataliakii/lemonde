@@ -93,7 +93,7 @@ function BigCalendarLayout({
         <Box data-bigcalendar-legend sx={calendarStyles.legend}>
           <LegendCalendarAdmin
             showBufferControls={showBufferInLegend}
-            showDeliveryInfo={showDeliveryInLegend}
+            showDeliveryInfo={!SINGLE_PROPERTY_MODE && showDeliveryInLegend}
           />
         </Box>
       )}
@@ -416,6 +416,8 @@ export default function CalendarContainer({
   const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
   const [selectedCarForAdd, setSelectedCarForAdd] = useState(null);
   const [selectedDateForAdd, setSelectedDateForAdd] = useState(null);
+  /** Suites: first click = check-in; second = check-out → open AddOrderModal with [start, end] */
+  const [rangeSelectDraft, setRangeSelectDraft] = useState(null);
   const [selectedCarForEdit, setSelectedCarForEdit] = useState(null);
   const [isEditCarOpen, setIsEditCarOpen] = useState(false);
   const [activeCell, setActiveCell] = useState({ carIndex: 0, dayIndex: 0 });
@@ -608,7 +610,7 @@ export default function CalendarContainer({
     handleRowDrop,
   } = moveModeHook;
 
-  const enableOrderDrag = !isPortraitPhone;
+  const enableOrderDrag = true; // all moves via drag-and-drop (car/apartment + date shift)
 
   // =======================
   // 📦 Orders handlers
@@ -710,11 +712,46 @@ export default function CalendarContainer({
       // Если в режиме перемещения - не открываем AddOrderModal
       if (moveMode) return;
 
+      if (!SINGLE_PROPERTY_MODE) {
+        setRangeSelectDraft(null);
+        setSelectedCarForAdd(car);
+        setSelectedDateForAdd(dateStr);
+        setIsAddOrderOpen(true);
+        return;
+      }
+
+      // Suites: 2-click range — first = check-in, second = check-out
+      const carId = String(car?._id || "");
+      if (
+        !rangeSelectDraft ||
+        String(rangeSelectDraft.carId) !== carId
+      ) {
+        setRangeSelectDraft({ carId, start: dateStr });
+        enqueueSnackbar(t("suites.checkInSelected"), {
+          variant: "info",
+          autoHideDuration: 4500,
+        });
+        return;
+      }
+
+      let start = rangeSelectDraft.start;
+      let end = dateStr;
+      if (dayjs(end).isBefore(dayjs(start), "day")) {
+        const tmp = start;
+        start = end;
+        end = tmp;
+      }
+      // Same day → one night (checkout next day)
+      if (dayjs(end).isSame(dayjs(start), "day")) {
+        end = dayjs(start).add(1, "day").format("YYYY-MM-DD");
+      }
+
+      setRangeSelectDraft(null);
       setSelectedCarForAdd(car);
-      setSelectedDateForAdd(dateStr);
+      setSelectedDateForAdd([start, end]);
       setIsAddOrderOpen(true);
     },
-    [moveMode]
+    [moveMode, rangeSelectDraft, enqueueSnackbar, t]
   );
 
   const hasBlockingModal = useMemo(
@@ -799,6 +836,10 @@ export default function CalendarContainer({
         }
         case "Escape": {
           e.preventDefault();
+          if (rangeSelectDraft) {
+            setRangeSelectDraft(null);
+            return;
+          }
           if (open) tryCloseEditModal();
           setHeaderOrdersModal((prev) => ({ ...prev, open: false }));
           setIsAddOrderOpen(false);
@@ -831,6 +872,7 @@ export default function CalendarContainer({
       moveMode,
       exitMoveMode,
       setActiveCellClamped,
+      rangeSelectDraft,
     ]
   );
 
@@ -1006,6 +1048,7 @@ export default function CalendarContainer({
       selectedMoveOrder,
       selectedOrderDates,
       calendarRef,
+      rangeSelectDraft,
     }),
     [
       headerData,
@@ -1025,6 +1068,7 @@ export default function CalendarContainer({
       orderToMove,
       selectedMoveOrder,
       selectedOrderDates,
+      rangeSelectDraft,
     ]
   );
 

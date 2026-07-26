@@ -98,7 +98,7 @@ export const ORDER_COLORS = {
     labelEn: "Pending (admin)",
   },
 
-  // Офлайн-бронь (вне сайта) — slate + hatch in calendar
+  // Заглушка / офлайн — всегда со штриховкой в календаре
   OFFLINE: {
     key: "OFFLINE",
     main: "#5C6BC0",
@@ -106,21 +106,66 @@ export const ORDER_COLORS = {
     dark: "#3949AB",
     text: "#283593",
     bg: alpha("#5C6BC0", 0.2),
-    label: "Офлайн (не через сайт)",
-    labelEn: "Offline (off-site)",
+    label: "Заглушка",
+    labelEn: "Stub (offline)",
+    hatch: true,
+  },
+  /** Unconfirmed stub — amber-pending tone + hatch */
+  OFFLINE_PENDING: {
+    key: "OFFLINE_PENDING",
+    main: "#8D6E63",
+    light: "#A1887F",
+    dark: "#6D4C41",
+    text: "#4E342E",
+    bg: alpha("#8D6E63", 0.22),
+    label: "Заглушка (ожидает)",
+    labelEn: "Stub (pending)",
     hatch: true,
   },
 };
 
-/** CSS repeating gradient for offline calendar cells */
-export function getOfflineHatchBackground(baseColor = ORDER_COLORS.OFFLINE.main) {
+/**
+ * Distinct diagonal hatch for stubs/offline — high-contrast white stripes.
+ * @param {string} [baseColor]
+ * @param {{ dense?: boolean }} [opts]
+ */
+export function getOfflineHatchBackground(
+  baseColor = ORDER_COLORS.OFFLINE.main,
+  opts = {}
+) {
+  const stripe = opts.dense ? 4 : 5;
+  const gap = opts.dense ? 9 : 11;
   return `repeating-linear-gradient(
     -45deg,
-    ${baseColor},
-    ${baseColor} 6px,
-    rgba(255,255,255,0.28) 6px,
-    rgba(255,255,255,0.28) 10px
+    ${baseColor} 0px,
+    ${baseColor} ${stripe}px,
+    rgba(255,255,255,0.42) ${stripe}px,
+    rgba(255,255,255,0.42) ${gap}px
   )`;
+}
+
+/**
+ * Fill value for `background` (supports solid color and hatch gradient).
+ * Prefer this over backgroundColor when the cell may be a stub.
+ * @param {{ main: string, hatch?: boolean } | null | undefined} orderColor
+ * @returns {string}
+ */
+export function getOrderFillBackground(orderColor) {
+  if (!orderColor?.main) return "transparent";
+  if (orderColor.hatch) return getOfflineHatchBackground(orderColor.main);
+  return orderColor.main;
+}
+
+/**
+ * sx fill for a calendar order cell (solid or hatched).
+ * @param {{ main: string, hatch?: boolean } | null | undefined} orderColor
+ */
+export function getOrderFillSx(orderColor) {
+  if (!orderColor?.main) return { background: "transparent" };
+  return {
+    background: getOrderFillBackground(orderColor),
+    backgroundColor: "transparent",
+  };
 }
 
 /**
@@ -197,6 +242,7 @@ export function getOrderColorsForLegend() {
     ORDER_COLORS.CONFIRMED_CLIENT,
     ORDER_COLORS.CONFIRMED_ADMIN,
     ORDER_COLORS.OFFLINE,
+    ORDER_COLORS.OFFLINE_PENDING,
     ORDER_COLORS.PENDING_CLIENT,
     ORDER_COLORS.PENDING_ADMIN,
   ];

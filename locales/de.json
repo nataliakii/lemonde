@@ -4,7 +4,7 @@
     "locations": "Standorte",
     "terms": "AGB",
     "contacts": "Kontakt",
-    "cars": "Fahrzeuge",
+    "cars": "Apartments",
     "calendars": "Kalender",
     "table": "Bestelltabelle",
     "calendar": "Kalender",
@@ -163,7 +163,11 @@
     "unsavedChangesMessage": "Bestelldaten wurden geändert. Beenden ohne Speichern, bleiben oder speichern und beenden?",
     "leaveWithoutSaving": "Beenden ohne Speichern",
     "leaveWithSaving": "Speichern und beenden",
-    "unsavedSaveBlocked": "Speichern nicht möglich: Konflikte oder Validierungsfehler beheben."
+    "unsavedSaveBlocked": "Speichern nicht möglich: Konflikte oder Validierungsfehler beheben.",
+    "checkInDate": "Anreisedatum",
+    "checkOutDate": "Abreisedatum",
+    "checkInTime": "Anreisezeit",
+    "checkOutTime": "Abreisezeit"
   },
   "car": {
     "viewDetails": "Mehr Details",
@@ -372,5 +376,11 @@
     ],
     "swap": "Ziele tauschen",
     "distanceApprox": "Ca. Entfernung: ~{{km}} km · ~{{minutes}} Min."
+  },
+  "table": {
+    "carModel": "Apartment",
+    "pickup": "Check-in",
+    "return": "Check-out",
+    "filterByCar": "Nach Apartment filtern"
   }
 }

@@ -33,6 +33,10 @@ const MainContext = createContext({
   company: {},
   carSearchQuery: "",
   setCarSearchQuery: () => {},
+  stayCheckIn: null,
+  stayCheckOut: null,
+  setStayDates: () => {},
+  clearStayDates: () => {},
   pendingConfirmBlockById: {}, // Map pending order ID -> block message
   conflictHighlightById: {}, // Map orderId -> { level: "block"|"warning", message: string, sourceOrderId?: string }
   setConflictHighlightsFromResult: () => {},
@@ -200,6 +204,16 @@ export const MainContextProvider = ({
   const [selectedTransmission, setSelectedTransmission] = useState("All"); // Новый фильтр по коробке передач
   const [selectedSeats, setSelectedSeats] = useState("All");
   const [carSearchQuery, setCarSearchQuery] = useState("");
+  const [stayCheckIn, setStayCheckIn] = useState(null);
+  const [stayCheckOut, setStayCheckOut] = useState(null);
+  const setStayDates = useCallback(({ checkIn, checkOut }) => {
+    setStayCheckIn(checkIn || null);
+    setStayCheckOut(checkOut || null);
+  }, []);
+  const clearStayDates = useCallback(() => {
+    setStayCheckIn(null);
+    setStayCheckOut(null);
+  }, []);
   const arrayOfAvailableClasses = useMemo(() => {
     return [...new Set(cars.map((car) => car.class))];
   }, [cars]);
@@ -496,6 +510,10 @@ export const MainContextProvider = ({
       arrayOfAvailableSeats,
       carSearchQuery,
       setCarSearchQuery,
+      stayCheckIn,
+      stayCheckOut,
+      setStayDates,
+      clearStayDates,
       lang,
       setLang,
       changeLanguage, // Добавляем функцию смены языка
@@ -524,6 +542,10 @@ export const MainContextProvider = ({
       selectedSeats,
       arrayOfAvailableSeats,
       carSearchQuery,
+      stayCheckIn,
+      stayCheckOut,
+      setStayDates,
+      clearStayDates,
       lang,
       changeLanguage,
       company,

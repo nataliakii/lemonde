@@ -37,7 +37,12 @@ export function getOrderColor(order) {
   }
 
   if (offline === true) {
-    return ORDER_COLORS.OFFLINE;
+    // Confirmed stub / offline booking
+    if (confirmed) {
+      return ORDER_COLORS.OFFLINE;
+    }
+    // Unconfirmed stub — still hatched so it reads as a stub, not a normal pending
+    return ORDER_COLORS.OFFLINE_PENDING;
   }
 
   // Определяем цвет на основе confirmed + my_order

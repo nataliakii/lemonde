@@ -271,7 +271,7 @@ async function main() {
       {
         $set: {
           name: "Le Monde Suites",
-          slogan: "Nea Kallikratia · Halkidiki",
+          slogan: "Apartment stays · Nea Kallikratia · Halkidiki",
           email: "nataliakireewa@gmail.com",
           address: ADDRESS,
           coords: {

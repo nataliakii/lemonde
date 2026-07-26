@@ -48,11 +48,21 @@ export async function POST(req) {
 
     await validateRequiredFields(apartmentData);
 
-    if (apartmentData.file) {
+    if (apartmentData.photoUrlFromForm) {
+      apartmentData.photoUrl = apartmentData.photoUrlFromForm;
+    } else if (apartmentData.file) {
       apartmentData.photoUrl = await handleImageUpload(apartmentData.file);
     } else {
       apartmentData.photoUrl = getCloudinaryPlaceholderPublicId();
     }
+    apartmentData.gallery = Array.isArray(apartmentData.galleryFromForm)
+      ? apartmentData.galleryFromForm.filter(
+          (u) => u && u !== apartmentData.photoUrl
+        )
+      : [];
+    delete apartmentData.photoUrlFromForm;
+    delete apartmentData.galleryFromForm;
+    delete apartmentData.file;
 
     apartmentData.dateAddCar = dayjs().toDate();
 
@@ -123,6 +133,8 @@ function extractApartmentData(formData) {
 
   return {
     file,
+    photoUrlFromForm: String(formData.get("photoUrl") || "").trim() || null,
+    galleryFromForm: parseGallery(formData.get("gallery")),
     model: formData.get("model"),
     class: formData.get("class"),
     transmission: formData.get("transmission") || "automatic",
@@ -146,6 +158,17 @@ function extractApartmentData(formData) {
     description: String(formData.get("description") || ""),
     amenities: parseAmenities(formData.get("amenities")),
   };
+}
+
+function parseGallery(raw) {
+  if (!raw) return [];
+  try {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((u) => String(u).trim()).filter(Boolean);
+  } catch {
+    return [];
+  }
 }
 
 function parseAmenities(raw) {

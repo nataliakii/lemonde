@@ -1037,9 +1037,13 @@ export function useEditOrderState({
       // Offline (off-site) flag — always send current value for admin edits
       payload.offline = Boolean(o.offline);
       if (payload.offline) {
-        payload.confirmed = true;
         payload.my_order = false;
       }
+
+      payload.guestsCount = Number(o.guestsCount) || 0;
+      payload.childrenCount = Number(o.childrenCount) || 0;
+      payload.needsTransfer = Boolean(o.needsTransfer);
+      payload.needsBabyBed = Boolean(o.needsBabyBed);
 
       if (payload.phone !== undefined) {
         const p = String(payload.phone ?? "").trim();
@@ -1047,6 +1051,10 @@ export function useEditOrderState({
           setUpdateMessage(i18n.t("order.phoneInvalid"));
           setIsUpdating(false);
           return false;
+        }
+        // Offline stubs may omit phone
+        if (!p && payload.offline) {
+          payload.phone = "+306999999999";
         }
       }
 

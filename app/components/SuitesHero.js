@@ -5,7 +5,7 @@ import Link from "next/link";
 
 /**
  * Full-bleed landing hero for Le Monde Suites.
- * Brand-first: cursive wordmark + gold shimmer, one tagline, one CTA.
+ * Brand mark lives in the navbar; hero is wordmark + tagline + CTA.
  */
 export default function SuitesHero({ locale = "en", tagline, ctaLabel }) {
   const apartmentsHref = `/${locale}/apartments`;
@@ -20,7 +20,7 @@ export default function SuitesHero({ locale = "en", tagline, ctaLabel }) {
         marginLeft: "-50vw",
         marginRight: "-50vw",
         width: "100vw",
-        minHeight: { xs: "calc(100dvh - 110px)", md: "calc(100dvh - 90px)" },
+        minHeight: { xs: "calc(100dvh - 60px)", md: "calc(100dvh - 60px)" },
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -53,27 +53,6 @@ export default function SuitesHero({ locale = "en", tagline, ctaLabel }) {
           maxWidth: 820,
         }}
       >
-        <Box
-          className="hero-reveal"
-          sx={{
-            width: { xs: 64, md: 80 },
-            height: { xs: 64, md: 80 },
-            mx: "auto",
-            mb: 2.5,
-            borderRadius: "50%",
-            overflow: "hidden",
-            boxShadow: "0 0 32px rgba(201,162,39,0.35), 0 0 0 1.5px rgba(201,162,39,0.45)",
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo-mark.svg"
-            alt=""
-            width={80}
-            height={80}
-            style={{ width: "100%", height: "100%", display: "block" }}
-          />
-        </Box>
         <Typography
           component="h1"
           className="brand-wordmark hero-reveal"
@@ -129,20 +108,6 @@ export default function SuitesHero({ locale = "en", tagline, ctaLabel }) {
           </Button>
         </Box>
       </Box>
-
-      <Box
-        className="hero-scroll-hint"
-        aria-hidden
-        sx={{
-          position: "absolute",
-          bottom: { xs: 28, md: 36 },
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: 1,
-          height: 36,
-          bgcolor: "rgba(232,213,163,0.55)",
-        }}
-      />
     </Box>
   );
 }

@@ -266,7 +266,7 @@ const CalendarPicker = ({
 
     const isDisabled = disabledDate(date);
 
-    // If the date is disabled, return it with no styles (transparent background)
+    // Past / disabled dates: muted and not interactive
     if (isDisabled) {
       return (
         <Box
@@ -276,6 +276,11 @@ const CalendarPicker = ({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            opacity: 0.35,
+            color: "text.disabled",
+            pointerEvents: "none",
+            cursor: "not-allowed",
+            userSelect: "none",
           }}
         >
           {date.date()}
@@ -569,6 +574,10 @@ const CalendarPicker = ({
   };
 
   const onSelect = (date) => {
+    // Клиент не может выбирать прошлые даты
+    if (date.isBefore(dayjs().startOf("day"), "day")) {
+      return;
+    }
     // --- ДОБАВЛЕНЫ ПРОВЕРКИ ДЛЯ ЗАПРЕТА КЛИКА ПО ПОДТВЕРЖДЁННЫМ ДАТАМ ---
     const dateStr = date.format("YYYY-MM-DD");
     const isConfirmed = confirmedDates?.includes(dateStr);

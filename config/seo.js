@@ -19,27 +19,27 @@ const fallbackCompanyData = {
 export const PRODUCTION_BASE_URL = getBaseUrl();
 
 export const multilingualDescriptions = {
-  en: "Le Monde Suites — refined apartment stays with calm interiors and attentive hospitality. Book your suite online.",
-  ru: "Le Monde Suites — апартаменты с изысканным интерьером и внимательным сервисом. Бронируйте сьют онлайн.",
-  uk: "Le Monde Suites — апартаменти з вишуканим інтер'єром та уважним сервісом. Бронюйте сьют онлайн.",
-  de: "Le Monde Suites — elegante Apartments mit ruhigem Interieur und aufmerksamer Gastfreundschaft. Suite online buchen.",
-  sr: "Le Monde Suites — elegantni apartmani sa smirenim enterijerom i pažljivim gostoprimstvom. Rezervišite suite online.",
-  ro: "Le Monde Suites — apartamente rafinate cu interior calm și ospitalitate atentă. Rezervați suite-ul online.",
-  bg: "Le Monde Suites — изискани апартаменти със спокоен интериор и внимателно гостоприемство. Резервирайте онлайн.",
-  el: "Le Monde Suites — εκλεπτυσμένα διαμερίσματα με ήρεμους εσωτερικούς χώρους και προσεκτική φιλοξενία. Κλείστε online.",
-  pl: "Le Monde Suites — wyrafinowane apartamenty ze spokojnym wnętrzem i uważną gościnnością. Zarezerwuj online.",
+  en: "Le Monde Suites — refined apartment stays in Nea Kallikratia, Halkidiki. Calm interiors and attentive hospitality. Book your suite online.",
+  ru: "Le Monde Suites — апартаменты в Неа Калликратии, Халкидики. Изысканный интерьер и внимательный сервис. Бронируйте сьют онлайн.",
+  uk: "Le Monde Suites — апартаменти в Неа Каллікратії, Халкідіки. Вишуканий інтер'єр та уважний сервіс. Бронюйте сьют онлайн.",
+  de: "Le Monde Suites — elegante Apartments in Nea Kallikratia, Chalkidiki. Ruhiges Interieur und aufmerksame Gastfreundschaft. Suite online buchen.",
+  sr: "Le Monde Suites — elegantni apartmani u Nea Kalikratiji, Halkidiki. Smiren enterijer i pažljivo gostoprimstvo. Rezervišite suite online.",
+  ro: "Le Monde Suites — apartamente rafinate în Nea Kallikratia, Halkidiki. Interior calm și ospitalitate atentă. Rezervați suite-ul online.",
+  bg: "Le Monde Suites — изискани апартаменти в Неа Каликратия, Халкидики. Спокоен интериор и внимателно гостоприемство. Резервирайте онлайн.",
+  el: "Le Monde Suites — εκλεπτυσμένα διαμερίσματα στη Νέα Καλλικράτεια, Χαλκιδική. Ήρεμοι εσωτερικοί χώροι και προσεκτική φιλοξενία. Κλείστε online.",
+  pl: "Le Monde Suites — wyrafinowane apartamenty w Nea Kallikratia, Chalkidiki. Spokojne wnętrze i uważna gościnność. Zarezerwuj online.",
 };
 
 export const multilingualTitles = {
-  en: "Le Monde Suites — Apartment Stays",
-  ru: "Le Monde Suites — Апартаменты",
-  uk: "Le Monde Suites — Апартаменти",
-  de: "Le Monde Suites — Apartments",
-  sr: "Le Monde Suites — Apartmani",
-  ro: "Le Monde Suites — Apartamente",
-  bg: "Le Monde Suites — Апартаменти",
-  el: "Le Monde Suites — Διαμερίσματα",
-  pl: "Le Monde Suites — Apartamenty",
+  en: "Le Monde Suites — Apartments in Nea Kallikratia, Halkidiki",
+  ru: "Le Monde Suites — Апартаменты в Неа Калликратии, Халкидики",
+  uk: "Le Monde Suites — Апартаменти в Неа Каллікратії, Халкідіки",
+  de: "Le Monde Suites — Apartments in Nea Kallikratia, Chalkidiki",
+  sr: "Le Monde Suites — Apartmani u Nea Kalikratiji, Halkidiki",
+  ro: "Le Monde Suites — Apartamente în Nea Kallikratia, Halkidiki",
+  bg: "Le Monde Suites — Апартаменти в Неа Каликратия, Халкидики",
+  el: "Le Monde Suites — Διαμερίσματα στη Νέα Καλλικράτεια, Χαλκιδική",
+  pl: "Le Monde Suites — Apartamenty w Nea Kallikratia, Chalkidiki",
 };
 
 /**
@@ -58,7 +58,7 @@ export function getSeoConfig(dbCompanyData = null) {
     supportedLocales: ["en", "ru", "uk", "de", "sr", "ro", "bg", "el", "pl"],
     primaryLocation: "Greece",
     titleTemplate: `%s | ${siteName}`,
-    defaultTitle: `${siteName} — Apartment Stays`,
+    defaultTitle: multilingualTitles.en,
     defaultDescription: multilingualDescriptions.en,
     descriptions: multilingualDescriptions,
     titles: multilingualTitles,

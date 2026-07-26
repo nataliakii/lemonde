@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Grid,
   MenuItem,
@@ -33,11 +33,15 @@ import {
   RenderTextField,
   RenderSelectField,
 } from "@/app/components/ui/inputs/Fields";
-import CarImageUpload from "@/app/components/ui/media/AddImageComponent";
+import SuiteGalleryEditor from "@/app/components/ui/media/SuiteGalleryEditor";
 import { useTranslation } from "react-i18next";
 import { useSession } from "next-auth/react";
 import { ROLE } from "@/domain/orders/admin-rbac";
 import { SINGLE_PROPERTY_MODE } from "@/config/domain";
+import { CLOUDINARY_PLACEHOLDER_PUBLIC_ID } from "@config/cloudinary";
+
+/** Stable empty default — inline `companies = []` re-creates a new array every render and loops with useEffect. */
+const EMPTY_COMPANIES = [];
 
 const EditCarModal = ({
   open,
@@ -47,7 +51,7 @@ const EditCarModal = ({
   handleUpdate,
   handleCheckboxChange,
   setUpdatedCar,
-  companies = [],
+  companies = EMPTY_COMPANIES,
 }) => {
 
   const { updateCarInContext, setUpdateStatus, updateStatus, company } =
@@ -56,47 +60,36 @@ const EditCarModal = ({
   const isSuperAdmin = session?.user?.role === ROLE.SUPERADMIN;
 
   const [isLoading, setIsLoading] = useState(false);
-  const fileInputRef = useRef(null);
-  const [imagePreview, setImagePreview] = useState(updatedCar.photoUrl || "");
-  const [photoUrl, setPhotoUrl] = useState(updatedCar.photoUrl || "");
   const [localCompanies, setLocalCompanies] = useState(companies);
 
-  const handleImageUpload = async () => {
-    const file = fileInputRef.current.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("image", file);
-
+  const handleGalleryChange = async ({ photoUrl, gallery }) => {
+    const next = {
+      ...updatedCar,
+      photoUrl: photoUrl || CLOUDINARY_PLACEHOLDER_PUBLIC_ID,
+      gallery: Array.isArray(gallery) ? gallery : [],
+    };
+    setUpdatedCar(next);
     try {
       setIsLoading(true);
-      const response = await fetch("/api/order/update/image", {
-        method: "POST",
-        body: formData,
+      const response = await updateCarInContext(next);
+      setUpdateStatus({
+        type: response.type,
+        message: response.message,
+        data: response.data,
       });
-
-      const data = await response.json();
-      if (data.success) {
-        // Update the photoUrl state
-        setPhotoUrl(data.data);
-
-        // Update the car in the context
-        const response = await updateCarInContext({
-          ...updatedCar,
-          photoUrl: data.data,
-        });
-        setUpdateStatus({
-          type: response.type,
-          message: response.message,
-          data: response.data,
-        });
-      } else {
-        console.error("Image upload failed:", data.message);
-        setUpdateStatus({ type: 400, message: data.message });
+      if (response?.data) {
+        setUpdatedCar((prev) => ({
+          ...prev,
+          ...response.data,
+          photoUrl: response.data.photoUrl ?? next.photoUrl,
+          gallery: response.data.gallery ?? next.gallery,
+        }));
       }
     } catch (error) {
-      console.error("Error uploading image:", error);
-      setUpdateStatus({ type: 400, message: error.message });
+      setUpdateStatus({
+        type: 400,
+        message: error?.message || "Failed to save photos",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -141,7 +134,7 @@ const EditCarModal = ({
   }, [open]);
 
   useEffect(() => {
-    setLocalCompanies(companies);
+    setLocalCompanies(Array.isArray(companies) ? companies : EMPTY_COMPANIES);
   }, [companies]);
 
   useEffect(() => {
@@ -251,6 +244,16 @@ const EditCarModal = ({
       contentSx={{ opacity: isLoading ? 0.3 : 1, transition: "opacity 0.2s" }}
       >
         <Grid container spacing={3} sx={{ flexGrow: 1, pt: 4 }}>
+          <Grid item xs={12} md={5}>
+            <SuiteGalleryEditor
+              photoUrl={updatedCar?.photoUrl}
+              gallery={updatedCar?.gallery}
+              onChange={handleGalleryChange}
+              disabled={isLoading}
+            />
+          </Grid>
+          <Grid item xs={12} md={7}>
+          <Grid container spacing={3}>
           {isSuperAdmin && !SINGLE_PROPERTY_MODE && (
             <Grid item xs={12}>
               <FormControl fullWidth size="small">
@@ -288,9 +291,13 @@ const EditCarModal = ({
                     target: { name: "model", value: newValue || "" },
                   })
                 }
-                onInputChange={(_, inputValue) =>
-                  handleChange({ target: { name: "model", value: inputValue } })
-                }
+                onInputChange={(_, inputValue, reason) => {
+                  // Ignore Autocomplete "reset"/"blur" — those re-fire on every parent render and loop.
+                  if (reason !== "input" && reason !== "clear") return;
+                  handleChange({
+                    target: { name: "model", value: inputValue },
+                  });
+                }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -301,96 +308,87 @@ const EditCarModal = ({
                   />
                 )}
               />
-              <RenderSelectField
-                name="transmission"
-                label={t("car.transmission")}
-                options={Object.values(TRANSMISSION_TYPES)}
-                required
-                updatedCar={updatedCar}
-                handleChange={handleChange}
-                isLoading={isLoading}
-              />
+              {!SINGLE_PROPERTY_MODE && (
+                <RenderSelectField
+                  name="transmission"
+                  label={t("car.transmission")}
+                  options={Object.values(TRANSMISSION_TYPES)}
+                  required
+                  updatedCar={updatedCar}
+                  handleChange={handleChange}
+                  isLoading={isLoading}
+                />
+              )}
               <RenderTextField
                 type="number"
                 name="seats"
-                label={t("car.seats")}
+                label={
+                  SINGLE_PROPERTY_MODE
+                    ? "Max guests"
+                    : t("car.seats")
+                }
                 defaultValue={updatedCar.seats}
                 updatedCar={updatedCar}
                 handleChange={handleChange}
                 isLoading={isLoading}
               />
-              {/* <RenderTextField
-                type="number"
-                name="PriceChildSeats"
-                label={t("car.childSeatsPrice") || "Цена детских кресел"}
-                defaultValue={updatedCar.PriceChildSeats}
-                updatedCar={updatedCar}
-                handleChange={handleChange}
-                isLoading={isLoading}
-              />{" "} */}
+              {!SINGLE_PROPERTY_MODE && (
               <RenderTextField
                 type="number"
                 name="PriceKacko"
                 label={t("car.KackoPrice") || "Цена КАСКО в день"}
-                //label="Цена КАСКО в день"
                 defaultValue={updatedCar.PriceKacko}
                 updatedCar={updatedCar}
                 handleChange={handleChange}
                 isLoading={isLoading}
               />
-              {/* <RenderTextField
-                type="number"
-                name="deposit"
-                label={t("car.deposit") || "Залог, €"}
-                defaultValue={
-                  typeof updatedCar.deposit !== "undefined"
-                    ? updatedCar.deposit
-                    : ""
-                }
-                updatedCar={updatedCar}
-                handleChange={handleChange}
-                isLoading={isLoading}
-              /> */}
+              )}
             </Stack>
           </Grid>
 
           <Grid item xs={12} sm={3}>
             <Stack spacing={3}>
-              <RenderTextField
-                name="registration"
-                label={t("car.reg-year")}
-                defaultValue={updatedCar.registration}
-                type="number"
-                updatedCar={updatedCar}
-                handleChange={handleChange}
-                isLoading={isLoading}
-              />
-              <RenderSelectField
-                name="fueltype"
-                label={t("car.fuel")}
-                options={Object.values(FUEL_TYPES)}
-                updatedCar={updatedCar}
-                handleChange={handleChange}
-                isLoading={isLoading}
-              />
+              {!SINGLE_PROPERTY_MODE && (
+                <>
+                  <RenderTextField
+                    name="registration"
+                    label={t("car.reg-year")}
+                    defaultValue={updatedCar.registration}
+                    type="number"
+                    updatedCar={updatedCar}
+                    handleChange={handleChange}
+                    isLoading={isLoading}
+                  />
+                  <RenderSelectField
+                    name="fueltype"
+                    label={t("car.fuel")}
+                    options={Object.values(FUEL_TYPES)}
+                    updatedCar={updatedCar}
+                    handleChange={handleChange}
+                    isLoading={isLoading}
+                  />
+                </>
+              )}
               <RenderTextField
                 type="number"
                 name="numberOfDoors"
-                label={t("car.doors")}
+                label={SINGLE_PROPERTY_MODE ? "Bedrooms" : t("car.doors")}
                 defaultValue={updatedCar.numberOfDoors}
                 updatedCar={updatedCar}
                 handleChange={handleChange}
                 isLoading={isLoading}
               />
-              <RenderTextField
-                type="number"
-                name="franchise"
-                label={t("car.franchise") || "Франшиза"}
-                defaultValue={updatedCar.franchise}
-                updatedCar={updatedCar}
-                handleChange={handleChange}
-                isLoading={isLoading}
-              />
+              {!SINGLE_PROPERTY_MODE && (
+                <RenderTextField
+                  type="number"
+                  name="franchise"
+                  label={t("car.franchise") || "Франшиза"}
+                  defaultValue={updatedCar.franchise}
+                  updatedCar={updatedCar}
+                  handleChange={handleChange}
+                  isLoading={isLoading}
+                />
+              )}
             </Stack>
           </Grid>
 
@@ -399,78 +397,84 @@ const EditCarModal = ({
             <Stack spacing={3}>
               <RenderTextField
                 name="regNumber"
-                label={t("car.reg-numb")}
+                label={SINGLE_PROPERTY_MODE ? "Unit code" : t("car.reg-numb")}
                 defaultValue={updatedCar.regNumber}
                 updatedCar={updatedCar}
                 handleChange={handleChange}
                 isLoading={isLoading}
               />
-              <RenderTextField
-                type="number"
-                name="engine"
-                label={t("car.engine")}
-                defaultValue={updatedCar.enginePower}
-                updatedCar={updatedCar}
-                handleChange={handleChange}
-                isLoading={isLoading}
-                adornment="c.c."
-              />
-              <Autocomplete
-                freeSolo
-                options={Object.values(PREDEFINED_COLORS)}
-                value={updatedCar.color || ""}
-                getOptionLabel={(option) =>
-                  typeof option === "string" && option.length > 0
-                    ? option.charAt(0).toUpperCase() + option.slice(1)
-                    : option
-                }
-                onChange={(_, newValue) => {
-                  handleChange({
-                    target: {
-                      name: "color",
-                      value: (newValue || "").toLowerCase(),
-                    },
-                  });
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={t("car.color") || "Цвет"}
-                    name="color"
-                    disabled={isLoading}
-                    onChange={(e) => {
+              {!SINGLE_PROPERTY_MODE && (
+                <>
+                  <RenderTextField
+                    type="number"
+                    name="engine"
+                    label={t("car.engine")}
+                    defaultValue={updatedCar.enginePower}
+                    updatedCar={updatedCar}
+                    handleChange={handleChange}
+                    isLoading={isLoading}
+                    adornment="c.c."
+                  />
+                  <Autocomplete
+                    freeSolo
+                    options={Object.values(PREDEFINED_COLORS)}
+                    value={updatedCar.color || ""}
+                    getOptionLabel={(option) =>
+                      typeof option === "string" && option.length > 0
+                        ? option.charAt(0).toUpperCase() + option.slice(1)
+                        : option
+                    }
+                    onChange={(_, newValue) => {
                       handleChange({
                         target: {
                           name: "color",
-                          value: e.target.value.toLowerCase(),
+                          value: (newValue || "").toLowerCase(),
                         },
                       });
                     }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={t("car.color") || "Цвет"}
+                        name="color"
+                        disabled={isLoading}
+                        onChange={(e) => {
+                          handleChange({
+                            target: {
+                              name: "color",
+                              value: e.target.value.toLowerCase(),
+                            },
+                          });
+                        }}
+                      />
+                    )}
                   />
-                )}
-              />
-              <RenderTextField
-                type="number"
-                name="deposit"
-                label={t("car.deposit") || "Залог, €"}
-                defaultValue={
-                  typeof updatedCar.deposit !== "undefined"
-                    ? updatedCar.deposit
-                    : ""
-                }
-                updatedCar={updatedCar}
-                handleChange={handleChange}
-                isLoading={isLoading}
-              />
-              {/* <RenderTextField
-                type="number"
-                name="franchise"
-                label={t("car.franchise") || "Франшиза"}
-                defaultValue={updatedCar.franchise}
-                updatedCar={updatedCar}
-                handleChange={handleChange}
-                isLoading={isLoading}
-              /> */}
+                  <RenderTextField
+                    type="number"
+                    name="deposit"
+                    label={t("car.deposit") || "Залог, €"}
+                    defaultValue={
+                      typeof updatedCar.deposit !== "undefined"
+                        ? updatedCar.deposit
+                        : ""
+                    }
+                    updatedCar={updatedCar}
+                    handleChange={handleChange}
+                    isLoading={isLoading}
+                  />
+                </>
+              )}
+              {SINGLE_PROPERTY_MODE && (
+                <RenderTextField
+                  type="number"
+                  name="beds"
+                  label="Beds"
+                  defaultValue={updatedCar.beds ?? ""}
+                  updatedCar={updatedCar}
+                  handleChange={handleChange}
+                  isLoading={isLoading}
+                />
+              )}
             </Stack>
           </Grid>
 
@@ -528,6 +532,9 @@ const EditCarModal = ({
               label={t("car.air")}
               sx={{ my: 0.5 }}
             />
+          </Grid>
+
+          </Grid>
           </Grid>
 
           <Grid item xs={12}>

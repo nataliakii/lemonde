@@ -4,7 +4,7 @@
     "locations": "Lokacije",
     "terms": "Uslovi",
     "contacts": "Kontakt",
-    "cars": "Vozila",
+    "cars": "Apartmani",
     "calendars": "Kalendari",
     "table": "Tabela narudžbina",
     "calendar": "Kalendar",
@@ -163,7 +163,11 @@
     "unsavedChangesMessage": "Podaci narudžbine su izmenjeni. Izađi bez čuvanja, ostati ili sačuvati i izaći?",
     "leaveWithoutSaving": "Izađi bez čuvanja",
     "leaveWithSaving": "Sačuvaj i izađi",
-    "unsavedSaveBlocked": "Nije moguće sačuvati: rešite konflikte ili greške provere."
+    "unsavedSaveBlocked": "Nije moguće sačuvati: rešite konflikte ili greške provere.",
+    "checkInDate": "Datum prijave",
+    "checkOutDate": "Datum odjave",
+    "checkInTime": "Vreme prijave",
+    "checkOutTime": "Vreme odjave"
   },
   "car": {
     "viewDetails": "Više detalja",
@@ -372,5 +376,11 @@
     ],
     "swap": "Zameni destinacije",
     "distanceApprox": "Približno: ~{{km}} km · ~{{minutes}} min"
+  },
+  "table": {
+    "carModel": "Apartman",
+    "pickup": "Prijava",
+    "return": "Odjava",
+    "filterByCar": "Filter po apartmanu"
   }
 }

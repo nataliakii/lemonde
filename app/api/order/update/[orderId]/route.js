@@ -343,7 +343,12 @@ export const PATCH = async (request, { params }) => {
       payload.Whatsapp !== undefined ||
       payload.Telegram !== undefined ||
       payload.flightNumber !== undefined ||
-      payload.drivingLicenceUrls !== undefined;
+      payload.drivingLicenceUrls !== undefined ||
+      payload.offline !== undefined ||
+      payload.guestsCount !== undefined ||
+      payload.childrenCount !== undefined ||
+      payload.needsTransfer !== undefined ||
+      payload.needsBabyBed !== undefined;
 
     const hasConfirmationChange = payload.confirmed !== undefined;
     const hasStatusChange = payload.status !== undefined;
@@ -837,9 +842,20 @@ export const PATCH = async (request, { params }) => {
               if (payload.offline !== undefined) {
                 order.offline = Boolean(payload.offline);
                 if (order.offline) {
-                  order.confirmed = true;
                   order.my_order = false;
                 }
+              }
+              if (payload.guestsCount !== undefined) {
+                order.guestsCount = Number(payload.guestsCount) || 0;
+              }
+              if (payload.childrenCount !== undefined) {
+                order.childrenCount = Number(payload.childrenCount) || 0;
+              }
+              if (payload.needsTransfer !== undefined) {
+                order.needsTransfer = Boolean(payload.needsTransfer);
+              }
+              if (payload.needsBabyBed !== undefined) {
+                order.needsBabyBed = Boolean(payload.needsBabyBed);
               }
               if (payload.flightNumber !== undefined)
                 order.flightNumber = payload.flightNumber;
@@ -975,9 +991,20 @@ export const PATCH = async (request, { params }) => {
         if (payload.offline !== undefined) {
           order.offline = Boolean(payload.offline);
           if (order.offline) {
-            order.confirmed = true;
             order.my_order = false;
           }
+        }
+        if (payload.guestsCount !== undefined) {
+          order.guestsCount = Number(payload.guestsCount) || 0;
+        }
+        if (payload.childrenCount !== undefined) {
+          order.childrenCount = Number(payload.childrenCount) || 0;
+        }
+        if (payload.needsTransfer !== undefined) {
+          order.needsTransfer = Boolean(payload.needsTransfer);
+        }
+        if (payload.needsBabyBed !== undefined) {
+          order.needsBabyBed = Boolean(payload.needsBabyBed);
         }
         if (payload.flightNumber !== undefined)
           order.flightNumber = payload.flightNumber;
@@ -1073,9 +1100,20 @@ export const PATCH = async (request, { params }) => {
       if (payload.offline !== undefined) {
         order.offline = Boolean(payload.offline);
         if (order.offline) {
-          order.confirmed = true;
           order.my_order = false;
         }
+      }
+      if (payload.guestsCount !== undefined) {
+        order.guestsCount = Number(payload.guestsCount) || 0;
+      }
+      if (payload.childrenCount !== undefined) {
+        order.childrenCount = Number(payload.childrenCount) || 0;
+      }
+      if (payload.needsTransfer !== undefined) {
+        order.needsTransfer = Boolean(payload.needsTransfer);
+      }
+      if (payload.needsBabyBed !== undefined) {
+        order.needsBabyBed = Boolean(payload.needsBabyBed);
       }
       if (payload.flightNumber !== undefined)
         order.flightNumber = payload.flightNumber;

@@ -2,6 +2,7 @@ import { MetadataRoute } from "next";
 import {
   getAllLocationsForLocale,
   getCarAlternates,
+  getCarPath,
   getDefaultLocale,
   getHubAlternates,
   getLocationAlternatesById,
@@ -210,7 +211,7 @@ export function buildLocalizedSitemap(cars: SitemapCar[] = []): MetadataRoute.Si
 
     for (const locale of supportedLocales) {
       entries.push({
-        url: toAbsoluteUrl(`/${locale}/cars/${encodeURIComponent(slug)}`),
+        url: toAbsoluteUrl(getCarPath(locale, slug)),
         lastModified: carLastModified,
         changeFrequency: "weekly",
         priority: locale === defaultLocale ? 0.75 : 0.7,
