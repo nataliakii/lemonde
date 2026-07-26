@@ -60,6 +60,57 @@ const CompanySchema = new Schema({
 
   // Delivery pricing
   deliveryPricePerKm: { type: Number, default: 1, min: 0 },
+
+  /**
+   * Brand theme — per-property colors for UI (MUI palette overrides).
+   * Secrets stay in env; visual identity lives here so deploys can copy with a new company doc.
+   */
+  branding: {
+    primary: { type: String, default: "#C9A227" },
+    primaryLight: { type: String, default: "#E8D5A3" },
+    primaryDark: { type: String, default: "#9A7B2E" },
+    secondary: { type: String, default: "#1A1612" },
+    secondaryLight: { type: String, default: "#3A322A" },
+    secondaryDark: { type: String, default: "#0E0C0A" },
+    accent: { type: String, default: "#B85C38" },
+    ink: { type: String, default: "#2A2520" },
+  },
+
+  /**
+   * Public media — local paths (/logo-mark.png) or absolute Cloudinary/CDN URLs.
+   */
+  assets: {
+    logoMark: { type: String, default: "/logo-mark.png" },
+    logoWordmark: { type: String, default: "" },
+    favicon: { type: String, default: "/favicon.ico" },
+    ogImage: { type: String, default: "" },
+    heroImages: { type: [String], default: [] },
+    galleryImages: { type: [String], default: [] },
+  },
+
+  /**
+   * Cloudinary folder layout for this property.
+   * Cloud name / API secrets remain in env (account-level).
+   * Override root via CLOUDINARY_ROOT_FOLDER env if needed.
+   */
+  cloudinary: {
+    rootFolder: { type: String, default: "lemondesuites" },
+    apartmentsFolder: { type: String, default: "apartments" },
+    ordersFolder: { type: String, default: "orders" },
+    placeholderPublicId: { type: String, default: "carsnk/NO_PHOTO" },
+  },
+
+  /** Optional home-page gallery section titles (locale → string) */
+  galleryTitle: {
+    en: { type: String, default: "The property" },
+    ru: { type: String, default: "Отель" },
+    el: { type: String, default: "Το κατάλυμα" },
+  },
+  gallerySubtitle: {
+    en: { type: String, default: "Spaces designed for calm Mediterranean stays." },
+    ru: { type: String, default: "Пространства для спокойного средиземноморского отдыха." },
+    el: { type: String, default: "Χώροι σχεδιασμένοι για ήρεμη μεσογειακή διαμονή." },
+  },
 });
 
 // В клиентском бандле mongoose.models может быть undefined — не обращаться без проверки

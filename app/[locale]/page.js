@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Feed from "@app/components/Feed";
 import SuitesHero from "@app/components/SuitesHero";
+import PropertyGallery from "@app/components/PropertyGallery";
 import JsonLdScript from "@app/components/seo/JsonLdScript";
 import {
   getLocationById,
@@ -14,6 +15,8 @@ import { authOptions } from "@lib/authOptions";
 import { getCars, getCompany, getActiveOrders } from "@/domain/services";
 import { buildHubJsonLd } from "@/services/seo/jsonLdBuilder";
 import { buildHubMetadata } from "@/services/seo/metadataBuilder";
+import { resolveBrandConfig } from "@/domain/branding/resolveBrandConfig";
+import { DEFAULT_PROPERTY_GALLERY } from "@/domain/services/ensureCarsNkCompany";
 
 const HERO_COPY = {
   en: {
@@ -66,6 +69,12 @@ export default async function LocalizedHomePage({ params }) {
     : null;
 
   const copy = HERO_COPY[locale] || HERO_COPY.en;
+  const brand = resolveBrandConfig(companyData, locale);
+  const galleryImages =
+    brand.assets.galleryImages.length > 0
+      ? brand.assets.galleryImages
+      : DEFAULT_PROPERTY_GALLERY;
+  const heroImage = brand.assets.heroImages[0] || "";
 
   return (
     <>
@@ -81,6 +90,14 @@ export default async function LocalizedHomePage({ params }) {
           locale={locale}
           tagline={copy.tagline}
           ctaLabel={copy.cta}
+          brandName={brand.name}
+          heroImage={heroImage}
+        />
+        <PropertyGallery
+          images={galleryImages}
+          title={brand.galleryTitle}
+          subtitle={brand.gallerySubtitle}
+          brandName={brand.name}
         />
       </Feed>
     </>

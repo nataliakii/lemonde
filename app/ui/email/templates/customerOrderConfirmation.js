@@ -28,6 +28,11 @@ import { EMAIL_SIGNATURE_HTML } from "@/app/ui/email/templates/signature";
  *   flightNumber?: string,
  *   showExcludeCityDelivery?: boolean,
  *   headingTitle?: string,
+ *   suitesMode?: boolean,
+ *   guestsCount?: string|number,
+ *   childrenCount?: string|number,
+ *   needsTransfer?: boolean,
+ *   needsBabyBed?: boolean,
  * }} data
  * @returns {string} Full HTML document
  */
@@ -53,6 +58,11 @@ export function renderCustomerOrderConfirmation(data) {
     flightNumber = "",
     showExcludeCityDelivery = false,
     headingTitle,
+    suitesMode = false,
+    guestsCount = "",
+    childrenCount = "",
+    needsTransfer = false,
+    needsBabyBed = false,
   } = data;
   const s = EMAIL_STYLE;
   const p = (style, content) =>
@@ -68,11 +78,6 @@ export function renderCustomerOrderConfirmation(data) {
   const reservationDetailsHeading = (t.reservationDetails || "").replace(/\*\*/g, "");
   const whatHappensNextHeading = (t.whatHappensNext || "").replace(/^#+\s*/, "");
   const teamText = (t.team || "").replace(/\*\*/g, "");
-  // const phonesHtml = (t.phones || "")
-  //   .split("\n")
-  //   .filter(Boolean)
-  //   .map((line) => `<div style="margin:4px 0;font-size:14px;color:${s.text};font-family:${s.fontSans};">${escapeHtml(line.trim())}</div>`)
-  //   .join("");
   const phonesHtml = "";
 
   const rentalPeriodValue =
@@ -80,20 +85,36 @@ export function renderCustomerOrderConfirmation(data) {
       ? `${fromStr}${timeInStr ? " " + timeInStr : ""} – ${toStr}${timeOutStr ? " " + timeOutStr : ""}`.trim()
       : "—";
 
-  const detailRows = [
-    row(t.orderNumberLabel || "Order number", orderNum ? "#" + orderNum : "—"),
-    row(t.vehicleLabel || "Vehicle", carDisplay || "—"),
-    row(t.rentalPeriodLabel || "Rental period", rentalPeriodValue),
-    row(t.daysLabel || "Number of days", numberOfDays || "—"),
-    row(t.childSeatsLabel || "Child seats", childSeats !== undefined && childSeats !== "" ? childSeats : "0"),
-    row(t.insuranceLabel || "Insurance", insurance || "—"),
-    ...(secondDriverEnabled
-      ? [row(secondDriverLabel || t.secondDriverLabel || "Second driver", secondDriverText || (t.secondDriverEnabled || "Yes"))]
-      : []),
-    row(t.pickupLocationLabel || "Pick-up location", placeIn || "—"),
-    row(t.returnLocationLabel || "Return location", placeOut || "—"),
-    ...(flightNumber ? [row(t.flightNumberLabel || "Flight number", flightNumber)] : []),
-  ].join("");
+  const yes = t.yes || "Yes";
+  const detailRows = suitesMode
+    ? [
+        row(t.orderNumberLabel || "Order number", orderNum ? "#" + orderNum : "—"),
+        row(t.vehicleLabel || "Suite", carDisplay || "—"),
+        row(t.rentalPeriodLabel || "Stay", rentalPeriodValue),
+        row(t.daysLabel || "Nights", numberOfDays || "—"),
+        ...(guestsCount !== "" && guestsCount != null
+          ? [row(t.guestsLabel || "Guests", String(guestsCount))]
+          : []),
+        ...(childrenCount !== "" && childrenCount != null && Number(childrenCount) > 0
+          ? [row(t.childrenLabel || "Children", String(childrenCount))]
+          : []),
+        ...(needsTransfer ? [row(t.transferLabel || "Transfer", yes)] : []),
+        ...(needsBabyBed ? [row(t.babyBedLabel || "Baby crib", yes)] : []),
+      ].join("")
+    : [
+        row(t.orderNumberLabel || "Order number", orderNum ? "#" + orderNum : "—"),
+        row(t.vehicleLabel || "Vehicle", carDisplay || "—"),
+        row(t.rentalPeriodLabel || "Rental period", rentalPeriodValue),
+        row(t.daysLabel || "Number of days", numberOfDays || "—"),
+        row(t.childSeatsLabel || "Child seats", childSeats !== undefined && childSeats !== "" ? childSeats : "0"),
+        row(t.insuranceLabel || "Insurance", insurance || "—"),
+        ...(secondDriverEnabled
+          ? [row(secondDriverLabel || t.secondDriverLabel || "Second driver", secondDriverText || (t.secondDriverEnabled || "Yes"))]
+          : []),
+        row(t.pickupLocationLabel || "Pick-up location", placeIn || "—"),
+        row(t.returnLocationLabel || "Return location", placeOut || "—"),
+        ...(flightNumber ? [row(t.flightNumberLabel || "Flight number", flightNumber)] : []),
+      ].join("");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -163,7 +184,7 @@ export function renderCustomerOrderConfirmation(data) {
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width:600px;margin-top:20px;">
           <tr>
             <td style="text-align:center;padding:20px;color:${s.muted};font-size:12px;font-family:${s.fontSans};">
-              <p style="margin:0;">© ${new Date().getFullYear()} CarsNK. All rights reserved. · <a href="https://carsnk.gr" style="color:${s.muted};">carsnk.gr</a></p>
+              <p style="margin:0;">© ${new Date().getFullYear()} Le Monde Suites. All rights reserved.</p>
             </td>
           </tr>
         </table>

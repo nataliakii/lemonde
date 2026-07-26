@@ -1079,6 +1079,7 @@ export async function calculateTotalPrice(
         secondDriver: normalizedSecondDriver,
         placeIn: normalizedOptions.placeIn,
         placeOut: normalizedOptions.placeOut,
+        needsTransfer: Boolean(normalizedOptions.needsTransfer),
       }),
       cache: "no-store",
     };

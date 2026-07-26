@@ -100,7 +100,7 @@ function Footer() {
     : rawSlogan || "Nea Kallikratia · Halkidiki";
   const tel = company?.tel || "";
   const tel2 = company?.tel2 || "";
-  const email = company?.email || "nataliakireewa@gmail.com";
+  const email = company?.email || "lemonde@bbqr.site";
   const address = SINGLE_PROPERTY_MODE
     ? company?.address && !/Antonioy Kelesi/i.test(company.address)
       ? company.address
@@ -224,13 +224,12 @@ function Footer() {
           sx={{ mb: 1.5 }}
         >
           <CreditLink
-            href="https://www.linkedin.com/in/natalia-kirejeva/"
+            href="https://bbqr.site/me"
             target="_blank"
             rel="noopener noreferrer"
           >
             <CodeIcon sx={{ fontSize: 16 }} />
             Developed by NataliaKi
-            <LinkedInIcon sx={{ fontSize: 15 }} />
           </CreditLink>
         </Stack>
 

@@ -15,7 +15,7 @@
 //
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { DEVELOPER_EMAIL } from "@config/email";
+import { DEVELOPER_EMAIL, getMailFromHeader } from "@config/email";
 import { EMAIL_SIGNATURE_HTML, EMAIL_SIGNATURE_TEXT } from "@/app/ui/email/templates/signature";
 
 /** Minimal HTML when only text is provided: wrap lines + signature. No theme, no branding. */
@@ -184,7 +184,7 @@ export async function POST(request) {
     const emailSubject = isTestingMode ? `[TEST] ${title}` : title;
 
     const mailOptions = {
-      from: `CarsNK <${SMTP_USER}>`,
+      from: getMailFromHeader(SMTP_USER),
       to: toRecipients,
       cc: ccRecipients.length > 0 ? ccRecipients : undefined,
       replyTo: bodyReplyTo || SMTP_USER,

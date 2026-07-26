@@ -72,20 +72,13 @@ describe("orderNotificationDispatcher", () => {
     expect(sendTelegramDirect).toHaveBeenCalledTimes(1);
 
     const firstEmailCall = sendEmailDirect.mock.calls[0][0];
-    expect(firstEmailCall.message).toContain("📅 From: 15-01-26 (14:00)");
-    expect(firstEmailCall.message).toContain("📅 To: 17-01-26 (10:00)");
+    expect(firstEmailCall.message).toContain("📅 Check-in: 15-01-26 (14:00)");
+    expect(firstEmailCall.message).toContain("📅 Check-out: 17-01-26 (10:00)");
     expect(firstEmailCall.message).toContain("AA-1234");
-    expect(firstEmailCall.message).toContain("📍 Pickup: Thessaloniki Airport (SKG)");
-    expect(firstEmailCall.message).toContain("↩️ Return: Nea Kallikratia");
+    expect(firstEmailCall.message).toContain("🏠 Apartment:");
     expect(sendTelegramDirect.mock.calls[0][0]).toContain("AA-1234");
-    expect(sendTelegramDirect.mock.calls[0][0]).toContain(
-      "📍 Pickup: Thessaloniki Airport (SKG)"
-    );
-    expect(sendTelegramDirect.mock.calls[0][0]).toContain("↩️ Return: Nea Kallikratia");
-    expect(sendTelegramDirect.mock.calls[0][0]).toContain(
-      "🪪 Driver's licence: not uploaded"
-    );
-    expect(firstEmailCall.message).not.toContain("🪪 Driver's licence:");
+    expect(sendTelegramDirect.mock.calls[0][0]).not.toContain("Driver's licence");
+    expect(firstEmailCall.message).not.toContain("Driver's licence");
 
     // COMPANY_EMAIL: только язык + страна; SUPERADMIN: полный гео-футер в Telegram и письме
     const companyEmail = sendEmailDirect.mock.calls[0][0];
@@ -105,10 +98,10 @@ describe("orderNotificationDispatcher", () => {
     const superadminEmail = sendEmailDirect.mock.calls[1][0];
     expect(superadminEmail.message).toContain("• Language: ru");
     expect(superadminEmail.message).toContain("• Client IP: 203.0.113.1");
-    expect(superadminEmail.message).toContain("🪪 Driver's licence: not uploaded");
+    expect(superadminEmail.message).not.toContain("Driver's licence");
   });
 
-  test("CREATE with CDW includes localized insurance line before days in admin/superadmin messages", async () => {
+  test("CREATE with CDW omits insurance line in suites mode", async () => {
     await notifyOrderAction({
       order: { ...baseOrder, insurance: "CDW", numberOfDays: 2 },
       user: baseUser,
@@ -123,11 +116,8 @@ describe("orderNotificationDispatcher", () => {
     const superadminEmailMsg = sendEmailDirect.mock.calls[1][0].message;
     const telegramMsg = sendTelegramDirect.mock.calls[0][0];
     for (const msg of [companyMsg, superadminEmailMsg, telegramMsg]) {
-      const daysIdx = msg.indexOf("🗓 Days:");
-      const insIdx = msg.indexOf("🛡️ Insurance: CDW");
-      expect(insIdx).toBeGreaterThan(-1);
-      expect(daysIdx).toBeGreaterThan(-1);
-      expect(insIdx).toBeLessThan(daysIdx);
+      expect(msg).not.toContain("Insurance: CDW");
+      expect(msg).toContain("🏠 Apartment:");
     }
   });
 
@@ -149,10 +139,10 @@ describe("orderNotificationDispatcher", () => {
     expect(companyMsg).not.toContain("🪪");
     expect(companyMsg).not.toContain("Driver's licence:");
     expect(companyMsg).not.toContain(licUrl);
-    expect(superadminMsg).toContain(licUrl);
-    expect(superadminMsg).toContain("🪪 Driver's licence: uploaded");
-    expect(telegramMsg).toContain(licUrl);
-    expect(telegramMsg).toContain("🪪 Driver's licence: uploaded");
+    expect(superadminMsg).not.toContain(licUrl);
+    expect(superadminMsg).not.toContain("Driver's licence");
+    expect(telegramMsg).not.toContain(licUrl);
+    expect(telegramMsg).not.toContain("Driver's licence");
   });
 
   test("CREATE with driving licences and Russian notify locale does not throw (ru DICT had missing keys)", async () => {
@@ -175,7 +165,7 @@ describe("orderNotificationDispatcher", () => {
     expect(companyMsg).not.toContain("🪪");
     expect(companyMsg).not.toContain("Водительские права");
     expect(companyMsg).not.toContain(licUrl);
-    expect(superadminMsg).toContain(licUrl);
+    expect(superadminMsg).not.toContain(licUrl);
   });
 
   test("CREATE with TPL does not include insurance line", async () => {

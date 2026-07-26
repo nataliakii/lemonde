@@ -1,15 +1,14 @@
 "use client";
-import React, { useState, useEffect, Suspense, useMemo } from "react";
+import React, { useEffect, Suspense, useMemo } from "react";
 import { ThemeProvider } from "@mui/material";
-import darkTheme from "@theme";
 import { I18nextProvider } from "react-i18next";
-import { unstable_noStore } from "next/cache";
 
 import Loading from "@app/loading";
 import { Box } from "@mui/material";
 
 import i from "@locales/i18n";
 import { MainContextProvider } from "../Context";
+import { useCompanyTheme } from "@/domain/branding/createThemeFromCompany";
 
 import dynamic from "next/dynamic";
 import ScrollButton from "@/app/components/ui/buttons/ScrollButton";
@@ -35,8 +34,6 @@ function Feed({ children, ...props }) {
     [props.isAdmin]
   );
 
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
   // Keep i18n language and locale cookie aligned with URL locale prefix.
   useEffect(() => {
     const locale = typeof props.locale === "string" ? props.locale.toLowerCase() : null;
@@ -56,18 +53,13 @@ function Feed({ children, ...props }) {
     }
   }, [props.locale]);
 
-  useEffect(() => {
-    if (window.matchMedia("(prefers-color-scheme: light)").matches) {
-      setIsDarkMode(false);
-    }
-  }, []);
-
   // Мемоизируем пропсы для Context, чтобы предотвратить ненужные ре-рендеры
   const carsLength = props.cars?.length;
   const firstCarId = props.cars?.[0]?._id;
   const ordersLength = props.orders?.length;
   const firstOrderId = props.orders?.[0]?._id;
   const companyId = props.company?._id;
+  const brandPrimary = props.company?.branding?.primary;
   
   const contextProps = useMemo(
     () => ({
@@ -76,12 +68,14 @@ function Feed({ children, ...props }) {
       companyData: props.company,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [carsLength, firstCarId, ordersLength, firstOrderId, companyId]
+    [carsLength, firstCarId, ordersLength, firstOrderId, companyId, brandPrimary]
   );
+
+  const companyTheme = useCompanyTheme(props.company);
 
   return (
     <Suspense fallback={<Loading />}>
-      <ThemeProvider theme={darkTheme}>
+      <ThemeProvider theme={companyTheme}>
         <I18nextProvider i18n={i}>
           <MainContextProvider
             carsData={contextProps.carsData}

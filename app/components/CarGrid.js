@@ -16,7 +16,7 @@ import CarItemComponent from "./CarComponent/CarItemComponent";
 import ApartmentCard from "./ApartmentCard";
 import { carMatchesSearchQuery } from "@utils/carSearch";
 import { isApartmentAvailableForStay } from "@utils/stayAvailability";
-import { SINGLE_PROPERTY_MODE } from "@config/domain";
+import { SINGLE_PROPERTY_MODE, DISCOUNT_UI_ENABLED } from "@config/domain";
 
 const Section = styled("section")(() => ({
   backgroundColor: "transparent",
@@ -63,6 +63,7 @@ function CarGrid() {
   const [discountEnd, setDiscountEnd] = useState(null);
 
   const fetchDiscount = useCallback(async () => {
+    if (!DISCOUNT_UI_ENABLED) return;
     try {
       const res = await fetch("/api/discount");
       if (!res.ok) throw new Error("Ошибка загрузки скидки");
@@ -76,6 +77,7 @@ function CarGrid() {
   }, []);
 
   useEffect(() => {
+    if (!DISCOUNT_UI_ENABLED) return undefined;
     let timer;
     if (typeof window !== "undefined" && window.requestIdleCallback) {
       timer = window.requestIdleCallback(

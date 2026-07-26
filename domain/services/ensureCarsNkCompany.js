@@ -2,9 +2,21 @@ import { COMPANY_ID } from "@config/company";
 import { seasons } from "@utils/companyData";
 import mongoose from "mongoose";
 
+/** Curated property gallery (Cloudinary URLs) — home page carousel. */
+export const DEFAULT_PROPERTY_GALLERY = [
+  "https://res.cloudinary.com/dn513dy1y/image/upload/v1778342496/NK-site/listings/apartment-rent/ext-db-64abf11051d4/gotup85kawvwgtbcwd77.jpg",
+  "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530482/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/jkpbjezq0ujcxpxojfxu.jpg",
+  "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530481/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/laurom3hdqecvfjxpy2x.jpg",
+  "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530486/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/tombq0lhvblmbyucsclz.jpg",
+  "https://res.cloudinary.com/dn513dy1y/image/upload/v1778342506/NK-site/listings/apartment-rent/ext-db-64abf11051d4/ks0r84tpxhaigxn1sjdl.jpg",
+  "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530484/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/w4klswub7f8mp3w2f39v.jpg",
+  "https://res.cloudinary.com/dn513dy1y/image/upload/v1778342513/NK-site/listings/apartment-rent/ext-db-64abf11051d4/qpjp8p9ag7729rpfraqp.jpg",
+  "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530487/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/merwwpxyqpz5hj8hlmzx.jpg",
+];
+
 /**
  * Default company document for empty / new databases.
- * Uses fixed COMPANY_ID so config stays stable.
+ * Uses fixed COMPANY_ID so config stays stable (override via env COMPANY_ID).
  */
 export function getCarsNkCompanyDefaults() {
   return {
@@ -35,6 +47,41 @@ export function getCarsNkCompanyDefaults() {
     minRentalDuration: 1,
     workingHours: { start: "08:00", end: "22:00" },
     deliveryPricePerKm: 1,
+    branding: {
+      primary: "#C9A227",
+      primaryLight: "#E8D5A3",
+      primaryDark: "#9A7B2E",
+      secondary: "#1A1612",
+      secondaryLight: "#3A322A",
+      secondaryDark: "#0E0C0A",
+      accent: "#B85C38",
+      ink: "#2A2520",
+    },
+    assets: {
+      logoMark: "/logo-mark.png",
+      logoWordmark: "",
+      favicon: "/favicon.ico",
+      ogImage: "",
+      heroImages: [],
+      galleryImages: DEFAULT_PROPERTY_GALLERY,
+    },
+    cloudinary: {
+      rootFolder: "lemondesuites",
+      apartmentsFolder: "apartments",
+      ordersFolder: "orders",
+      // Keep existing CarsNK placeholder until a Le Monde asset is uploaded
+      placeholderPublicId: "carsnk/NO_PHOTO",
+    },
+    galleryTitle: {
+      en: "The property",
+      ru: "Отель",
+      el: "Το κατάλυμα",
+    },
+    gallerySubtitle: {
+      en: "Spaces designed for calm Mediterranean stays.",
+      ru: "Пространства для спокойного средиземноморского отдыха.",
+      el: "Χώροι σχεδιασμένοι για ήρεμη μεσογειακή διαμονή.",
+    },
   };
 }
 

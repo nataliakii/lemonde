@@ -14,6 +14,7 @@ import {
 import dynamic from "next/dynamic";
 import LegendCalendarAdmin from "@/app/components/calendar-ui/LegendCalendarAdmin";
 import { SINGLE_PROPERTY_MODE } from "@/config/domain";
+import { useTranslation } from "react-i18next";
 
 const SettingsIcon = dynamic(() => import("@mui/icons-material/Settings"), {
   ssr: false,
@@ -29,6 +30,7 @@ export default function CalendarToolbar({
   onOpenCalendarSettings,
   onBulkOfflineOrders,
 }) {
+  const { t } = useTranslation();
   const showInlineLegend =
     Boolean(showLegend) && legendPlacement === "inline";
   const showDelivery = !SINGLE_PROPERTY_MODE && Boolean(showDeliveryInLegend);
@@ -71,12 +73,13 @@ export default function CalendarToolbar({
   };
 
   return (
+    <>
     <Box
       sx={{
         flexShrink: 0,
         px: "10px",
         py: "4px",
-        borderBottom: 1,
+        borderBottom: SINGLE_PROPERTY_MODE && showLegend ? 0 : 1,
         borderColor: "rgba(255,255,255,0.1)",
         bgcolor: "#2a2a2a",
         boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
@@ -104,23 +107,23 @@ export default function CalendarToolbar({
             justifyContent: { xs: "center", sm: "flex-start" },
           }}
         >
-          <ToolbarGroup label="Период">
+          <ToolbarGroup label={t("admin.calendar.period")}>
             <ToggleButtonGroup
               exclusive
               size="small"
               value={dayRange}
               onChange={(_, v) => v != null && onDayRangeChange(v)}
-              aria-label="Диапазон дней календаря"
+              aria-label={t("admin.calendar.dayRange")}
               sx={toggleGroupSx}
             >
-              <ToggleButton value="15d">15 дн.</ToggleButton>
-              <ToggleButton value="1m">1 мес.</ToggleButton>
-              <ToggleButton value="2m">2 мес.</ToggleButton>
+              <ToggleButton value="15d">{t("admin.calendar.days15")}</ToggleButton>
+              <ToggleButton value="1m">{t("admin.calendar.month1")}</ToggleButton>
+              <ToggleButton value="2m">{t("admin.calendar.month2")}</ToggleButton>
             </ToggleButtonGroup>
           </ToolbarGroup>
         </Box>
 
-        {/* CENTER: buffer + delivery (mx auto + equal flex wings keeps block visually centered) */}
+        {/* CENTER: buffer + delivery */}
         <Box
           sx={{
             display: "flex",
@@ -141,7 +144,7 @@ export default function CalendarToolbar({
           />
         </Box>
 
-        {/* RIGHT: legend (icons) + settings */}
+        {/* RIGHT: legacy icon legend (cars) + settings */}
         <Box
           sx={{
             display: "flex",
@@ -153,7 +156,7 @@ export default function CalendarToolbar({
             order: { xs: 2, sm: 0 },
           }}
         >
-          {showInlineLegend ? (
+          {showInlineLegend && !SINGLE_PROPERTY_MODE ? (
             <Box
               sx={{
                 display: "flex",
@@ -194,15 +197,15 @@ export default function CalendarToolbar({
                 },
               }}
             >
-              Bulk offline
+              {t("admin.calendar.bulkOffline")}
             </Button>
           ) : null}
 
-          <Tooltip title="Настройки календаря" arrow>
+          <Tooltip title={t("admin.calendar.settings")} arrow>
             <IconButton
               size="small"
               onClick={onOpenCalendarSettings}
-              aria-label="Настройки календаря"
+              aria-label={t("admin.calendar.settings")}
               sx={{
                 color: "rgba(255,255,255,0.92)",
                 border: "1px solid rgba(255,255,255,0.22)",
@@ -222,6 +225,17 @@ export default function CalendarToolbar({
         </Box>
       </Box>
     </Box>
+    {SINGLE_PROPERTY_MODE && showLegend ? (
+      <Box sx={{ flexShrink: 0, bgcolor: "#2a2a2a" }}>
+        <LegendCalendarAdmin
+          asStrip
+          showLegendItems
+          showBufferControls={false}
+          showDeliveryInfo={false}
+        />
+      </Box>
+    ) : null}
+    </>
   );
 }
 

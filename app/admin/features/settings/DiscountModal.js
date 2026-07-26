@@ -11,20 +11,28 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import DialogLayout from "@/app/components/ui/modals/DialogLayout";
+import { useTranslation } from "react-i18next";
 
 /**
  * DiscountModal - Admin-only component for setting discount dates
  * Heavy date picker libraries are lazy-loaded only when modal opens
- * 
+ *
  * Location: admin/features/settings/ (admin-only bundle)
- * 
- * NOTE: DialogLayout.loading используется ТОЛЬКО для UX-действий (сохранение).
- * Lazy-loading библиотек обрабатывается внутренним placeholder в children.
+ *
+ * NOTE: DialogLayout.loading is only for UX actions (save).
+ * Lazy-loading of libraries is handled by the inner placeholder in children.
  */
 const DISCOUNT_SLIDER_MARKS = [0, 25, 50, 75, 100].map((value) => ({
   value,
   label: `${value}%`,
 }));
+
+const DAYJS_LOCALE_LOADERS = {
+  en: () => import("dayjs/locale/en").then((mod) => mod.default || mod.en),
+  el: () => import("dayjs/locale/el").then((mod) => mod.default || mod.el),
+  de: () => import("dayjs/locale/de").then((mod) => mod.default || mod.de),
+  ru: () => import("dayjs/locale/ru").then((mod) => mod.default || mod.ru),
+};
 
 export default function DiscountModal({
   open,
@@ -40,6 +48,9 @@ export default function DiscountModal({
   discountHistory = [],
   activeDiscount = null,
 }) {
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "en").split("-")[0];
+
   // Lazy load all date picker dependencies only when modal opens
   const [DatePicker, setDatePicker] = React.useState(null);
   const [LocalizationProvider, setLocalizationProvider] = React.useState(null);
@@ -50,38 +61,57 @@ export default function DiscountModal({
 
   React.useEffect(() => {
     if (open && !DatePicker && !LocalizationProvider) {
-      // Load all date picker libraries only when modal opens for the first time
+      const loadLocale =
+        DAYJS_LOCALE_LOADERS[lang] || DAYJS_LOCALE_LOADERS.en;
       Promise.all([
-        // Используем DesktopDatePicker для компактного выпадающего календаря
-        import("@mui/x-date-pickers/DesktopDatePicker").then((mod) => mod.DesktopDatePicker || mod.default),
-        import("@mui/x-date-pickers/LocalizationProvider").then((mod) => mod.LocalizationProvider || mod.default),
-        import("@mui/x-date-pickers/AdapterDayjs").then((mod) => mod.AdapterDayjs || mod.default),
-        import("dayjs/locale/ru").then((mod) => mod.default || mod.ru),
+        import("@mui/x-date-pickers/DesktopDatePicker").then(
+          (mod) => mod.DesktopDatePicker || mod.default
+        ),
+        import("@mui/x-date-pickers/LocalizationProvider").then(
+          (mod) => mod.LocalizationProvider || mod.default
+        ),
+        import("@mui/x-date-pickers/AdapterDayjs").then(
+          (mod) => mod.AdapterDayjs || mod.default
+        ),
+        loadLocale(),
         import("dayjs").then((mod) => mod.default),
       ])
-        .then(([DatePickerComponent, LocalizationProviderComponent, adapter, ruLocale, dayjsLib]) => {
-          // Проверяем, что все компоненты загружены
-          if (DatePickerComponent && LocalizationProviderComponent && adapter && ruLocale && dayjsLib) {
-            setDatePicker(() => DatePickerComponent);
-            setLocalizationProvider(() => LocalizationProviderComponent);
-            setDateAdapter(() => adapter);
-            setLocale(ruLocale);
-            setDayjs(() => dayjsLib);
-          } else {
-            console.error("Some date picker components failed to load:", {
-              DatePickerComponent: !!DatePickerComponent,
-              LocalizationProviderComponent: !!LocalizationProviderComponent,
-              adapter: !!adapter,
-              ruLocale: !!ruLocale,
-              dayjs: !!dayjsLib,
-            });
+        .then(
+          ([
+            DatePickerComponent,
+            LocalizationProviderComponent,
+            adapter,
+            dayjsLocale,
+            dayjsLib,
+          ]) => {
+            if (
+              DatePickerComponent &&
+              LocalizationProviderComponent &&
+              adapter &&
+              dayjsLocale &&
+              dayjsLib
+            ) {
+              setDatePicker(() => DatePickerComponent);
+              setLocalizationProvider(() => LocalizationProviderComponent);
+              setDateAdapter(() => adapter);
+              setLocale(dayjsLocale);
+              setDayjs(() => dayjsLib);
+            } else {
+              console.error("Some date picker components failed to load:", {
+                DatePickerComponent: !!DatePickerComponent,
+                LocalizationProviderComponent: !!LocalizationProviderComponent,
+                adapter: !!adapter,
+                dayjsLocale: !!dayjsLocale,
+                dayjs: !!dayjsLib,
+              });
+            }
           }
-        })
+        )
         .catch((err) => {
           console.error("Failed to load date picker libraries:", err);
         });
     }
-  }, [open, DatePicker, LocalizationProvider]);
+  }, [open, DatePicker, LocalizationProvider, lang]);
 
   React.useEffect(() => {
     if (open) {
@@ -150,11 +180,10 @@ export default function DiscountModal({
       open={open}
       onClose={onClose}
       maxWidth="sm"
-      title={`Выбор скидки: ${selectedDiscount}%`}
+      title={t("adminModals.discountTitle", { value: selectedDiscount })}
       showCloseButton={true}
       closeOnBackdropClick={false}
       closeOnEscape={false}
-      // loading НЕ используется для lazy-import — только для UX-действий
       contentSx={{ minWidth: 350, pb: 3, pt: 3 }}
       sx={{
         "& .MuiDialog-paper": {
@@ -163,7 +192,6 @@ export default function DiscountModal({
         },
       }}
     >
-      {/* Внутренний placeholder пока библиотеки загружаются */}
       {!isReady ? (
         <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", py: 8 }}>
           <CircularProgress />
@@ -181,12 +209,14 @@ export default function DiscountModal({
             }}
           >
             <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-              Активная скидка
+              {t("adminModals.activeDiscount")}
             </Typography>
             <Typography variant="body2">
               {resolvedActiveDiscount
-                ? `Активная скидка: ${formatValue(resolvedActiveDiscount)}`
-                : "Скидка не применена"}
+                ? t("adminModals.activeDiscountValue", {
+                    value: formatValue(resolvedActiveDiscount),
+                  })
+                : t("adminModals.discountNotApplied")}
             </Typography>
           </Box>
 
@@ -195,7 +225,7 @@ export default function DiscountModal({
           <LocalizationProvider dateAdapter={DateAdapter} adapterLocale={locale}>
             <Box sx={{ mb: 3, mt: 2 }}>
               <DatePicker
-                label="Дата начала скидки"
+                label={t("adminModals.discountStartDate")}
                 value={discountStartDate ? dayjs(discountStartDate) : null}
                 disablePast
                 minDate={dayjs()}
@@ -234,7 +264,7 @@ export default function DiscountModal({
             </Box>
             <Box sx={{ mb: 3 }}>
               <DatePicker
-                label="Дата окончания скидки"
+                label={t("adminModals.discountEndDate")}
                 value={discountEndDate ? dayjs(discountEndDate) : null}
                 disablePast
                 minDate={
@@ -301,11 +331,11 @@ export default function DiscountModal({
                 color="success.main"
                 sx={{ display: "block", mb: 1.5, fontWeight: 600 }}
               >
-                Скидка активна сегодня
+                {t("adminModals.discountActiveToday")}
               </Typography>
             )}
             <Typography gutterBottom sx={{ mb: 2 }}>
-              Скидка на аренду (%):
+              {t("adminModals.discountOnRental")}
             </Typography>
             <Slider
               value={selectedDiscount}
@@ -327,8 +357,10 @@ export default function DiscountModal({
               sx={{ p: 0, minWidth: "auto", fontSize: "0.75rem", textTransform: "none" }}
             >
               {isHistoryExpanded
-                ? "Скрыть историю скидок"
-                : `История скидок (${sortedHistory.length})`}
+                ? t("adminModals.hideDiscountHistory")
+                : t("adminModals.discountHistory", {
+                    count: sortedHistory.length,
+                  })}
             </Button>
           </Box>
 
@@ -346,7 +378,7 @@ export default function DiscountModal({
             >
               {sortedHistory.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  История скидок пуста
+                  {t("adminModals.discountHistoryEmpty")}
                 </Typography>
               ) : (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -361,12 +393,17 @@ export default function DiscountModal({
                       }}
                     >
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {entry.type === "fixed" ? "Фиксированная скидка" : "% скидка"}: {formatValue(entry)}
+                        {entry.type === "fixed"
+                          ? t("adminModals.fixedDiscount")
+                          : t("adminModals.percentDiscount")}
+                        : {formatValue(entry)}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Когда: {formatAppliedAt(entry.appliedAt)}
-                        {entry.appliedBy ? ` · Кем: ${entry.appliedBy}` : ""}
-                        {` · Источник: ${entry.source}`}
+                        {t("adminModals.when")}: {formatAppliedAt(entry.appliedAt)}
+                        {entry.appliedBy
+                          ? ` · ${t("adminModals.byWhom")}: ${entry.appliedBy}`
+                          : ""}
+                        {` · ${t("adminModals.source")}: ${entry.source}`}
                       </Typography>
                     </Box>
                   ))}
@@ -374,11 +411,11 @@ export default function DiscountModal({
               )}
             </Box>
           )}
-        
+
           <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 3 }}>
-            <Button onClick={onClose}>Закрыть</Button>
+            <Button onClick={onClose}>{t("basic.close")}</Button>
             <Button variant="contained" onClick={onSave}>
-              Сохранить
+              {t("basic.save")}
             </Button>
           </Box>
         </>

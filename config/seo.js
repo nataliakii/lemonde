@@ -85,12 +85,24 @@ export function getSeoConfig(dbCompanyData = null) {
         fallbackCompanyData.coords?.lon ||
         "23.06426516796098",
     },
-    heroImageUrl: process.env.NEXT_PUBLIC_HERO_IMAGE_URL || null,
-    heroImages: getHeroImages(),
+    heroImageUrl:
+      (Array.isArray(companyData?.assets?.heroImages) &&
+        companyData.assets.heroImages[0]) ||
+      companyData?.assets?.ogImage ||
+      process.env.NEXT_PUBLIC_HERO_IMAGE_URL ||
+      null,
+    heroImages: getHeroImages(companyData),
   };
 }
 
-function getHeroImages() {
+function getHeroImages(dbCompanyData = null) {
+  const fromDb = Array.isArray(dbCompanyData?.assets?.heroImages)
+    ? dbCompanyData.assets.heroImages.filter(
+        (item) => typeof item === "string" && item.trim().length > 0
+      )
+    : [];
+  if (fromDb.length) return fromDb;
+
   const raw =
     (typeof process !== "undefined" && process.env.NEXT_PUBLIC_HERO_IMAGES) || "";
   if (!raw || typeof raw !== "string") return [];

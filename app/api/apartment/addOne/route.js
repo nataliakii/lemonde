@@ -155,6 +155,8 @@ function extractApartmentData(formData) {
     bathrooms: toNumber(formData.get("bathrooms"), 1),
     sizeSqm: toNumber(formData.get("sizeSqm"), null),
     floor: toNumber(formData.get("floor"), null),
+    beds: toNumber(formData.get("beds"), null),
+    transferPrice: toNumber(formData.get("transferPrice"), 0),
     description: String(formData.get("description") || ""),
     amenities: parseAmenities(formData.get("amenities")),
   };

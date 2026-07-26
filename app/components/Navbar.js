@@ -30,7 +30,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useSession, signOut } from "next-auth/react";
 import { ROLE } from "@/domain/orders/admin-rbac";
-import { SINGLE_PROPERTY_MODE } from "@/config/domain";
+import { SINGLE_PROPERTY_MODE, DISCOUNT_UI_ENABLED } from "@/config/domain";
 import BrandLogo from "@app/components/BrandLogo";
 
 import LanguageIcon from "@mui/icons-material/Language";
@@ -159,11 +159,6 @@ export default function NavBar({
     isAdmin && session?.user?.role !== undefined ? session.user.role : null; // ROLE.ADMIN = 1, ROLE.SUPERADMIN = 2
   const isSuperAdmin = adminRole === ROLE.SUPERADMIN;
 
-  // Обработчик logout
-  const handleLogout = async () => {
-    await signOut({ callbackUrl: "/" });
-  };
-
   // Следим за выходом из полноэкранного режима
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -226,6 +221,20 @@ export default function NavBar({
   const router = useRouter();
   const pathname = usePathname();
 
+  // Prefer next-auth signOut; if fetch fails (wrong NEXTAUTH_URL / hung API),
+  // force hard navigation to the signout endpoint.
+  const handleLogout = async () => {
+    const home = withLocalePrefix(i18n.language, "/");
+    try {
+      await signOut({ callbackUrl: home });
+    } catch (err) {
+      console.error("signOut failed, forcing redirect:", err);
+      window.location.assign(
+        `/api/auth/signout?callbackUrl=${encodeURIComponent(home)}`
+      );
+    }
+  };
+
   // Загружаем скидку для ВСЕХ пользователей (чтобы показать активную скидку)
   // Сохранение скидки доступно только админам (см. handleSaveDiscount)
   const loadDiscountData = useCallback(async () => {
@@ -262,6 +271,7 @@ export default function NavBar({
   }, []);
 
   useEffect(() => {
+    if (!DISCOUNT_UI_ENABLED) return;
     loadDiscountData();
   }, [loadDiscountData]);
 
@@ -936,42 +946,46 @@ export default function NavBar({
                         </Typography>
                       </Link>
                     )}
-                    <Box
-                      aria-hidden
-                      sx={{
-                        width: "1px",
-                        alignSelf: "stretch",
-                        my: 0.6,
-                        mx: { md: 0.4, lg: 0.75 },
-                        backgroundColor: "rgba(255,255,255,0.28)",
-                        flexShrink: 0,
-                      }}
-                    />
-                    <Button
-                      onClick={() => setDiscountModalOpen(true)}
-                      title={discountButtonLabel}
-                      sx={{
-                        ...adminActionLinkSx,
-                        maxWidth: { md: 140, lg: 200 },
-                        ...(discountActiveNow && {
-                          opacity: 1,
-                          color: "#a5d6a7",
-                          borderBottom: "1px solid rgba(165,214,167,0.7)",
-                        }),
-                      }}
-                    >
-                      <Box
-                        component="span"
-                        sx={{
-                          display: "block",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {currentDiscountInlineLabel}
-                      </Box>
-                    </Button>
+                    {DISCOUNT_UI_ENABLED && (
+                      <>
+                        <Box
+                          aria-hidden
+                          sx={{
+                            width: "1px",
+                            alignSelf: "stretch",
+                            my: 0.6,
+                            mx: { md: 0.4, lg: 0.75 },
+                            backgroundColor: "rgba(255,255,255,0.28)",
+                            flexShrink: 0,
+                          }}
+                        />
+                        <Button
+                          onClick={() => setDiscountModalOpen(true)}
+                          title={discountButtonLabel}
+                          sx={{
+                            ...adminActionLinkSx,
+                            maxWidth: { md: 140, lg: 200 },
+                            ...(discountActiveNow && {
+                              opacity: 1,
+                              color: "#a5d6a7",
+                              borderBottom: "1px solid rgba(165,214,167,0.7)",
+                            }),
+                          }}
+                        >
+                          <Box
+                            component="span"
+                            sx={{
+                              display: "block",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {currentDiscountInlineLabel}
+                          </Box>
+                        </Button>
+                      </>
+                    )}
                   </>
                 )}
               </Stack>
@@ -1461,7 +1475,7 @@ export default function NavBar({
                     <ListItemText primary={t("header.owners")} />
                   </ListItem>
                 )}
-                {isAdmin && (
+                {isAdmin && DISCOUNT_UI_ENABLED && (
                   <ListItem
                     button
                     onClick={() => {

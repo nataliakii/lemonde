@@ -4,6 +4,7 @@ import { Apartment } from "@models/apartment";
 import { toBusinessDateTime } from "@/domain/orders/numberOfDays";
 import { calculateDeliveryPrice } from "@/domain/delivery/calculateDeliveryPrice";
 import { toBooleanField } from "@/domain/orders/fieldUtils";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 
 export async function POST(request) {
   // Логируем параметры для диагностики
@@ -24,7 +25,9 @@ export async function POST(request) {
       secondDriver = false,
       placeIn,
       placeOut,
+      needsTransfer = false,
     } = debugBody;
+    const normalizedNeedsTransfer = toBooleanField(needsTransfer, false);
     const calculationStartSource = timeIn ?? rentalStartDate;
     const calculationEndSource = timeOut ?? rentalEndDate;
     const normalizedStartDate = toBusinessDateTime(calculationStartSource);
@@ -94,7 +97,19 @@ export async function POST(request) {
     );
 
     let deliveryData = {};
-    if (placeIn || placeOut) {
+    if (SINGLE_PROPERTY_MODE) {
+      // Suites: transfer fee from apartment.transferPrice when requested
+      const transferFee = normalizedNeedsTransfer
+        ? Math.max(0, Number(car.transferPrice) || 0)
+        : 0;
+      deliveryData = {
+        deliveryIn: 0,
+        deliveryOut: 0,
+        deliveryTotal: transferFee,
+        transferPrice: transferFee,
+        transferRequested: normalizedNeedsTransfer,
+      };
+    } else if (placeIn || placeOut) {
       try {
         deliveryData = await calculateDeliveryPrice({ placeIn, placeOut });
       } catch (err) {

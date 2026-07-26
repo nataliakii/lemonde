@@ -1268,6 +1268,7 @@ export default function CarTableRow({
 
         return (
           <Box
+            {...orderInteractionProps}
             onMouseDown={() => handleLongPressStart(dateStr)}
             onMouseUp={handleOverlapMouseUp}
             onMouseLeave={handleLongPressEnd}
@@ -1279,6 +1280,8 @@ export default function CarTableRow({
                   : undefined
                 : cellState.isCompletedCell || cellState.isPastDay
                 ? t("suites.clickToViewOrder")
+                : orderForDrag
+                ? t("suites.dragHintShort")
                 : t("suites.dragHintOpen")
             }
             sx={{
@@ -1300,8 +1303,15 @@ export default function CarTableRow({
                 ? MOVE_MODE_COLORS.BLUE_SELECTED
                 : overlapBackgroundColor,
               backgroundColor: "transparent",
-              cursor: "pointer",
+              cursor: orderForDrag
+                ? isDraggingOrder
+                  ? "grabbing"
+                  : "grab"
+                : "pointer",
               width: "100%",
+              opacity: dragSourceOpacity,
+              userSelect: orderForDrag ? "none" : undefined,
+              WebkitUserDrag: orderForDrag ? "element" : undefined,
             }}
           >
             {/* Желтый overlay для первого/последнего дня перемещения */}
@@ -1428,6 +1438,7 @@ export default function CarTableRow({
 
         return (
           <Box
+            {...orderInteractionProps}
             onMouseDown={() => handleLongPressStart(dateStr)}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleLongPressEnd}
@@ -1441,6 +1452,8 @@ export default function CarTableRow({
                   : undefined
                 : cellState.isCompletedCell || cellState.isPastDay
                 ? t("suites.clickToViewOrder")
+                : orderForDrag
+                ? t("suites.dragHintShort")
                 : t("suites.dragHintOpen")
             }
             sx={{
@@ -1450,7 +1463,14 @@ export default function CarTableRow({
               height: "100%",
               display: "flex",
               flexDirection: "row",
-              cursor: "pointer",
+              cursor: orderForDrag
+                ? isDraggingOrder
+                  ? "grabbing"
+                  : "grab"
+                : "pointer",
+              opacity: dragSourceOpacity,
+              userSelect: orderForDrag ? "none" : undefined,
+              WebkitUserDrag: orderForDrag ? "element" : undefined,
             }}
           >
             {/* Желтый overlay для первого/последнего дня перемещения */}
@@ -1615,8 +1635,16 @@ export default function CarTableRow({
               display: "flex",
               flexDirection: "row",
               cursor:
-                moveMode && !isActiveInMoveMode ? "not-allowed" : "pointer",
+                moveMode && !isActiveInMoveMode
+                  ? "not-allowed"
+                  : orderForDrag
+                    ? isDraggingOrder
+                      ? "grabbing"
+                      : "grab"
+                    : "pointer",
               opacity: dragSourceOpacity,
+              userSelect: orderForDrag ? "none" : undefined,
+              WebkitUserDrag: orderForDrag ? "element" : undefined,
             }}
           >
             {/* Желтый overlay для первого/последнего дня перемещения */}
@@ -1753,10 +1781,16 @@ export default function CarTableRow({
               flexDirection: "row",
               cursor: moveMode && !isActiveInMoveMode
                 ? "not-allowed"
-                : "pointer",
+                : orderForDrag
+                  ? isDraggingOrder
+                    ? "grabbing"
+                    : "grab"
+                  : "pointer",
               alignItems: "center",
               justifyContent: "center",
               opacity: dragSourceOpacity,
+              userSelect: orderForDrag ? "none" : undefined,
+              WebkitUserDrag: orderForDrag ? "element" : undefined,
             }}
           >
             {/* Желтый overlay для первого/последнего дня перемещения */}
@@ -1925,10 +1959,16 @@ export default function CarTableRow({
             cursor:
               moveMode && !isPartOfSelectedOrder(dateStr)
                 ? "not-allowed"
-                : "pointer",
+                : orderForDrag
+                  ? isDraggingOrder
+                    ? "grabbing"
+                    : "grab"
+                  : "pointer",
             border: border,
             width: "100%",
             opacity: dragSourceOpacity,
+            userSelect: orderForDrag ? "none" : undefined,
+            WebkitUserDrag: orderForDrag ? "element" : undefined,
           }}
         >
           {/* Желтый overlay для первого/последнего дня перемещения */}

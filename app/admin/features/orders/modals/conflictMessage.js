@@ -3,18 +3,14 @@ import { Grid, Box, Typography, Button } from "@mui/material";
 import dayjs from "dayjs";
 import { useMainContext } from "@app/Context";
 import { deleteOrder } from "@/utils/action";
-
-const mappingTypes = {
-  1: "Изменение дат создало конфликт бронирования с даныи датами",
-  2: "Брони которые не позволяют занять указанные даты",
-  3: "У єтого заказа есть конфликтующие бронирования",
-};
+import { useTranslation } from "react-i18next";
 
 export default function ConflictMessage({
   initialConflicts,
   type,
   setUpdateMessage,
 }) {
+  const { t } = useTranslation();
   const { fetchAndUpdateOrders } = useMainContext();
   const [loading, setLoading] = useState(false);
   const [conflicts, setConflicts] = useState(initialConflicts);
@@ -23,23 +19,31 @@ export default function ConflictMessage({
     setConflicts(initialConflicts);
   }, [initialConflicts]);
 
+  const mappingTypes = {
+    1: t("order.conflictDatesChange"),
+    2: t("order.conflictBlockingBookings"),
+    3: t("order.conflictHasConflicts"),
+  };
+
   const handleDeleteOrder = async (orderId) => {
     setLoading(true);
     try {
       const result = await deleteOrder(orderId);
 
       if (!result.success) {
-        setUpdateMessage(result.message || "Failed to delete order");
-        throw new Error(result.message || "Failed to delete order");
+        setUpdateMessage(result.message || t("order.orderDeleteFailed"));
+        throw new Error(result.message || t("order.orderDeleteFailed"));
       }
       await fetchAndUpdateOrders();
       setConflicts((prevConflicts) =>
         prevConflicts.filter((o) => o._id !== orderId)
       );
-      setUpdateMessage("Order deleted successfully");
+      setUpdateMessage(t("order.orderDeletedSuccess"));
     } catch (error) {
       console.error("Failed to delete order:", error);
-      setUpdateMessage(`Failed to delete order: ${error.message}`);
+      setUpdateMessage(
+        `${t("order.orderDeleteFailed")}: ${error.message}`
+      );
     } finally {
       setLoading(false);
     }
@@ -65,14 +69,16 @@ export default function ConflictMessage({
 
       <Grid container spacing={2}>
         {conflicts.map((o) => (
-          <Grid item sx={12} sm={12} md={6} key={o.id || o._id}>
+          <Grid item xs={12} sm={12} md={6} key={o.id || o._id}>
             <Box border={1} borderColor="grey.300" p={2} borderRadius={2}>
               <Typography variant="body1" fontWeight="bold">
                 {o.customerName}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Бронь с {dayjs(o.rentalStartDate).format("MMM D")} по{" "}
-                {dayjs(o.rentalEndDate).format("MMM D")}
+                {t("order.bookingFromTo", {
+                  from: dayjs(o.rentalStartDate).format("MMM D"),
+                  to: dayjs(o.rentalEndDate).format("MMM D"),
+                })}
               </Typography>
               <Typography variant="body2">{o.email}</Typography>
               <Typography variant="body2">{o.phone}</Typography>
@@ -80,7 +86,9 @@ export default function ConflictMessage({
                 variant="body2"
                 color={o.confirmed ? "success.main" : "error"}
               >
-                {o.confirmed ? "Подтвержден" : "НЕ Подтвержден"}
+                {o.confirmed
+                  ? t("order.confirmedShort")
+                  : t("order.notConfirmedShort")}
               </Typography>
               <Button
                 variant="contained"
@@ -89,7 +97,7 @@ export default function ConflictMessage({
                 disabled={loading}
                 sx={{ mt: 2 }}
               >
-                Удалить
+                {t("order.delete")}
               </Button>
             </Box>
           </Grid>

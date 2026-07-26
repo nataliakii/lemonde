@@ -9,14 +9,19 @@ import {
   Popover,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { ORDER_COLORS, getOrderColorsForLegend, getOfflineHatchBackground } from "@/config/orderColors";
+import {
+  ORDER_COLORS,
+  getOrderColorsForLegend,
+  getOfflineHatchBackground,
+  getSuitesLegendRows,
+} from "@/config/orderColors";
 import { useMainContext } from "@app/Context";
 import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 import dynamic from "next/dynamic";
 
-// ВАЖНО: Динамический импорт admin-only компонентов
-// Это исключает их из public bundle (экономия ~50KB+)
-const SettingsIcon = dynamic(() => import("@mui/icons-material/Settings"), { ssr: false });
+const SettingsIcon = dynamic(() => import("@mui/icons-material/Settings"), {
+  ssr: false,
+});
 const BufferSettingsModal = dynamic(
   () => import("@/app/admin/features/settings/BufferSettingsModal"),
   { ssr: false }
@@ -24,44 +29,35 @@ const BufferSettingsModal = dynamic(
 
 const TOOLBAR_LEGEND_DETAIL_BY_KEY = {
   PAID_AND_CLOSED: "suites.legendPaidClosed",
-  CONFIRMED_CLIENT: "suites.legendConfirmedClient",
-  CONFIRMED_ADMIN: "suites.legendConfirmedAdmin",
+  CONFIRMED_CLIENT: "suites.legendConfirmedTip",
+  CONFIRMED_ADMIN: "suites.legendConfirmedTip",
   OFFLINE: "suites.legendStubTip",
-  OFFLINE_PENDING: "suites.legendStubPendingTip",
-  PENDING_CLIENT: "suites.legendPendingClient",
-  PENDING_ADMIN: "suites.legendPendingAdmin",
+  OFFLINE_PENDING: "suites.legendStubTip",
+  PENDING_CLIENT: "suites.legendPendingTip",
+  PENDING_ADMIN: "suites.legendPendingTip",
 };
 
 const LEGEND_POPOVER_ID = "calendar-admin-legend-popover";
 
 /**
- * Легенда календаря для админки и клиентской части
- * 
- * Для админки показывает 4 типа заказов:
- * 1. Подтверждён (клиент) — красный
- * 2. Подтверждён (внутр.) — горчичный
- * 3. Ожидает (клиент) — фиолетовый
- * 4. Ожидает (внутр.) — жёлтый
- * 
- * + Заблокированные pending (⛔)
+ * Легенда календаря.
+ * Suites: зелёный = подтверждён, жёлтый = неподтверждён, штрих = заглушка.
  */
 function LegendCalendarAdmin({
   client,
   showLegendItems = true,
-  /** Только квадратики статусов; подписи в Tooltip (тулбар) */
   legendIconsOnly = false,
   showBufferControls = true,
   showDeliveryInfo = true,
-  /** В Drawer настройки — показывать на всех ширинах экрана */
   inDrawer = false,
-  /** В верхнем control bar — без фоновой карточки */
   inToolbar = false,
+  /** Full-width strip under toolbar with labels (suites default) */
+  asStrip = false,
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const { company } = useMainContext();
   const [bufferModalOpen, setBufferModalOpen] = useState(false);
-  /** Свернута / развёрнута: в тулбаре = открыт popover; в блоке под календарем = inline-раскладка */
   const [legendExpanded, setLegendExpanded] = useState(false);
   const [coarsePointer, setCoarsePointer] = useState(false);
   const legendGroupRef = useRef(null);
@@ -79,19 +75,18 @@ function LegendCalendarAdmin({
     };
   }, []);
 
-  // Светлые цвета для тёмного фона
   const darkBgColors = theme.palette.backgroundDark1 || {};
-  const primaryTextColor = inToolbar
+  const primaryTextColor = inToolbar || asStrip
     ? "rgba(255,255,255,0.9)"
     : darkBgColors.text || "#ffffff";
-  const secondaryTextColor = inToolbar
-    ? "rgba(255,255,255,0.66)"
+  const secondaryTextColor = inToolbar || asStrip
+    ? "rgba(255,255,255,0.72)"
     : darkBgColors.text || "#ffffff";
 
-  // Suites mode: never show car-delivery €/km (even if a parent passes true).
   const deliveryVisible = !SINGLE_PROPERTY_MODE && Boolean(showDeliveryInfo);
   const deliveryPrice =
-    company?.deliveryPricePerKm != null && Number.isFinite(company.deliveryPricePerKm)
+    company?.deliveryPricePerKm != null &&
+    Number.isFinite(company.deliveryPricePerKm)
       ? company.deliveryPricePerKm
       : null;
   const bufferRaw = company?.bufferTime;
@@ -105,9 +100,9 @@ function LegendCalendarAdmin({
   const baseItemSx = {
     display: "inline-flex",
     alignItems: "center",
-    gap: inToolbar ? 0.45 : 0.6,
+    gap: inToolbar || asStrip ? 0.55 : 0.6,
     color: primaryTextColor,
-    fontSize: inToolbar ? "0.72rem" : "0.75rem",
+    fontSize: asStrip ? "0.78rem" : inToolbar ? "0.72rem" : "0.75rem",
     lineHeight: 1.1,
     whiteSpace: "nowrap",
     maxWidth: "100%",
@@ -116,20 +111,22 @@ function LegendCalendarAdmin({
   const legendTooltipTitle = (label, tooltip) =>
     tooltip && String(tooltip).trim() ? `${label}: ${tooltip}` : label;
 
-  // Компактный элемент легенды
   const CompactLegendItem = ({ color, label, tooltip, iconsOnly, hatch }) => {
     const title = legendTooltipTitle(label, tooltip);
     const swatch = (
       <Box
         component="span"
         sx={{
-          width: iconsOnly ? 11 : 9,
-          height: iconsOnly ? 11 : 9,
-          minWidth: iconsOnly ? 11 : 9,
-          borderRadius: iconsOnly ? "3px" : "2px",
+          width: iconsOnly ? 11 : asStrip ? 12 : 9,
+          height: iconsOnly ? 11 : asStrip ? 12 : 9,
+          minWidth: iconsOnly ? 11 : asStrip ? 12 : 9,
+          borderRadius: iconsOnly || asStrip ? "3px" : "2px",
           backgroundColor: hatch ? undefined : color,
           background: hatch ? getOfflineHatchBackground(color) : undefined,
-          boxShadow: iconsOnly ? "0 0 0 1px rgba(255,255,255,0.12) inset" : "none",
+          boxShadow:
+            iconsOnly || asStrip
+              ? "0 0 0 1px rgba(255,255,255,0.12) inset"
+              : "none",
         }}
       />
     );
@@ -157,6 +154,11 @@ function LegendCalendarAdmin({
           sx={{
             ...baseItemSx,
             cursor: tooltip ? "help" : "default",
+            px: asStrip ? 0.85 : 0,
+            py: asStrip ? 0.35 : 0,
+            borderRadius: asStrip ? 1 : 0,
+            border: asStrip ? "1px solid rgba(255,255,255,0.12)" : "none",
+            backgroundColor: asStrip ? "rgba(255,255,255,0.04)" : "transparent",
           }}
         >
           {swatch}
@@ -165,8 +167,8 @@ function LegendCalendarAdmin({
             variant="caption"
             sx={{
               color: secondaryTextColor,
-              fontSize: inToolbar ? "0.7rem" : "0.74rem",
-              fontWeight: 500,
+              fontSize: asStrip ? "0.78rem" : inToolbar ? "0.7rem" : "0.74rem",
+              fontWeight: asStrip ? 600 : 500,
               overflow: "hidden",
               textOverflow: "ellipsis",
             }}
@@ -178,8 +180,13 @@ function LegendCalendarAdmin({
     );
   };
 
-  // Полный элемент легенды (inline или внутри popover)
-  const FullLegendItem = ({ color, label, tooltip, wrap = false, hatch = false }) => (
+  const FullLegendItem = ({
+    color,
+    label,
+    tooltip,
+    wrap = false,
+    hatch = false,
+  }) => (
     <Tooltip title={tooltip || ""} arrow>
       <Box
         sx={{
@@ -229,7 +236,20 @@ function LegendCalendarAdmin({
     </Tooltip>
   );
 
-  const rowDisplay = inDrawer || inToolbar ? "flex" : { xs: "none", sm: "flex" };
+  const suitesMode = SINGLE_PROPERTY_MODE && !client;
+  const suitesRows = suitesMode
+    ? getSuitesLegendRows().map((row) => ({
+        key: row.key,
+        color: row.color,
+        hatch: row.hatch,
+        label: t(row.labelKey),
+        tooltip: t(row.tipKey),
+      }))
+    : null;
+
+  const rowDisplay =
+    asStrip || inDrawer || inToolbar ? "flex" : { xs: "none", sm: "flex" };
+
   const compactLegendItems = client
     ? [
         {
@@ -239,7 +259,7 @@ function LegendCalendarAdmin({
           tooltip: t("suites.legendBooked"),
         },
       ]
-    : [
+    : suitesRows || [
         {
           key: "paid-and-closed",
           color: ORDER_COLORS.PAID_AND_CLOSED.main,
@@ -250,13 +270,13 @@ function LegendCalendarAdmin({
           key: "confirmed-client",
           color: ORDER_COLORS.CONFIRMED_CLIENT.main,
           label: "Client",
-          tooltip: t("suites.legendConfirmedClient"),
+          tooltip: t("suites.legendConfirmedTip"),
         },
         {
           key: "confirmed-admin",
           color: ORDER_COLORS.CONFIRMED_ADMIN.main,
           label: "Admin",
-          tooltip: t("suites.legendConfirmedAdmin"),
+          tooltip: t("suites.legendConfirmedTip"),
         },
         {
           key: "offline",
@@ -269,38 +289,87 @@ function LegendCalendarAdmin({
           key: "offline-pending",
           color: ORDER_COLORS.OFFLINE_PENDING.main,
           hatch: true,
-          label: t("suites.legendStubPending"),
-          tooltip: t("suites.legendStubPendingTip"),
+          label: t("suites.legendStub"),
+          tooltip: t("suites.legendStubTip"),
         },
         {
           key: "pending-client",
           color: ORDER_COLORS.PENDING_CLIENT.main,
           label: "Pending",
-          tooltip: t("suites.legendPendingClient"),
+          tooltip: t("suites.legendPendingTip"),
         },
         {
           key: "pending-admin",
           color: ORDER_COLORS.PENDING_ADMIN.main,
           label: "Pending Admin",
-          tooltip: t("suites.legendPendingAdmin"),
+          tooltip: t("suites.legendPendingTip"),
         },
       ];
 
-  const toolbarInfoOnly = inToolbar && !showLegendItems;
+  const toolbarInfoOnly = inToolbar && !showLegendItems && !asStrip;
   const useIconOnlyLegend = Boolean(
-    inToolbar && showLegendItems && legendIconsOnly
+    inToolbar && showLegendItems && legendIconsOnly && !suitesMode && !asStrip
   );
-  const toolbarInteractiveLegend = Boolean(useIconOnlyLegend && !client);
+  const toolbarInteractiveLegend = Boolean(
+    useIconOnlyLegend && !client && !suitesMode
+  );
   const toolbarLegendRows = toolbarInteractiveLegend
-    ? getOrderColorsForLegend().map((oc) => ({
+    ? getOrderColorsForLegend({ suites: false }).map((oc) => ({
         key: oc.key,
         color: oc.main,
         hatch: Boolean(oc.hatch),
         hoverTitle: oc.label,
         label: oc.label,
-        detailTooltip: TOOLBAR_LEGEND_DETAIL_BY_KEY[oc.key] ? t(TOOLBAR_LEGEND_DETAIL_BY_KEY[oc.key]) : "",
+        detailTooltip: TOOLBAR_LEGEND_DETAIL_BY_KEY[oc.key]
+          ? t(TOOLBAR_LEGEND_DETAIL_BY_KEY[oc.key])
+          : "",
       }))
     : [];
+
+  // Suites strip: labeled chips only
+  if (asStrip && showLegendItems && suitesRows) {
+    return (
+      <Stack
+        direction="row"
+        alignItems="center"
+        flexWrap="wrap"
+        spacing={0}
+        sx={{
+          width: "100%",
+          px: "10px",
+          py: 0.65,
+          columnGap: 1,
+          rowGap: 0.55,
+          borderBottom: "1px solid rgba(255,255,255,0.1)",
+          backgroundColor: "rgba(0,0,0,0.18)",
+        }}
+        aria-label={t("suites.legendAria")}
+      >
+        <Typography
+          component="span"
+          sx={{
+            fontSize: "0.7rem",
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.55)",
+            mr: 0.5,
+          }}
+        >
+          {t("suites.legendTitle")}
+        </Typography>
+        {suitesRows.map((item) => (
+          <CompactLegendItem
+            key={item.key}
+            color={item.color}
+            hatch={item.hatch}
+            label={item.label}
+            tooltip={item.tooltip}
+          />
+        ))}
+      </Stack>
+    );
+  }
 
   return (
     <Stack
@@ -328,7 +397,6 @@ function LegendCalendarAdmin({
           rowGap: inToolbar ? 0.35 : 0.6,
         }}
       >
-        {/* LEFT: compact legend */}
         {showLegendItems && toolbarInteractiveLegend ? (
           <>
             <ButtonBase
@@ -451,6 +519,7 @@ function LegendCalendarAdmin({
                       color={item.color}
                       label={item.label}
                       tooltip={item.detailTooltip}
+                      hatch={item.hatch}
                       wrap
                     />
                   </Box>
@@ -479,49 +548,9 @@ function LegendCalendarAdmin({
                 iconsOnly={useIconOnlyLegend}
               />
             ))}
-            {!client && (
-              <Tooltip title={legendExpanded ? t("suites.legendCollapse") : t("suites.legendExpand")} arrow>
-                <ButtonBase
-                  onClick={() => setLegendExpanded((v) => !v)}
-                  sx={{
-                    ...baseItemSx,
-                    fontWeight: 600,
-                    px: useIconOnlyLegend ? 0.35 : 0.5,
-                    py: useIconOnlyLegend ? 0.35 : undefined,
-                    minWidth: useIconOnlyLegend ? 28 : undefined,
-                    minHeight: useIconOnlyLegend ? 28 : undefined,
-                    borderRadius: 0.8,
-                    justifyContent: "center",
-                    "&:hover": { backgroundColor: "rgba(255,255,255,0.06)" },
-                  }}
-                >
-                  {!useIconOnlyLegend ? (
-                    <Typography
-                      component="span"
-                      variant="caption"
-                      sx={{ color: "inherit", fontSize: "0.74rem" }}
-                    >
-                      Legend
-                    </Typography>
-                  ) : null}
-                  <Typography
-                    component="span"
-                    sx={{
-                      fontSize: "0.75rem",
-                      fontWeight: 700,
-                      lineHeight: 1,
-                    }}
-                    aria-hidden
-                  >
-                    {legendExpanded ? "⌃" : "⌄"}
-                  </Typography>
-                </ButtonBase>
-              </Tooltip>
-            )}
           </Stack>
         ) : null}
 
-        {/* RIGHT: buffer + delivery */}
         <Stack
           direction="row"
           alignItems="center"
@@ -560,7 +589,10 @@ function LegendCalendarAdmin({
                   },
                 }}
               >
-                <Typography component="span" sx={{ fontSize: "0.8rem", lineHeight: 1 }}>
+                <Typography
+                  component="span"
+                  sx={{ fontSize: "0.8rem", lineHeight: 1 }}
+                >
                   ⏱
                 </Typography>
                 <Typography
@@ -602,7 +634,10 @@ function LegendCalendarAdmin({
                 <Box component="span" sx={{ fontSize: "0.8rem", lineHeight: 1 }}>
                   🚚
                 </Box>
-                <Box component="span" sx={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                <Box
+                  component="span"
+                  sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+                >
                   {deliveryPrice != null ? `${deliveryPrice} €/км` : "— €/км"}
                 </Box>
               </Typography>
@@ -611,65 +646,52 @@ function LegendCalendarAdmin({
         </Stack>
       </Stack>
 
-      {/* Развёрнутая легенда под строкой (не тулбар с popover) */}
       {!client &&
         showLegendItems &&
         legendExpanded &&
-        !toolbarInteractiveLegend && (
-        <Stack
-          direction="row"
-          flexWrap="wrap"
-          sx={{
-            columnGap: 1.25,
-            rowGap: 0.65,
-            pt: 0.35,
-            maxWidth: 340,
-            width: "100%",
-            overflow: "hidden",
-            boxSizing: "border-box",
-          }}
-        >
-          <FullLegendItem
-            color={ORDER_COLORS.PAID_AND_CLOSED.main}
-            label={ORDER_COLORS.PAID_AND_CLOSED.label}
-            tooltip={t("suites.legendPaidClosed")}
-            wrap
-          />
-          <FullLegendItem
-            color={ORDER_COLORS.CONFIRMED_CLIENT.main}
-            label={ORDER_COLORS.CONFIRMED_CLIENT.label}
-            tooltip={t("suites.legendConfirmedClient")}
-            wrap
-          />
-          <FullLegendItem
-            color={ORDER_COLORS.CONFIRMED_ADMIN.main}
-            label={ORDER_COLORS.CONFIRMED_ADMIN.label}
-            tooltip={t("suites.legendConfirmedAdmin")}
-            wrap
-          />
-          <FullLegendItem
-            color={ORDER_COLORS.OFFLINE.main}
-            label={t("suites.legendStub")}
-            tooltip={t("suites.legendStubTip")}
-            hatch
-            wrap
-          />
-          <FullLegendItem
-            color={ORDER_COLORS.PENDING_CLIENT.main}
-            label={ORDER_COLORS.PENDING_CLIENT.label}
-            tooltip={t("suites.legendPendingClient")}
-            wrap
-          />
-          <FullLegendItem
-            color={ORDER_COLORS.PENDING_ADMIN.main}
-            label={ORDER_COLORS.PENDING_ADMIN.label}
-            tooltip={t("suites.legendPendingAdmin")}
-            wrap
-          />
-        </Stack>
-      )}
+        !toolbarInteractiveLegend &&
+        !suitesMode && (
+          <Stack
+            direction="row"
+            flexWrap="wrap"
+            sx={{
+              columnGap: 1.25,
+              rowGap: 0.65,
+              pt: 0.35,
+              maxWidth: 340,
+              width: "100%",
+              overflow: "hidden",
+              boxSizing: "border-box",
+            }}
+          >
+            <FullLegendItem
+              color={ORDER_COLORS.PAID_AND_CLOSED.main}
+              label={ORDER_COLORS.PAID_AND_CLOSED.label}
+              tooltip={t("suites.legendPaidClosed")}
+              wrap
+            />
+            <FullLegendItem
+              color={ORDER_COLORS.CONFIRMED_CLIENT.main}
+              label={ORDER_COLORS.CONFIRMED_CLIENT.label}
+              tooltip={t("suites.legendConfirmedTip")}
+              wrap
+            />
+            <FullLegendItem
+              color={ORDER_COLORS.PENDING_CLIENT.main}
+              label={ORDER_COLORS.PENDING_CLIENT.label}
+              tooltip={t("suites.legendPendingTip")}
+              wrap
+            />
+            <FullLegendItem
+              color={ORDER_COLORS.OFFLINE.main}
+              label={t("suites.legendStub")}
+              tooltip={t("suites.legendStubTip")}
+              hatch
+              wrap
+            />
+          </Stack>
+        )}
 
-      {/* Модальное окно настроек буфера */}
       <BufferSettingsModal
         open={bufferModalOpen}
         onClose={() => setBufferModalOpen(false)}

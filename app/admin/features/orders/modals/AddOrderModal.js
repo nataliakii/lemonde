@@ -1112,7 +1112,7 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
             <Box sx={{ width: "16%" }}>
               <RenderTextField
                 name="franchiseOrder"
-                label={t("car.franchise") || "Франшиза заказа"}
+                label={t("car.franchise")}
                 type="number"
                 updatedCar={orderDetails}
                 handleChange={(e) =>
@@ -1213,7 +1213,7 @@ const AddOrder = ({ open, onClose, car, date, setUpdateStatus }) => {
             >
               <CircularProgress color="inherit" />
               <Typography variant="h6" sx={{ mt: 2 }}>
-                Отправка заказа...
+                {t("order.sendingOrder")}
               </Typography>
             </Box>
           </Box>

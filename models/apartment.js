@@ -210,6 +210,21 @@ const ApartmentSchema = new Schema({
     type: Number,
     default: null,
   },
+  /**
+   * Flat airport/transfer fee (€) when order.needsTransfer is true.
+   * Shown as Transfer in suite price breakdown (maps to deliveryTotal).
+   */
+  transferPrice: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  /** Beds count (sleeping places) */
+  beds: {
+    type: Number,
+    default: null,
+    min: 0,
+  },
   /** Short public description */
   description: {
     type: String,

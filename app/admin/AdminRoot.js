@@ -24,6 +24,7 @@ import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { useMainContext } from "@app/Context";
+import { DISCOUNT_UI_ENABLED } from "@/config/domain";
 
 // ============================================================
 // DYNAMIC ADMIN UI COMPONENTS
@@ -98,8 +99,13 @@ export default function AdminRoot({
         <LegendCalendarAdmin client={isMain} />
       )}
 
-      {/* Discount Modal - state managed by parent */}
-      {setDiscountModalOpen && setSelectedDiscount && setDiscountStartDate && setDiscountEndDate && onSaveDiscount && (
+      {/* Discount Modal - state managed by parent; hide when DISCOUNT_UI_ENABLED=false */}
+      {DISCOUNT_UI_ENABLED &&
+        setDiscountModalOpen &&
+        setSelectedDiscount &&
+        setDiscountStartDate &&
+        setDiscountEndDate &&
+        onSaveDiscount && (
         <DiscountModal
           open={discountModalOpen}
           onClose={() => setDiscountModalOpen(false)}

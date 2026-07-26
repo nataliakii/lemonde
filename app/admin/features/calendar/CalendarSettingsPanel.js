@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import dynamic from "next/dynamic";
 import { SINGLE_PROPERTY_MODE } from "@/config/domain";
+import { useTranslation } from "react-i18next";
 
 const CloseIcon = dynamic(() => import("@mui/icons-material/Close"), {
   ssr: false,
@@ -28,7 +29,7 @@ const LegendCalendarAdmin = dynamic(
 );
 
 /**
- * Единая панель настроек отображения админ-календаря (localStorage через useCalendarViewSettings).
+ * Unified admin calendar display settings panel (localStorage via useCalendarViewSettings).
  */
 export default function CalendarSettingsPanel({
   open,
@@ -41,6 +42,7 @@ export default function CalendarSettingsPanel({
   setHighlightToday,
   setAutoScrollToToday,
 }) {
+  const { t } = useTranslation();
   const [bufferModalOpen, setBufferModalOpen] = useState(false);
 
   const showBufferShortcut =
@@ -76,12 +78,12 @@ export default function CalendarSettingsPanel({
           }}
         >
           <Typography variant="subtitle1" component="h2" fontWeight={600}>
-            Настройки календаря
+            {t("admin.calendar.settings")}
           </Typography>
           <IconButton
             edge="end"
             onClick={onClose}
-            aria-label="Закрыть настройки"
+            aria-label={t("admin.calendar.closeSettings")}
             size="small"
           >
             <CloseIcon />
@@ -99,7 +101,7 @@ export default function CalendarSettingsPanel({
         >
           <Stack spacing={2}>
             <Typography variant="caption" color="text.secondary">
-              Видимость
+              {t("admin.calendar.visibility")}
             </Typography>
 
             <FormControlLabel
@@ -110,7 +112,11 @@ export default function CalendarSettingsPanel({
                   onChange={(e) => setShowLegend(e.target.checked)}
                 />
               }
-              label={<Typography variant="body2">Показывать легенду</Typography>}
+              label={
+                <Typography variant="body2">
+                  {t("admin.calendar.showLegend")}
+                </Typography>
+              }
             />
 
             <FormControlLabel
@@ -125,8 +131,8 @@ export default function CalendarSettingsPanel({
               label={
                 <Typography variant="body2">
                   {SINGLE_PROPERTY_MODE
-                    ? "Буфер между заездами в легенде"
-                    : "Буфер между заказами в легенде"}
+                    ? t("admin.calendar.bufferInLegendSuites")
+                    : t("admin.calendar.bufferInLegendOrders")}
                 </Typography>
               }
             />
@@ -142,7 +148,9 @@ export default function CalendarSettingsPanel({
                   />
                 }
                 label={
-                  <Typography variant="body2">Тариф доставки в легенде</Typography>
+                  <Typography variant="body2">
+                    {t("admin.calendar.deliveryInLegend")}
+                  </Typography>
                 }
               />
             )}
@@ -159,7 +167,7 @@ export default function CalendarSettingsPanel({
               }
               label={
                 <Typography variant="body2">
-                  Бейджи конфликтов (если отображаются)
+                  {t("admin.calendar.conflictBadges")}
                 </Typography>
               }
             />
@@ -173,7 +181,9 @@ export default function CalendarSettingsPanel({
                 />
               }
               label={
-                <Typography variant="body2">Подсветка колонки «сегодня»</Typography>
+                <Typography variant="body2">
+                  {t("admin.calendar.highlightToday")}
+                </Typography>
               }
             />
 
@@ -187,7 +197,7 @@ export default function CalendarSettingsPanel({
               }
               label={
                 <Typography variant="body2">
-                  Автоскролл к сегодня (узкий экран)
+                  {t("admin.calendar.autoScrollToday")}
                 </Typography>
               }
             />
@@ -199,7 +209,7 @@ export default function CalendarSettingsPanel({
                 onClick={() => setBufferModalOpen(true)}
                 sx={{ alignSelf: "flex-start", mt: 1 }}
               >
-                Настройки буфера между заездами
+                {t("admin.calendar.bufferSettings")}
               </Button>
             )}
 
@@ -207,7 +217,7 @@ export default function CalendarSettingsPanel({
               <>
                 <Divider sx={{ my: 1 }} />
                 <Typography variant="caption" color="text.secondary">
-                  Легенда
+                  {t("admin.calendar.legend")}
                 </Typography>
                 <Box data-bigcalendar-legend sx={{ width: "100%" }}>
                   <LegendCalendarAdmin

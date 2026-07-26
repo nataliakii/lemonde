@@ -32,7 +32,7 @@ export const companyData = {
   name: "Le Monde Suites",
   tel: "+380 68 100 3771",
   tel2: "+353 85 270 96 05",
-  email: "nataliakireewa@gmail.com",
+  email: "stay@lemondesuites.com",
   address: "Leoforos Nikis, Kato Galini, Nea Kallikratia 630 80, Greece",
   slogan: "Apartment stays · Nea Kallikratia · Halkidiki",
   coords: { lat: "40.31059163454398", lon: "23.063829408712166" },

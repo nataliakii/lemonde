@@ -37,17 +37,15 @@ async function loadOrder(orderId) {
 
 function orderSummaryLines(order) {
   const id = order.orderNumber || order._id?.toString?.() || "";
-  const car =
+  const suite =
     order.carModel ||
     (typeof order.car === "object" && order.car?.model) ||
     "—";
   return [
     `Order #${id}`,
-    `Car: ${car}`,
-    `From: ${order.rentalStartDate || "—"} ${order.timeIn || ""}`.trim(),
-    `To: ${order.rentalEndDate || "—"} ${order.timeOut || ""}`.trim(),
-    `Pickup: ${order.placeIn || "—"}`,
-    `Return: ${order.placeOut || "—"}`,
+    `Apartment: ${suite}`,
+    `Check-in: ${order.rentalStartDate || "—"} ${order.timeIn || ""}`.trim(),
+    `Check-out: ${order.rentalEndDate || "—"} ${order.timeOut || ""}`.trim(),
     `Total: €${order.totalPrice ?? "—"}`,
     `Confirmed: ${order.confirmed ? "yes" : "no"}`,
     `Admin link: ${absoluteUrl(`/admin`)}`,
@@ -135,7 +133,7 @@ export async function applyCompanyEmailDecision({ token, decision }) {
   await notifySuperadmins({
     title,
     bodyLines: lines,
-    telegramText: `${title}\n\n${lines.join("\n")}\n\nCarsNK · ${getBaseUrl()}`,
+    telegramText: `${title}\n\n${lines.join("\n")}\n\nLe Monde Suites · ${getBaseUrl()}`,
   });
 
   return {

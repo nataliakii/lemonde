@@ -18,7 +18,7 @@ loadEnvConfig(process.cwd());
 
 const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_URI_OLD = process.env.MONGODB_URI_OLD;
-const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME || "Car";
+const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME || "lemonde";
 const COMPANY_ID = "679903bd10e6c8a8c0f027bc";
 
 const args = new Set(process.argv.slice(2));

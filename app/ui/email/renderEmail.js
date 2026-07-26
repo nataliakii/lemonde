@@ -17,6 +17,7 @@ import { renderCustomerOfficialConfirmation } from "@/app/ui/email/templates/cus
 import { renderAdminOrderNotificationHtml } from "@/app/ui/email/templates/adminOrderNotification";
 import { getSecondDriverPriceLabelValue } from "@utils/secondDriverPricing";
 import { withTestOrderEmailSubject } from "@/domain/orders/testOrderMarkers";
+import { SINGLE_PROPERTY_MODE } from "@config/domain";
 
 /** Дата в формате "17 Jan 2026" и т.п. по локали письма клиенту */
 function formatDateLong(d, locale) {
@@ -217,6 +218,17 @@ function buildCustomerEmailViewModel(payload) {
     officialGreeting,
     meetingContactValue,
     rentalPeriodWithTime,
+    suitesMode: SINGLE_PROPERTY_MODE,
+    guestsCount:
+      payload.guestsCount != null && payload.guestsCount !== ""
+        ? String(payload.guestsCount)
+        : "",
+    childrenCount:
+      payload.childrenCount != null && payload.childrenCount !== ""
+        ? String(payload.childrenCount)
+        : "",
+    needsTransfer: payload.needsTransfer === true,
+    needsBabyBed: payload.needsBabyBed === true,
   };
 }
 
@@ -247,10 +259,16 @@ export function renderCustomerOrderConfirmationEmail(payload) {
     flightNumber,
     greeting,
     rentalPeriodWithTime,
+    suitesMode,
+    guestsCount,
+    childrenCount,
+    needsTransfer,
+    needsBabyBed,
   } = vm;
 
   /** Первое письмо клиенту после бронирования (не повтор при CONFIRM и т.д.) */
-  const showExcludeCityDelivery = payload.action === "CREATE";
+  const showExcludeCityDelivery =
+    !suitesMode && payload.action === "CREATE";
   const headingTitle = withTestOrderEmailSubject(
     t.title,
     Boolean(payload.fromLocalhost)
@@ -277,6 +295,11 @@ export function renderCustomerOrderConfirmationEmail(payload) {
     timeOutStr,
     flightNumber,
     showExcludeCityDelivery,
+    suitesMode,
+    guestsCount,
+    childrenCount,
+    needsTransfer,
+    needsBabyBed,
   };
   const html = renderCustomerOrderConfirmation(data);
 
@@ -374,7 +397,7 @@ export function renderCustomerOfficialConfirmationEmail(payload) {
   const title = withTestOrderEmailSubject(baseOfficialTitle, fromLocalhost);
   const intro =
     t.officialIntro ||
-    "Your reservation has been officially confirmed by CarsNK.";
+    "Your reservation has been officially confirmed by Le Monde Suites.";
   const pdfNote =
     t.officialPdfNote ||
     "The official confirmation PDF is attached to this email.";
@@ -477,7 +500,7 @@ export function renderCustomerOfficialConfirmationEmail(payload) {
     .join("\n");
 
   const filePart = toSafeFilePart(orderNum || payload.orderId);
-  const pdfFileName = `NataliCars-Official-Confirmation-${filePart}.pdf`;
+  const pdfFileName = `LeMondeSuites-Confirmation-${filePart}.pdf`;
 
   const pdfData = {
     title,

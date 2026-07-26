@@ -3,9 +3,12 @@
 import { Box } from "@mui/material";
 import Image from "next/image";
 import Link from "next/link";
+import { useMainContext } from "@app/Context";
+import { resolveBrandConfig } from "@/domain/branding/resolveBrandConfig";
 
 /**
- * Le Monde Suites brand mark + optional cursive wordmark.
+ * Brand mark + wordmark from company.assets / company.name (DB),
+ * with local fallbacks for empty /public logo.
  */
 export default function BrandLogo({
   href = "/",
@@ -13,7 +16,14 @@ export default function BrandLogo({
   markSize = 36,
   wordmarkSx = {},
   linkSx = {},
+  name: nameProp,
+  logoSrc: logoProp,
 }) {
+  const { company } = useMainContext();
+  const brand = resolveBrandConfig(company);
+  const name = nameProp || brand.name;
+  const logoSrc = logoProp || brand.assets.logoMark || "/logo-mark.png";
+
   const content = (
     <Box
       sx={{
@@ -35,8 +45,8 @@ export default function BrandLogo({
         }}
       >
         <Image
-          src="/logo-mark.png"
-          alt="Le Monde Suites"
+          src={logoSrc}
+          alt={name}
           width={markSize}
           height={markSize}
           priority
@@ -54,7 +64,7 @@ export default function BrandLogo({
             ...wordmarkSx,
           }}
         >
-          Le Monde Suites
+          {name}
         </Box>
       )}
     </Box>

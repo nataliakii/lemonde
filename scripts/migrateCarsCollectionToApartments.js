@@ -19,7 +19,8 @@ async function main() {
     console.error("Missing MONGODB_URI");
     process.exit(1);
   }
-  await mongoose.connect(MONGODB_URI, { dbName: "Car" });
+  const dbName = String(process.env.MONGODB_DB_NAME || "").trim() || "lemonde";
+  await mongoose.connect(MONGODB_URI, { dbName });
   const db = mongoose.connection.db;
   const cols = await db.listCollections().toArray();
   const names = new Set(cols.map((c) => c.name));

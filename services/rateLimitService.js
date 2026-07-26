@@ -35,7 +35,7 @@ async function getLimiter() {
     );
   }
 
-  const dbName = mongoose.connection?.db?.databaseName || "Car";
+  const dbName = mongoose.connection?.db?.databaseName || process.env.MONGODB_DB_NAME || "lemonde";
   const points =
     typeof orderGuardConfig.RATE_LIMIT_MAX === "number"
       ? orderGuardConfig.RATE_LIMIT_MAX

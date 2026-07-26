@@ -20,7 +20,7 @@ const XLSX = require("xlsx");
 loadEnvConfig(process.cwd());
 
 const MONGODB_URI = process.env.MONGODB_URI;
-const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME || "Car";
+const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME || "lemonde";
 const OUT_DIR = path.join(process.cwd(), "exports");
 const JSON_FILE = path.join(OUT_DIR, "cars-noseason-prices.json");
 const CSV_FILE = path.join(OUT_DIR, "cars-noseason-prices.csv");

@@ -208,7 +208,8 @@ async function main() {
     console.error("Missing MONGODB_URI");
     process.exit(1);
   }
-  await mongoose.connect(MONGODB_URI, { dbName: "Car" });
+  const dbName = String(process.env.MONGODB_DB_NAME || "").trim() || "lemonde";
+  await mongoose.connect(MONGODB_URI, { dbName });
   const collectionName = await ensureCollection(mongoose.connection.db);
   const col = mongoose.connection.collection(collectionName);
   console.log(`Using collection: ${collectionName}`);
@@ -263,9 +264,19 @@ async function main() {
     );
   }
 
-  // Soft-update company contact / address if company doc exists
+  // Upsert company brand + media (copy-friendly property profile)
   try {
     const companies = mongoose.connection.collection("companies");
+    const galleryImages = [
+      "https://res.cloudinary.com/dn513dy1y/image/upload/v1778342496/NK-site/listings/apartment-rent/ext-db-64abf11051d4/gotup85kawvwgtbcwd77.jpg",
+      "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530482/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/jkpbjezq0ujcxpxojfxu.jpg",
+      "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530481/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/laurom3hdqecvfjxpy2x.jpg",
+      "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530486/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/tombq0lhvblmbyucsclz.jpg",
+      "https://res.cloudinary.com/dn513dy1y/image/upload/v1778342506/NK-site/listings/apartment-rent/ext-db-64abf11051d4/ks0r84tpxhaigxn1sjdl.jpg",
+      "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530484/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/w4klswub7f8mp3w2f39v.jpg",
+      "https://res.cloudinary.com/dn513dy1y/image/upload/v1778342513/NK-site/listings/apartment-rent/ext-db-64abf11051d4/qpjp8p9ag7729rpfraqp.jpg",
+      "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530487/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/merwwpxyqpz5hj8hlmzx.jpg",
+    ];
     await companies.updateOne(
       { _id: new mongoose.Types.ObjectId(COMPANY_ID) },
       {
@@ -278,10 +289,48 @@ async function main() {
             lat: "40.31059163454398",
             lon: "23.063829408712166",
           },
+          defaultStart: "15:00",
+          defaultEnd: "11:00",
+          branding: {
+            primary: "#C9A227",
+            primaryLight: "#E8D5A3",
+            primaryDark: "#9A7B2E",
+            secondary: "#1A1612",
+            secondaryLight: "#3A322A",
+            secondaryDark: "#0E0C0A",
+            accent: "#B85C38",
+            ink: "#2A2520",
+          },
+          assets: {
+            logoMark: "/logo-mark.png",
+            logoWordmark: "",
+            favicon: "/favicon.ico",
+            ogImage: galleryImages[0],
+            heroImages: [],
+            galleryImages,
+          },
+          cloudinary: {
+            rootFolder: process.env.CLOUDINARY_ROOT_FOLDER || "lemondesuites",
+            apartmentsFolder: "apartments",
+            ordersFolder: "orders",
+            placeholderPublicId:
+              process.env.CLOUDINARY_PLACEHOLDER_PUBLIC_ID || "carsnk/NO_PHOTO",
+          },
+          galleryTitle: {
+            en: "The property",
+            ru: "Отель",
+            el: "Το κατάλυμα",
+          },
+          gallerySubtitle: {
+            en: "Spaces designed for calm Mediterranean stays.",
+            ru: "Пространства для спокойного средиземноморского отдыха.",
+            el: "Χώροι σχεδιασμένοι για ήρεμη μεσογειακή διαμονή.",
+          },
         },
-      }
+      },
+      { upsert: true }
     );
-    console.log("Company profile updated.");
+    console.log("Company brand + gallery updated.");
   } catch (e) {
     console.warn("Company update skipped:", e.message);
   }

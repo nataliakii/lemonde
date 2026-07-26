@@ -18,6 +18,7 @@ import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import { CldImage } from "next-cloudinary";
 import { CLOUDINARY_PLACEHOLDER_PUBLIC_ID } from "@config/cloudinary";
+import { useTranslation } from "react-i18next";
 
 function isHttp(url) {
   return typeof url === "string" && /^https?:\/\//i.test(url);
@@ -108,6 +109,7 @@ export default function SuiteGalleryEditor({
   disabled = false,
   compact = false,
 }) {
+  const { t } = useTranslation();
   const inputRef = useRef(null);
   const [index, setIndex] = useState(0);
   const [uploading, setUploading] = useState(false);
@@ -211,7 +213,7 @@ export default function SuiteGalleryEditor({
   return (
     <Box sx={{ width: "100%" }}>
       <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-        Фото апартамента
+        {t("suites.photosTitle")}
       </Typography>
 
       <Box
@@ -241,7 +243,7 @@ export default function SuiteGalleryEditor({
               size="small"
               onClick={() => go(-1)}
               disabled={disabled || uploading}
-              aria-label="Previous photo"
+              aria-label={t("suites.prevPhoto")}
               sx={{
                 position: "absolute",
                 left: 8,
@@ -258,7 +260,7 @@ export default function SuiteGalleryEditor({
               size="small"
               onClick={() => go(1)}
               disabled={disabled || uploading}
-              aria-label="Next photo"
+              aria-label={t("suites.nextPhoto")}
               sx={{
                 position: "absolute",
                 right: 8,
@@ -339,7 +341,7 @@ export default function SuiteGalleryEditor({
                 <SuitePhoto src={src} alt={`Thumb ${i + 1}`} sizes="72px" />
                 {isCover && (
                   <Chip
-                    label="Cover"
+                    label={t("suites.coverBadge")}
                     size="small"
                     sx={{
                       position: "absolute",
@@ -368,7 +370,7 @@ export default function SuiteGalleryEditor({
           disabled={disabled || uploading}
           sx={{ textTransform: "none" }}
         >
-          Добавить фото
+          {t("suites.addPhoto")}
           <input
             ref={inputRef}
             type="file"
@@ -392,7 +394,9 @@ export default function SuiteGalleryEditor({
               onClick={() => handleSetCover(current)}
               sx={{ textTransform: "none" }}
             >
-              {current === cover ? "Обложка" : "Сделать обложкой"}
+              {current === cover
+                ? t("suites.coverBadge")
+                : t("suites.setAsCover")}
             </Button>
             <Button
               size="small"
@@ -403,7 +407,7 @@ export default function SuiteGalleryEditor({
               onClick={() => handleRemove(current)}
               sx={{ textTransform: "none" }}
             >
-              Удалить
+              {t("suites.deletePhoto")}
             </Button>
           </>
         )}
@@ -419,8 +423,7 @@ export default function SuiteGalleryEditor({
           color="text.secondary"
           sx={{ mt: 1, display: "block" }}
         >
-          Можно загрузить несколько фото. Первое / отмеченное — обложка на
-          карточке и в каталоге.
+          {t("suites.photosHint")}
         </Typography>
       )}
     </Box>

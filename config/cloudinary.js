@@ -1,38 +1,64 @@
 /**
- * CarsNK Cloudinary layout — single source of truth for Media Library folders.
+ * Cloudinary layout — folder names from env and/or Company.cloudinary (DB).
  *
- * Root folder: carsnk
- *   carsnk/cars          — fleet photos
- *   carsnk/orders/...    — order driving-licence uploads
+ * Account credentials (cloud name, API key/secret) stay in env.
+ * Per-property folder prefix lives in Company so another hotel deploy
+ * can point uploads at a different Media Library root without code changes.
  *
- * Credentials come from env (CLOUDINARY_* / NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME).
+ * Root folder resolution order:
+ *   1. CLOUDINARY_ROOT_FOLDER env
+ *   2. company.cloudinary.rootFolder (when passed)
+ *   3. default "lemondesuites"
  */
 
-const DEFAULT_ROOT_FOLDER = "carsnk";
+/** Prefer env / company; default keeps existing Media Library assets working. */
+const DEFAULT_ROOT_FOLDER = "lemondesuites";
+const DEFAULT_PLACEHOLDER = "carsnk/NO_PHOTO";
 
-export function getCloudinaryRootFolder() {
+/**
+ * @param {object|null} [company] - optional lean company document
+ */
+export function getCloudinaryRootFolder(company = null) {
   const fromEnv = String(process.env.CLOUDINARY_ROOT_FOLDER || "").trim();
-  return fromEnv || DEFAULT_ROOT_FOLDER;
+  if (fromEnv) return fromEnv;
+  const fromCompany = String(company?.cloudinary?.rootFolder || "").trim();
+  if (fromCompany) return fromCompany;
+  return DEFAULT_ROOT_FOLDER;
 }
 
-/** Fleet car photos: carsnk/cars */
-export function getCloudinaryCarsFolder() {
-  return `${getCloudinaryRootFolder()}/cars`;
+/** Apartment / suite photos: {root}/apartments */
+export function getCloudinaryCarsFolder(company = null) {
+  const sub =
+    String(company?.cloudinary?.apartmentsFolder || "").trim() || "apartments";
+  return `${getCloudinaryRootFolder(company)}/${sub}`;
+}
+
+/** Alias for suites wording */
+export function getCloudinaryApartmentsFolder(company = null) {
+  return getCloudinaryCarsFolder(company);
 }
 
 /**
- * Order driving-licence base: carsnk/orders
+ * Order uploads base: {root}/orders
  * Full path is built in domain/orders/orderDrivingLicenceFolder.js
  */
-export function getCloudinaryOrdersFolder() {
-  return `${getCloudinaryRootFolder()}/orders`;
+export function getCloudinaryOrdersFolder(company = null) {
+  const sub =
+    String(company?.cloudinary?.ordersFolder || "").trim() || "orders";
+  return `${getCloudinaryRootFolder(company)}/${sub}`;
 }
 
-/** Default placeholder public_id — upload once to Media Library as carsnk/NO_PHOTO. */
-export const CLOUDINARY_PLACEHOLDER_PUBLIC_ID = "carsnk/NO_PHOTO";
+/** Default placeholder public_id — override via env or company.cloudinary */
+export const CLOUDINARY_PLACEHOLDER_PUBLIC_ID = DEFAULT_PLACEHOLDER;
 
-/** Server-side: allows CLOUDINARY_PLACEHOLDER_PUBLIC_ID env override. */
-export function getCloudinaryPlaceholderPublicId() {
-  const fromEnv = String(process.env.CLOUDINARY_PLACEHOLDER_PUBLIC_ID || "").trim();
-  return fromEnv || CLOUDINARY_PLACEHOLDER_PUBLIC_ID;
+export function getCloudinaryPlaceholderPublicId(company = null) {
+  const fromEnv = String(
+    process.env.CLOUDINARY_PLACEHOLDER_PUBLIC_ID || ""
+  ).trim();
+  if (fromEnv) return fromEnv;
+  const fromCompany = String(
+    company?.cloudinary?.placeholderPublicId || ""
+  ).trim();
+  if (fromCompany) return fromCompany;
+  return CLOUDINARY_PLACEHOLDER_PUBLIC_ID;
 }

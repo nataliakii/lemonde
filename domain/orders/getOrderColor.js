@@ -8,8 +8,11 @@
  * - confirmed (подтверждён или нет)
  * - my_order (клиентский или админский)
  * 
- * ❗ БИЗНЕС-ЛОГИКА: не в JSX, только в domain
- * ❗ Цвета НЕ зависят от времени (прошлое/будущее)
+ * Цвета:
+ * - confirmed → зелёный
+ * - pending → жёлтый
+ * - offline stub → штриховка
+ * - paid & closed → фиолетовый
  */
 
 import { ORDER_COLORS } from "@/config/orderColors";

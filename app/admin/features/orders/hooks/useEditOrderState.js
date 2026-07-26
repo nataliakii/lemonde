@@ -447,6 +447,7 @@ export function useEditOrderState({
             timeOut: timeOutServer,
             placeIn: normalizeDeliveryPricingLocation(editedOrder?.placeIn),
             placeOut: normalizeDeliveryPricingLocation(editedOrder?.placeOut),
+            needsTransfer: Boolean(editedOrder?.needsTransfer),
           }
         );
 
@@ -508,6 +509,7 @@ export function useEditOrderState({
     normalizedSecondDriver,
     editedOrder?.placeIn,
     editedOrder?.placeOut,
+    editedOrder?.needsTransfer,
     permissions.viewOnly,
   ]);
 
@@ -812,7 +814,7 @@ export function useEditOrderState({
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || !json.success || !json.data) {
-        setUpdateMessage(json.message || "Не удалось рассчитать доставку");
+        setUpdateMessage(json.message || i18n.t("order.deliveryQuoteFailed"));
         return;
       }
       const { deliveryIn, deliveryOut, deliveryTotal } = json.data;
@@ -968,18 +970,14 @@ export function useEditOrderState({
             nIn < 0 ||
             nOut < 0
           ) {
-            setUpdateMessage(
-              "Некорректные суммы доставки (нужны неотрицательные числа)"
-            );
+            setUpdateMessage(i18n.t("order.invalidDeliveryAmounts"));
             setIsUpdating(false);
             return false;
           }
           payload.deliveryInOverride = nIn;
           payload.deliveryOutOverride = nOut;
         } else {
-          setUpdateMessage(
-            "Доставка: заполните оба поля (туда и обратно) или очистите оба для расчёта по зонам"
-          );
+          setUpdateMessage(i18n.t("order.deliveryBothFields"));
           setIsUpdating(false);
           return false;
         }
@@ -1060,7 +1058,7 @@ export function useEditOrderState({
 
       // Check if we have any changes
       if (Object.keys(payload).length === 0) {
-        setUpdateMessage("⛔ Нет прав на изменение полей этого заказа");
+        setUpdateMessage(i18n.t("order.noFieldEditPermission"));
         return false;
       }
 
@@ -1072,9 +1070,7 @@ export function useEditOrderState({
           o.rentalStartDate.isBefore(todayAthens, "day") &&
           !originalStart.isSame(o.rentalStartDate, "day")
         ) {
-          setUpdateMessage(
-            "Нельзя устанавливать новую дату начала раньше сегодняшнего дня"
-          );
+          setUpdateMessage(i18n.t("order.startDateNotBeforeToday"));
           return false;
         }
       }
@@ -1082,9 +1078,7 @@ export function useEditOrderState({
       if (fieldPermissions.rentalEndDate && permissions.isCurrentOrder) {
         const todayAthens = athensNow();
         if (o.rentalEndDate.isBefore(todayAthens, "day")) {
-          setUpdateMessage(
-            "Для текущего заказа дата окончания не может быть раньше сегодняшнего дня"
-          );
+          setUpdateMessage(i18n.t("order.currentOrderEndDateNotPast"));
           return false;
         }
       }
@@ -1101,9 +1095,7 @@ export function useEditOrderState({
         );
         const nowAthens = athensNow();
         if (attemptedEndTime.isBefore(nowAthens, "minute")) {
-          setUpdateMessage(
-            "Для текущего заказа время окончания не может быть в прошлом"
-          );
+          setUpdateMessage(i18n.t("order.currentOrderEndTimeNotPast"));
           return false;
         }
       }
@@ -1228,19 +1220,21 @@ export function useEditOrderState({
         }
         
         onSave(response.updatedOrder);
-        setUpdateMessage("Order updated successfully");
+        setUpdateMessage(i18n.t("order.orderUpdated"));
         setAttemptedSave(false);
         return true;
       } else if (response.status === 408 || response.status === 409) {
-        setUpdateMessage(response.message || "Conflict detected");
+        setUpdateMessage(response.message || i18n.t("order.conflictDetected"));
         return false;
       } else {
-        setUpdateMessage(response.message || "Failed to update order");
+        setUpdateMessage(
+          response.message || i18n.t("order.orderUpdateError")
+        );
         return false;
       }
     } catch (error) {
       console.error("Error updating order:", error);
-      setUpdateMessage(error?.message || "Failed to update order");
+      setUpdateMessage(error?.message || i18n.t("order.orderUpdateError"));
       return false;
     } finally {
       setIsUpdating(false);
@@ -1302,11 +1296,11 @@ export function useEditOrderState({
       permissions.isCurrentOrder &&
       !permissions.canDelete // This already checks superadmin
     ) {
-      setUpdateMessage("Текущий заказ нельзя удалить");
+      setUpdateMessage(i18n.t("order.cannotDeleteCurrent"));
       return;
     }
 
-    const isConfirmed = window.confirm("Are you sure you want to delete this order?");
+    const isConfirmed = window.confirm(i18n.t("order.sureDelOrder"));
     if (!isConfirmed) return;
 
     setIsUpdating(true);
@@ -1316,7 +1310,7 @@ export function useEditOrderState({
       const result = await deleteOrder(editedOrder._id);
 
       if (!result.success) {
-        throw new Error(result.message || "Failed to delete order");
+        throw new Error(result.message || i18n.t("order.orderDeleteFailed"));
       }
 
       if (setCarOrders) {
@@ -1326,11 +1320,11 @@ export function useEditOrderState({
       }
 
       await fetchAndUpdateOrders();
-      setUpdateMessage("Order deleted successfully");
+      setUpdateMessage(i18n.t("order.orderDeletedSuccess"));
       onClose();
     } catch (error) {
       console.error("Error deleting order:", error);
-      setUpdateMessage("Failed to delete order. Please try again.");
+      setUpdateMessage(i18n.t("order.orderDeleteFailed"));
     } finally {
       setIsUpdating(false);
     }

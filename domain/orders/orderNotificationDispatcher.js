@@ -36,6 +36,7 @@ import { getTimeBucket } from "@/domain/time/athensTime";
 import { ROLE } from "./admin-rbac";
 import { DEVELOPER_EMAIL } from "@config/email";
 import { COMPANY_ID } from "@config/company";
+import { getBaseUrl } from "@config/domain";
 import Company from "@models/company";
 import { connectToDB } from "@lib/database";
 import { renderCustomerOrderConfirmationEmail, renderAdminOrderNotificationEmail } from "@/app/ui/email/renderEmail";
@@ -257,7 +258,7 @@ async function sendTelegramNotification(target, payload, reason, priority, messa
   if (target === "SUPERADMIN") {
     body += formatSuperadminClientContextFooter(payload, messageLocale);
   }
-  let text = `${emoji} ${translatedReason}\n\n${body}\n\nCarsNK · https://carsnk.gr`;
+  let text = `${emoji} ${translatedReason}\n\n${body}\n\nLe Monde Suites · ${getBaseUrl()}`;
   text = withTestOrderTelegramMessage(text, Boolean(payload.fromLocalhost));
   const sent = await sendTelegramDirect(text);
   if (!sent) {

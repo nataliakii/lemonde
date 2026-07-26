@@ -15,7 +15,7 @@ const { loadEnvConfig } = require("@next/env");
 loadEnvConfig(process.cwd());
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/natalicar";
-const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME || "Car";
+const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME || "lemonde";
 
 async function seedCompanyNotSendIps() {
   const client = new MongoClient(MONGODB_URI);

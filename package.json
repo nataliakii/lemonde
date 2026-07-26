@@ -21,6 +21,7 @@
     "seed:carsnk-company": "node scripts/seedCarsNkCompany.js",
     "seed:owners": "node scripts/seedOwners.js",
     "copy:cars-from-old": "node scripts/copyCarsFromOldDb.js",
+    "copy:db-car-to-lemonde": "node scripts/copyDbCarToLemonde.js",
     "copy:delivery-zones-from-old": "node scripts/copyDeliveryZonesFromOldDb.js",
     "export:cars-noseason": "node scripts/exportCarsNoSeasonPrices.js",
     "test": "jest",
@@ -72,7 +73,6 @@
     "react-dom": "^18",
     "react-i18next": "^13.2.2",
     "react-icons": "^4.11.0",
-    "react-scripts": "^0.0.0",
     "react-scroll": "^1.9.0",
     "swr": "^2.3.8"
   },

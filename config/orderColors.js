@@ -1,39 +1,33 @@
 /**
  * Order colors configuration
- * 
+ *
  * 🎯 ЕДИНСТВЕННЫЙ ИСТОЧНИК ПРАВДЫ для цветов заказов
- * 
- * Colors depend on:
- * - order.offline (boolean) — off-site booking
- * - order.confirmed (boolean)
- * - order.my_order (boolean)
- * - order.status (terminal PAID_AND_CLOSED)
- * 
- * my_order = true  → клиентский заказ (CLIENT)
- * my_order = false → админский заказ (ADMIN)
- * offline = true   → офлайн-бронь (штриховка в календаре)
- * 
- * ЦВЕТОВАЯ ЛОГИКА:
- * - Клиентские заказы (my_order=true):
- *   - Confirmed: cyan brand (primary.main)
- *   - Pending: желтый (brand yellow)
- * 
- * - Админские заказы (my_order=false):
- *   - Confirmed: зеленый (triadic.green)
- *   - Pending: оливковый (triadic.olive)
- * 
- * ВСЕ ЦВЕТА ИЗ ПАЛИТРЫ theme.js!
+ *
+ * Suites (Le Monde):
+ * - Green  → confirmed
+ * - Yellow → pending / unconfirmed
+ * - Hatch  → stubs (offline)
+ *
+ * Car rental still distinguishes client vs admin via keys; colors match suites.
  */
 
 import { alpha } from "@mui/material/styles";
 import { palette } from "@/theme";
+
+const GREEN = palette.triadic.green; // "#3D7A5A"
+const GREEN_LIGHT = palette.triadic.greenLight;
+const GREEN_DARK = palette.triadic.greenDark;
+const YELLOW = palette.triadic.yellow; // "#E0C56A"
+const YELLOW_LIGHT = palette.triadic.yellowLight;
+const STUB = "#5C6BC0";
+const STUB_PENDING = "#78909C";
 
 /**
  * ORDER_COLORS - строгая структура с обязательными полями
  * Каждый объект содержит: key, main, light, dark, text, bg, label, labelEn
  */
 export const ORDER_COLORS = {
-  // Терминальный статус заказа: оплачен и закрыт - ФИОЛЕТОВЫЙ
+  // Терминальный статус заказа: оплачен и закрыт
   PAID_AND_CLOSED: {
     key: "PAID_AND_CLOSED",
     main: "#7E57C2",
@@ -45,81 +39,76 @@ export const ORDER_COLORS = {
     labelEn: "Paid and closed",
   },
 
-  // Подтверждённый клиентский заказ (confirmed + my_order=true) - CYAN brand
+  // Подтверждённый клиентский заказ — зелёный
   CONFIRMED_CLIENT: {
     key: "CONFIRMED_CLIENT",
-    main: palette.primary.main,
-    light: palette.primary.light,
-    dark: palette.primary.dark,
-    text: palette.primary.dark,
-    bg: alpha(palette.primary.main, 0.14),
-    label: "Подтверждён (клиент)",
-    labelEn: "Confirmed (client)",
+    main: GREEN,
+    light: GREEN_LIGHT,
+    dark: GREEN_DARK,
+    text: GREEN_DARK,
+    bg: alpha(GREEN, 0.14),
+    label: "Подтверждён",
+    labelEn: "Confirmed",
   },
 
-  // Ожидающий клиентский заказ (pending + my_order=true) - ЖЕЛТЫЙ
+  // Ожидающий клиентский заказ — жёлтый
   PENDING_CLIENT: {
     key: "PENDING_CLIENT",
-    main: palette.triadic.yellow,      // "rgb(247, 220, 112)" - желтый
-    light: palette.triadic.yellowLight, // "rgb(249, 237, 121)"
-    dark: palette.triadic.yellow,       // желтый
-    text: palette.neutral.black,       // желтый
-    bg: palette.triadic.yellow,   // желтый с прозрачностью
-    label: "Ожидает (клиент)",
-    labelEn: "Pending (client)",
+    main: YELLOW,
+    light: YELLOW_LIGHT,
+    dark: YELLOW,
+    text: palette.neutral.black,
+    bg: alpha(YELLOW, 0.35),
+    label: "Неподтверждён",
+    labelEn: "Pending",
   },
 
-  // Подтверждённый админский заказ (confirmed + my_order=false) - ЗЕЛЕНЫЙ
+  // Подтверждённый админский заказ — зелёный (как клиентский)
   CONFIRMED_ADMIN: {
     key: "CONFIRMED_ADMIN",
-    main: palette.triadic.green,        // "#008900" - зеленый
-    light: palette.triadic.greenLight,  // "#33a033"
-    dark: palette.triadic.greenDark,    // "#005c00"
-    text: palette.triadic.green,        // "#008900"
-    bg: alpha(palette.triadic.green, 0.12),
-    label: "Подтверждён (админ)",
-    labelEn: "Confirmed (admin)",
+    main: GREEN,
+    light: GREEN_LIGHT,
+    dark: GREEN_DARK,
+    text: GREEN_DARK,
+    bg: alpha(GREEN, 0.12),
+    label: "Подтверждён",
+    labelEn: "Confirmed",
   },
 
-  // Ожидающий админский заказ (pending + my_order=false) - ОЛИВКОВЫЙ
+  // Ожидающий админский заказ — жёлтый (как клиентский)
   PENDING_ADMIN: {
     key: "PENDING_ADMIN",
-    // main: palette.triadic.olive,        // "#898900" - оливковый (до исправления)
-    main: palette.neutral.gray500,        // "#9e9e9e" - серый для pending admin в BigCalendar
-    // light: palette.triadic.oliveLight,  // "#a0a033"
-    light: palette.neutral.gray400,       // "#bdbdbd"
-    // dark: palette.triadic.oliveDark,    // "#5c5c00"
-    dark: palette.neutral.gray700,        // "#616161"
-    // text: palette.neutral.gray100,      // "#898900"
-    text: palette.neutral.gray700,        // "#616161"
-    // bg: alpha(palette.triadic.olive, 0.8),
-    bg: alpha(palette.neutral.gray500, 0.24),
-    label: "Ожидает (админ)",
-    labelEn: "Pending (admin)",
+    main: YELLOW,
+    light: YELLOW_LIGHT,
+    dark: YELLOW,
+    text: palette.neutral.black,
+    bg: alpha(YELLOW, 0.28),
+    label: "Неподтверждён",
+    labelEn: "Pending",
   },
 
-  // Заглушка / офлайн — всегда со штриховкой в календаре
+  // Заглушка / офлайн — штриховка
   OFFLINE: {
     key: "OFFLINE",
-    main: "#5C6BC0",
+    main: STUB,
     light: "#7986CB",
     dark: "#3949AB",
     text: "#283593",
-    bg: alpha("#5C6BC0", 0.2),
+    bg: alpha(STUB, 0.2),
     label: "Заглушка",
-    labelEn: "Stub (offline)",
+    labelEn: "Stub",
     hatch: true,
   },
-  /** Unconfirmed stub — amber-pending tone + hatch */
+  /** Unconfirmed stub — cooler gray-blue + hatch */
   OFFLINE_PENDING: {
     key: "OFFLINE_PENDING",
-    main: "#8D6E63",
-    light: "#A1887F",
-    dark: "#6D4C41",
-    text: "#4E342E",
-    bg: alpha("#8D6E63", 0.22),
-    label: "Заглушка (ожидает)",
-    labelEn: "Stub (pending)",
+    main: STUB_PENDING,
+    light: "#90A4AE",
+    dark: "#546E7A",
+    text: "#37474F",
+    bg: alpha(STUB_PENDING, 0.22),
+    label: "Заглушка",
+    labelEn: "Stub",
     hatch: true,
   },
 };
@@ -233,10 +222,18 @@ export const ORDER_UI_COLORS = {
 };
 
 /**
- * Получить все цвета для легенды календаря
- * Возвращает 4 состояния в фиксированном порядке
+ * Получить цвета для легенды календаря.
+ * Suites: 3 понятных категории (confirmed / pending / stub).
+ * Car rental: полный набор статусов.
  */
-export function getOrderColorsForLegend() {
+export function getOrderColorsForLegend({ suites = false } = {}) {
+  if (suites) {
+    return [
+      ORDER_COLORS.CONFIRMED_CLIENT,
+      ORDER_COLORS.PENDING_CLIENT,
+      ORDER_COLORS.OFFLINE,
+    ];
+  }
   return [
     ORDER_COLORS.PAID_AND_CLOSED,
     ORDER_COLORS.CONFIRMED_CLIENT,
@@ -245,6 +242,35 @@ export function getOrderColorsForLegend() {
     ORDER_COLORS.OFFLINE_PENDING,
     ORDER_COLORS.PENDING_CLIENT,
     ORDER_COLORS.PENDING_ADMIN,
+  ];
+}
+
+/**
+ * Compact suites legend rows for toolbar / strip (i18n keys + colors).
+ */
+export function getSuitesLegendRows() {
+  return [
+    {
+      key: "confirmed",
+      color: ORDER_COLORS.CONFIRMED_CLIENT.main,
+      hatch: false,
+      labelKey: "suites.legendConfirmed",
+      tipKey: "suites.legendConfirmedTip",
+    },
+    {
+      key: "pending",
+      color: ORDER_COLORS.PENDING_CLIENT.main,
+      hatch: false,
+      labelKey: "suites.legendPending",
+      tipKey: "suites.legendPendingTip",
+    },
+    {
+      key: "stub",
+      color: ORDER_COLORS.OFFLINE.main,
+      hatch: true,
+      labelKey: "suites.legendStub",
+      tipKey: "suites.legendStubTip",
+    },
   ];
 }
 

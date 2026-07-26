@@ -39,6 +39,7 @@ import {
 import { useMainContext } from "@app/Context";
 import { useSession } from "next-auth/react";
 import { ROLE } from "@/domain/orders/admin-rbac";
+import { useTranslation } from "react-i18next";
 
 function emptyRow() {
   return {
@@ -70,6 +71,7 @@ function revokePreview(row) {
 }
 
 export default function BulkAddCarsModal({ open, onClose, setUpdateStatus }) {
+  const { t } = useTranslation();
   const { resubmitCars, cars } = useMainContext();
   const { data: session } = useSession();
   const isSuperAdmin = session?.user?.role === ROLE.SUPERADMIN;
@@ -226,11 +228,15 @@ export default function BulkAddCarsModal({ open, onClose, setUpdateStatus }) {
       closeOnBackdropClick={false}
       actions={
         <Stack direction="row" gap={1} justifyContent="center">
-          <CancelButton onClick={onClose} disabled={loading} label="Cancel" />
+          <CancelButton
+            onClick={onClose}
+            disabled={loading}
+            label={t("basic.cancel")}
+          />
           <ConfirmButton
             onClick={handleSave}
             loading={loading}
-            label={`Save all (${rows.length})`}
+            label={`${t("basic.save")} (${rows.length})`}
           />
         </Stack>
       }
@@ -246,7 +252,7 @@ export default function BulkAddCarsModal({ open, onClose, setUpdateStatus }) {
           <TextField
             select
             size="small"
-            label="Company"
+            label={t("car.company")}
             value={ownerId}
             onChange={(e) => setOwnerId(e.target.value)}
             sx={{ minWidth: 220 }}

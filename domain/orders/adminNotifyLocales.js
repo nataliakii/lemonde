@@ -7,8 +7,37 @@
 
 import { fromServerUTC } from "@/domain/time/athensTime";
 import { getBusinessDaySpanFromStoredDates } from "./numberOfDays";
+import { SINGLE_PROPERTY_MODE } from "@config/domain";
 
 const SUPPORTED = ["en", "ru", "uk", "el", "de", "bg", "ro", "sr", "pl"];
+
+/** Suite-oriented labels overlaid when SINGLE_PROPERTY_MODE */
+const SUITES_LABELS = {
+  en: {
+    car: "🏠 Apartment:",
+    from: "📅 Check-in:",
+    to: "📅 Check-out:",
+    pickup: "📍 Location:",
+    ret: "↩️ Location:",
+    carLabel: "Apartment:",
+  },
+  ru: {
+    car: "🏠 Апартаменты:",
+    from: "📅 Заезд:",
+    to: "📅 Выезд:",
+    pickup: "📍 Локация:",
+    ret: "↩️ Локация:",
+    carLabel: "Апартаменты:",
+  },
+  el: {
+    car: "🏠 Διαμέρισμα:",
+    from: "📅 Check-in:",
+    to: "📅 Check-out:",
+    pickup: "📍 Τοποθεσία:",
+    ret: "↩️ Τοποθεσία:",
+    carLabel: "Διαμέρισμα:",
+  },
+};
 
 /** @type {Record<string, Record<string, string>>} */
 const DICT = {
@@ -538,7 +567,10 @@ export function resolveNotifyLanguagesFromCompanyDoc(doc) {
  */
 function tBundle(locale) {
   const l = normalizeNotifyLocale(locale);
-  return DICT[l] || DICT.en;
+  const base = DICT[l] || DICT.en;
+  if (!SINGLE_PROPERTY_MODE) return base;
+  const suites = SUITES_LABELS[l] || SUITES_LABELS.en;
+  return { ...base, ...suites };
 }
 
 function tpl(str, vars) {
@@ -702,14 +734,20 @@ export function formatAdminNotificationBody(payload, reason, locale, options = {
       `${t.car} ${carDisplay}`,
       `${t.from} ${formatDateShortWithPickupReturnTime(payload.rentalStartDate, payload.timeIn)}`,
       `${t.to} ${formatDateShortWithPickupReturnTime(payload.rentalEndDate, payload.timeOut)}`,
-      `${t.pickup} ${payload.placeIn || t.dash}`,
-      `${t.ret} ${payload.placeOut || t.dash}`,
-      ...(insuranceLine ? [insuranceLine] : []),
+      ...(SINGLE_PROPERTY_MODE
+        ? []
+        : [
+            `${t.pickup} ${payload.placeIn || t.dash}`,
+            `${t.ret} ${payload.placeOut || t.dash}`,
+            ...(insuranceLine ? [insuranceLine] : []),
+          ]),
       `${t.days} ${days}`,
       `${t.total} €${payload.totalPrice ?? ""}`,
-      licenceStatusLine,
+      ...(SINGLE_PROPERTY_MODE
+        ? []
+        : [licenceStatusLine]),
       ...(hasPII ? ["", t.customer, ...customerLines] : []),
-      ...licenceBlock,
+      ...(SINGLE_PROPERTY_MODE ? [] : licenceBlock),
       ...(showFooterRule ? ["------------"] : []),
     ].filter(Boolean);
     return lines.join("\n");

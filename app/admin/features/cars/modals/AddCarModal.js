@@ -67,8 +67,10 @@ const AddCarModal = ({
     gallery: [],
     deposit: 0,
     bathrooms: 1,
+    beds: 2,
     sizeSqm: 45,
     floor: 1,
+    transferPrice: 0,
     description: "",
     amenities: ["wifi", "kitchen", "air conditioning"],
   });
@@ -117,6 +119,8 @@ const AddCarModal = ({
       formData.append("bathrooms", String(carData.bathrooms ?? 1));
       if (carData.sizeSqm != null) formData.append("sizeSqm", String(carData.sizeSqm));
       if (carData.floor != null) formData.append("floor", String(carData.floor));
+      if (carData.beds != null) formData.append("beds", String(carData.beds));
+      formData.append("transferPrice", String(carData.transferPrice ?? 0));
       formData.append("description", carData.description || "");
       formData.append("amenities", JSON.stringify(carData.amenities || []));
       formData.append("photoUrl", carData.photoUrl || CLOUDINARY_PLACEHOLDER_PUBLIC_ID);
@@ -262,10 +266,10 @@ const AddCarModal = ({
             {isSuperAdmin && !SINGLE_PROPERTY_MODE && (
               <Grid item xs={12}>
                 <FormControl fullWidth required size="small">
-                  <InputLabel id="add-car-company">Company</InputLabel>
+                  <InputLabel id="add-car-company">{t("car.company")}</InputLabel>
                   <Select
                     labelId="add-car-company"
-                    label="Company"
+                    label={t("car.company")}
                     value={ownerId}
                     onChange={(e) => setOwnerId(e.target.value)}
                   >
@@ -333,15 +337,23 @@ const AddCarModal = ({
                 <RenderTextField
                   type="number"
                   name="bathrooms"
-                  label="Bathrooms"
+                  label={t("car.bathrooms")}
                   defaultValue={carData.bathrooms}
                   updatedCar={carData}
                   handleChange={handleChange}
                 />
                 <RenderTextField
                   type="number"
+                  name="beds"
+                  label={t("car.beds")}
+                  defaultValue={carData.beds}
+                  updatedCar={carData}
+                  handleChange={handleChange}
+                />
+                <RenderTextField
+                  type="number"
                   name="sizeSqm"
-                  label="Size (m²)"
+                  label={t("car.sizeSqm")}
                   defaultValue={carData.sizeSqm}
                   updatedCar={carData}
                   handleChange={handleChange}
@@ -349,12 +361,21 @@ const AddCarModal = ({
                 <RenderTextField
                   type="number"
                   name="floor"
-                  label="Floor"
+                  label={t("car.floor")}
                   defaultValue={carData.floor}
                   updatedCar={carData}
                   handleChange={handleChange}
                 />
-                {!SINGLE_PROPERTY_MODE && (
+                {SINGLE_PROPERTY_MODE ? (
+                  <RenderTextField
+                    type="number"
+                    name="transferPrice"
+                    label={t("car.transferPrice")}
+                    defaultValue={carData.transferPrice ?? 0}
+                    updatedCar={carData}
+                    handleChange={handleChange}
+                  />
+                ) : (
                   <RenderTextField
                     type="number"
                     name="deposit"
@@ -380,7 +401,7 @@ const AddCarModal = ({
               <Stack spacing={2}>
                 <TextField
                   name="description"
-                  label="Short description"
+                  label={t("car.shortDescription")}
                   multiline
                   minRows={3}
                   value={carData.description || ""}
@@ -395,7 +416,7 @@ const AddCarModal = ({
                     setCarData((prev) => ({ ...prev, amenities: newValue }))
                   }
                   renderInput={(params) => (
-                    <TextField {...params} label="Amenities" />
+                    <TextField {...params} label={t("car.amenities")} />
                   )}
                 />
                 <SuiteGalleryEditor

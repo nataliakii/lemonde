@@ -4,6 +4,7 @@ import { Container, Grid, Typography } from "@mui/material";
 import CarItemComponent from "./CarComponent/CarItemComponent";
 import { useMainContext } from "../Context";
 import dayjs from "dayjs";
+import { DISCOUNT_UI_ENABLED } from "@config/domain";
 
 function FilteredCarsDisplay({ filterType, filterValue, minSeats }) {
   const { cars } = useMainContext();
@@ -62,6 +63,7 @@ function FilteredCarsDisplay({ filterType, filterValue, minSeats }) {
   const [discountEnd, setDiscountEnd] = useState(null);
 
   const fetchDiscount = useCallback(async () => {
+    if (!DISCOUNT_UI_ENABLED) return;
     try {
       const res = await fetch("/api/discount");
       if (!res.ok) return;
@@ -75,6 +77,7 @@ function FilteredCarsDisplay({ filterType, filterValue, minSeats }) {
   }, []);
 
   useEffect(() => {
+    if (!DISCOUNT_UI_ENABLED) return undefined;
     let timer;
     if (typeof window !== "undefined" && window.requestIdleCallback) {
       timer = window.requestIdleCallback(() => fetchDiscount(), {

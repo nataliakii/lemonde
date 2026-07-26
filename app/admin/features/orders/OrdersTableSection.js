@@ -607,15 +607,20 @@ export default function OrdersTableSection() {
 
         const successMsg =
           field === "totalPrice" && options.source === "recalculate"
-            ? `Цена пересчитана: €${Number(
-                mergedUpdate.totalPrice ?? value ?? 0
-              ).toFixed(2)}`
-            : result.message || "Order updated successfully";
+            ? t("order.priceRecalculated", {
+                price: Number(
+                  mergedUpdate.totalPrice ?? value ?? 0
+                ).toFixed(2),
+              })
+            : result.message || t("order.orderUpdated");
         enqueueSnackbar(successMsg, { variant: "success" });
       }
     } catch (error) {
       console.error("Error updating order field:", error);
-      enqueueSnackbar(error.message || "Failed to update order", { variant: "error" });
+      enqueueSnackbar(
+        error.message || t("order.orderUpdateError"),
+        { variant: "error" }
+      );
     } finally {
       setIsSaving((prev) => ({ ...prev, [savingKey]: false }));
     }
@@ -625,6 +630,7 @@ export default function OrdersTableSection() {
     setConflictHighlightsFromResult,
     clearConflictHighlights,
     setAllOrders,
+    t,
   ]);
   
   /**
@@ -684,6 +690,7 @@ export default function OrdersTableSection() {
           timeOut: order.timeOut,
           placeIn: order.placeIn,
           placeOut: order.placeOut,
+          needsTransfer: Boolean(order.needsTransfer),
         }
       );
 
@@ -1371,7 +1378,7 @@ export default function OrdersTableSection() {
                             disabled={!canEditStartDate || isSaving[`${order._id}_rentalStartDate`]}
                             onDenied={() => {
                               const permission = getFieldPermission(order, "rentalStartDate");
-                              enqueueSnackbar(permission.reason || "⛔ Нельзя редактировать дату начала", { variant: "warning" });
+                              enqueueSnackbar(permission.reason || `⛔ ${t("order.cannotEditStartDate")}`, { variant: "warning" });
                             }}
                             onCommit={(val) => handleFieldUpdate(order._id, "rentalStartDate", val)}
                             formatDisplay={(val) => {
@@ -1386,7 +1393,7 @@ export default function OrdersTableSection() {
                             disabled={!canEditTimeIn || isSaving[`${order._id}_timeIn`]}
                             onDenied={() => {
                               const permission = getFieldPermission(order, "timeIn");
-                              enqueueSnackbar(permission.reason || "⛔ Нельзя редактировать время начала", { variant: "warning" });
+                              enqueueSnackbar(permission.reason || `⛔ ${t("order.cannotEditStartTime")}`, { variant: "warning" });
                             }}
                             onCommit={(val) => handleFieldUpdate(order._id, "timeIn", val)}
                             formatDisplay={(val) => (val ? val : "-")}
@@ -1403,7 +1410,7 @@ export default function OrdersTableSection() {
                             disabled={!canEditEndDate || isSaving[`${order._id}_rentalEndDate`]}
                             onDenied={() => {
                               const permission = getFieldPermission(order, "rentalEndDate", currentUser);
-                              enqueueSnackbar(permission.reason || "⛔ Нельзя редактировать дату окончания", { variant: "warning" });
+                              enqueueSnackbar(permission.reason || `⛔ ${t("order.cannotEditEndDate")}`, { variant: "warning" });
                             }}
                             onCommit={(val) => handleFieldUpdate(order._id, "rentalEndDate", val)}
                             formatDisplay={(val) => {
@@ -1418,7 +1425,7 @@ export default function OrdersTableSection() {
                             disabled={!canEditTimeOut || isSaving[`${order._id}_timeOut`]}
                             onDenied={() => {
                               const permission = getFieldPermission(order, "timeOut");
-                              enqueueSnackbar(permission.reason || "⛔ Нельзя редактировать время окончания", { variant: "warning" });
+                              enqueueSnackbar(permission.reason || `⛔ ${t("order.cannotEditEndTime")}`, { variant: "warning" });
                             }}
                             onCommit={(val) => handleFieldUpdate(order._id, "timeOut", val)}
                             formatDisplay={(val) => (val ? val : "-")}
@@ -1438,7 +1445,7 @@ export default function OrdersTableSection() {
                             disabled={!canEditCustomerName || isSaving[`${order._id}_customerName`]}
                             onDenied={() => {
                               const permission = getFieldPermission(order, "customerName");
-                              enqueueSnackbar(permission.reason || "⛔ Нельзя редактировать имя клиента", { variant: "warning" });
+                              enqueueSnackbar(permission.reason || `⛔ ${t("order.cannotEditClientName")}`, { variant: "warning" });
                             }}
                             onCommit={(val) => handleFieldUpdate(order._id, "customerName", val)}
                           />
@@ -1447,7 +1454,7 @@ export default function OrdersTableSection() {
                             disabled={!canEditPhone || isSaving[`${order._id}_phone`]}
                             onDenied={() => {
                               const permission = getFieldPermission(order, "phone");
-                              enqueueSnackbar(permission.reason || "⛔ Нельзя редактировать телефон", { variant: "warning" });
+                              enqueueSnackbar(permission.reason || `⛔ ${t("order.cannotEditPhone")}`, { variant: "warning" });
                             }}
                             onCommit={(val) => handleFieldUpdate(order._id, "phone", val)}
                           />
@@ -1457,7 +1464,7 @@ export default function OrdersTableSection() {
                             disabled={!canEditEmail || isSaving[`${order._id}_email`]}
                             onDenied={() => {
                               const permission = getFieldPermission(order, "email", currentUser);
-                              enqueueSnackbar(permission.reason || "⛔ Нельзя редактировать email", { variant: "warning" });
+                              enqueueSnackbar(permission.reason || `⛔ ${t("order.cannotEditEmail")}`, { variant: "warning" });
                             }}
                             onCommit={(val) => handleFieldUpdate(order._id, "email", val)}
                           />
@@ -1517,7 +1524,7 @@ export default function OrdersTableSection() {
                                       );
                                       enqueueSnackbar(
                                         permission.reason ||
-                                          "⛔ Нельзя редактировать сумму",
+                                          `⛔ ${t("order.cannotEditAmount")}`,
                                         { variant: "warning" }
                                       );
                                     }}
@@ -1531,14 +1538,14 @@ export default function OrdersTableSection() {
                                         val.trim() === ""
                                       ) {
                                         enqueueSnackbar(
-                                          "⛔ Введите корректное число",
+                                          `⛔ ${t("order.enterValidNumber")}`,
                                           { variant: "error" }
                                         );
                                         return;
                                       }
                                       if (numericValue < 0) {
                                         enqueueSnackbar(
-                                          "⛔ Сумма не может быть отрицательной",
+                                          `⛔ ${t("order.amountNotNegative")}`,
                                           { variant: "error" }
                                         );
                                         return;

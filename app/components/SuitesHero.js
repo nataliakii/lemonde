@@ -2,13 +2,21 @@
 
 import { Box, Button, Typography } from "@mui/material";
 import Link from "next/link";
+import Image from "next/image";
 
 /**
- * Full-bleed landing hero for Le Monde Suites.
- * Brand mark lives in the navbar; hero is wordmark + tagline + CTA.
+ * Full-bleed landing hero.
+ * Brand name / optional hero image come from company (DB) via props.
  */
-export default function SuitesHero({ locale = "en", tagline, ctaLabel }) {
+export default function SuitesHero({
+  locale = "en",
+  tagline,
+  ctaLabel,
+  brandName = "Le Monde Suites",
+  heroImage = "",
+}) {
   const apartmentsHref = `/${locale}/apartments`;
+  const hasHeroImage = Boolean(heroImage);
 
   return (
     <Box
@@ -25,24 +33,48 @@ export default function SuitesHero({ locale = "en", tagline, ctaLabel }) {
         alignItems: "center",
         justifyContent: "center",
         overflow: "hidden",
-        background: `
+        background: hasHeroImage
+          ? "#0E0C0A"
+          : `
           radial-gradient(ellipse 80% 60% at 70% 20%, rgba(201,162,39,0.22) 0%, transparent 55%),
           radial-gradient(ellipse 60% 50% at 15% 80%, rgba(232,213,163,0.12) 0%, transparent 50%),
           linear-gradient(165deg, #0E0C0A 0%, #1A1612 45%, #2A2218 100%)
         `,
       }}
     >
-      <Box
-        aria-hidden
-        sx={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E\")",
-          opacity: 0.5,
-          pointerEvents: "none",
-        }}
-      />
+      {hasHeroImage ? (
+        <>
+          <Image
+            src={heroImage}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            style={{ objectFit: "cover" }}
+          />
+          <Box
+            aria-hidden
+            sx={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(165deg, rgba(14,12,10,0.72) 0%, rgba(26,22,18,0.55) 50%, rgba(14,12,10,0.78) 100%)",
+            }}
+          />
+        </>
+      ) : (
+        <Box
+          aria-hidden
+          sx={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E\")",
+            opacity: 0.5,
+            pointerEvents: "none",
+          }}
+        />
+      )}
 
       <Box
         sx={{
@@ -62,7 +94,7 @@ export default function SuitesHero({ locale = "en", tagline, ctaLabel }) {
             mb: 2,
           }}
         >
-          Le Monde Suites
+          {brandName}
         </Typography>
 
         <Typography

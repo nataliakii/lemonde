@@ -1,20 +1,19 @@
 /**
- * CarsNK email theme — colors and typography for email templates.
- * Single source of truth for brand-accent and layout styles (inline, email-client safe).
+ * Le Monde Suites email theme — inline styles for email clients.
  */
 
 export const EMAIL_STYLE = {
-  bgPage: "#f7f7f7",
-  bgCard: "#ffffff",
-  bgDetailsCard: "#fafafa",
-  bgPriceBlock: "#f0f2f5",
-  text: "#1a1a1a",
-  muted: "#6b6b6b",
-  accent: "#2c3e50",
-  border: "#e8e8e8",
-  /** Голубая заставка (шапка письма) — teal */
-  headerTeal: "#008989",
-  headerText: "#ffffff",
+  bgPage: "#F2F1EF",
+  bgCard: "#FFFCFA",
+  bgDetailsCard: "#F7F5F1",
+  bgPriceBlock: "#F5F0E6",
+  text: "#1A1612",
+  muted: "#6B655C",
+  accent: "#C9A227",
+  border: "#E8E6E2",
+  /** Espresso header */
+  headerTeal: "#1A1612",
+  headerText: "#E8D5A3",
   fontFamily: "Georgia, 'Times New Roman', serif",
   fontSans: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
 };

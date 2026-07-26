@@ -88,7 +88,7 @@ describe("order date consistency across channels", () => {
     });
     expect(text).toContain(expectedStartEmail);
     expect(text).toContain(expectedEndEmail);
-    expect(text).toContain(`Number of days: ${order.numberOfDays}`);
+    expect(text).toContain(`Nights: ${order.numberOfDays}`);
 
     await notifyOrderAction({
       order,
@@ -103,10 +103,10 @@ describe("order date consistency across channels", () => {
     expect(sendTelegramDirect).toHaveBeenCalledTimes(1);
     const telegramText = sendTelegramDirect.mock.calls[0][0];
     expect(telegramText).toContain(
-      `📅 From: ${expectedStartTelegram} (${expectedTimeInTelegram})`
+      `📅 Check-in: ${expectedStartTelegram} (${expectedTimeInTelegram})`
     );
     expect(telegramText).toContain(
-      `📅 To: ${expectedEndTelegram} (${expectedTimeOutTelegram})`
+      `📅 Check-out: ${expectedEndTelegram} (${expectedTimeOutTelegram})`
     );
     expect(telegramText).toContain(`🗓 Days: ${order.numberOfDays}`);
     expect(telegramText).toContain("AA-1234");
@@ -153,7 +153,7 @@ describe("order date consistency across channels", () => {
     });
     expect(text).toContain(expectedStartEmail);
     expect(text).toContain(expectedEndEmail);
-    expect(text).toContain(`Number of days: ${mayOrder.numberOfDays}`);
+    expect(text).toContain(`Nights: ${mayOrder.numberOfDays}`);
     expect(text).toContain("14:00");
     expect(text).toContain("12:00");
 
@@ -169,9 +169,9 @@ describe("order date consistency across channels", () => {
 
     const telegramText = sendTelegramDirect.mock.calls[0][0];
     expect(telegramText).toContain(
-      `📅 From: ${expectedStartTelegram} (${expectedTimeInMay})`
+      `📅 Check-in: ${expectedStartTelegram} (${expectedTimeInMay})`
     );
-    expect(telegramText).toContain(`📅 To: ${expectedEndTelegram} (${expectedTimeOutMay})`);
+    expect(telegramText).toContain(`📅 Check-out: ${expectedEndTelegram} (${expectedTimeOutMay})`);
     expect(telegramText).toContain(`🗓 Days: ${mayOrder.numberOfDays}`);
     expect(telegramText).toContain("AA-1234");
 

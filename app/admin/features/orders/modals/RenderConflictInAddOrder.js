@@ -1,15 +1,13 @@
 import { Box, Typography } from "@mui/material";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 
 const formatDateTime = (date, time) => {
   if (!date) return null;
 
-  // Форматируем дату
   const formattedDate = dayjs(date).format("DD.MM.YYYY");
 
-  // Если есть время, форматируем его
   if (time) {
-    // Проверяем, является ли время полной датой ISO
     const timeStr = time.includes("T") ? dayjs(time).format("HH:mm") : time;
     return `${formattedDate} (${timeStr})`;
   }
@@ -17,7 +15,6 @@ const formatDateTime = (date, time) => {
   return formattedDate;
 };
 
-// Вспомогательная функция для проверки пересечения дат
 const isDateInRange = (date, startDate, endDate) => {
   const checkDate = dayjs(date);
   const start = dayjs(startDate);
@@ -31,12 +28,13 @@ export default function RenderConflictMessage({
   endDate,
   confirmed = false,
 }) {
+  const { t } = useTranslation();
+
   if (!datesInRange?.length || !startDate || !endDate) return null;
 
   const currentBookingStart = dayjs(startDate);
   const currentBookingEnd = dayjs(endDate);
 
-  // 1. Конфликты с началом бронирования (когда начало новой брони совпадает с концом существующей)
   const startConflicts = datesInRange.filter(
     (pending) =>
       pending.isEnd &&
@@ -44,7 +42,6 @@ export default function RenderConflictMessage({
         currentBookingStart.format("YYYY-MM-DD")
   );
 
-  // 2. Конфликты с концом бронирования (когда конец новой брони совпадает с началом существующей)
   const endConflicts = datesInRange.filter(
     (pending) =>
       pending.isStart &&
@@ -52,10 +49,8 @@ export default function RenderConflictMessage({
         currentBookingEnd.format("YYYY-MM-DD")
   );
 
-  // 3. Внутренние конфликты (когда даты существующего бронирования находятся внутри нового диапазона)
   const internalConflicts = datesInRange.filter((pending) => {
     const pendingDate = dayjs(pending.date);
-    // Исключаем те даты, которые уже учтены в startConflicts и endConflicts
     const isAlreadyCounted =
       startConflicts.includes(pending) || endConflicts.includes(pending);
 
@@ -65,11 +60,16 @@ export default function RenderConflictMessage({
     );
   });
 
+  const confirmedPrefix = confirmed
+    ? `${t("order.confirmedShort")} `
+    : "";
+
   return (
     <Box sx={{ mt: 2 }}>
       {startConflicts.length > 0 && (
         <Typography variant="body1" color="error" sx={{ mb: 1 }}>
-          {confirmed && "Confirmed"} Конфликт с началом бронирования:
+          {confirmedPrefix}
+          {t("order.conflictWithStart")}{" "}
           {startConflicts.map((conflict, index) => (
             <span key={index}>
               {formatDateTime(conflict.date, conflict.timeEnd)}
@@ -81,7 +81,8 @@ export default function RenderConflictMessage({
 
       {endConflicts.length > 0 && (
         <Typography variant="body1" color="error" sx={{ mb: 1 }}>
-          {confirmed && "Confirmed"} Конфликт с окончанием бронирования:
+          {confirmedPrefix}
+          {t("order.conflictWithEnd")}{" "}
           {endConflicts.map((conflict, index) => (
             <span key={index}>
               {formatDateTime(conflict.date, conflict.timeStart)}
@@ -93,8 +94,8 @@ export default function RenderConflictMessage({
 
       {internalConflicts.length > 0 && (
         <Typography variant="body2" color="error" sx={{ mb: 1 }}>
-          {confirmed && "Confirmed"} В выбранном диапазоне есть существующие
-          бронирования:
+          {confirmedPrefix}
+          {t("order.conflictInRange")}{" "}
           {internalConflicts.map((conflict, index) => (
             <span key={index}>
               {formatDateTime(conflict.date)}

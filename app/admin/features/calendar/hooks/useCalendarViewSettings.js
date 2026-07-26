@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 
-const STORAGE_KEY = "calendar_view_settings_v1";
+const STORAGE_KEY = "calendar_view_settings_v2";
 
 /** @typedef {'15d' | '1m' | '2m'} DayRange */
 /** @typedef {'inline'} LegendPlacement */
@@ -22,7 +22,7 @@ const STORAGE_KEY = "calendar_view_settings_v1";
  */
 const DEFAULT_SETTINGS = {
   dayRange: "1m",
-  showLegend: false,
+  showLegend: true,
   legendPlacement: "inline",
   showBufferInLegend: true,
   showDeliveryInLegend: !SINGLE_PROPERTY_MODE,

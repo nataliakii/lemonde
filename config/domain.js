@@ -12,6 +12,13 @@ const LOCAL_DEV_FALLBACK = "http://localhost:3026";
 /** Le Monde Suites: single-property apartment mode */
 export const SINGLE_PROPERTY_MODE = true;
 
+/**
+ * Show discount controls/labels in UI (admin nav modal, public % badges,
+ * order breakdown discount columns). Backend DiscountSetting still applies
+ * to calcTotalPrice if an active record exists — set false to hide UI only.
+ */
+export const DISCOUNT_UI_ENABLED = false;
+
 function normalizeHost(host) {
   return String(host || "")
     .trim()

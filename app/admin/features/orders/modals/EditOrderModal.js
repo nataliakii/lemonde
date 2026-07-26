@@ -38,7 +38,7 @@ import { useEditOrderPermissions } from "../hooks/useEditOrderPermissions";
 import { useEditOrderState } from "../hooks/useEditOrderState";
 import { useOrderAccess } from "../hooks/useOrderAccess";
 import { useSession } from "next-auth/react";
-import { SINGLE_PROPERTY_MODE } from "@/config/domain";
+import { SINGLE_PROPERTY_MODE, DISCOUNT_UI_ENABLED } from "@/config/domain";
 // 🎯 Athens timezone utilities — ЕДИНСТВЕННЫЙ источник правды для времени
 import {
   ATHENS_TZ,
@@ -633,9 +633,7 @@ const EditOrderModal = ({
     })();
 
     if (hasUnsavedTimeChanges) {
-      const proceed = window.confirm(
-        'Есть несохранённые изменения времени. Нажмите "Обновить данные заказа", чтобы сохранить изменения, или "ОК", чтобы продолжить подтверждение без сохранения.'
-      );
+      const proceed = window.confirm(t("order.unsavedTimeChangesMessage"));
       if (!proceed) return;
     }
 
@@ -706,7 +704,7 @@ const EditOrderModal = ({
       }
     } catch (error) {
       console.error("Error toggling confirmation status:", error);
-      setUpdateMessage(error.message || "Статус не обновлен. Ошибка сервера.");
+      setUpdateMessage(error.message || t("order.statusNotUpdated"));
     } finally {
       setConfirmToggleUpdating(false);
     }
@@ -786,7 +784,7 @@ const EditOrderModal = ({
   const handleCloseOrder = useCallback(async () => {
     if (!editedOrder?._id) return;
     if (!canCloseByDate) {
-      setUpdateMessage("Нельзя закрыть заказ до начала аренды");
+      setUpdateMessage(t("order.cannotCloseBeforeRental"));
       setSnackbarOpen(true);
       return;
     }
@@ -799,7 +797,7 @@ const EditOrderModal = ({
       });
 
       if (!result?.success) {
-        setUpdateMessage(result?.message || "Не удалось закрыть заказ");
+        setUpdateMessage(result?.message || t("order.closeOrderFailed"));
         setSnackbarOpen(true);
         return;
       }
@@ -822,10 +820,10 @@ const EditOrderModal = ({
         onSave(updated);
       }
 
-      setUpdateMessage("Заказ успешно закрыт");
+      setUpdateMessage(t("order.orderClosedSuccess"));
       setSnackbarOpen(true);
     } catch (error) {
-      setUpdateMessage(error?.message || "Не удалось закрыть заказ");
+      setUpdateMessage(error?.message || t("order.closeOrderFailed"));
       setSnackbarOpen(true);
     } finally {
       setCloseOrderUpdating(false);
@@ -846,14 +844,12 @@ const EditOrderModal = ({
     // This is the primary defense against "auto-fix" side effects
     // hasBlockingConflict comes from useEditOrderConflicts and covers conflicts with confirmed orders
     if (hasBlockingConflict) {
-      setUpdateMessage(
-        "⛔ Невозможно сохранить: есть конфликт с подтверждённым заказом. Измените время или отмените изменения."
-      );
+      setUpdateMessage(`⛔ ${t("order.cannotSaveConfirmedConflict")}`);
       return false;
     }
 
     return handleSave();
-  }, [handleSave, hasBlockingConflict, setUpdateMessage]);
+  }, [handleSave, hasBlockingConflict, setUpdateMessage, t]);
 
   const editDirtyRef = useRef({});
   const handleOrderUpdateRef = useRef(handleOrderUpdate);
@@ -954,7 +950,10 @@ const EditOrderModal = ({
     });
 
     if (!result.canConfirm && result.message && !access?.canSeeClientPII) {
-      result.message = result.message.replace(/«[^»]*»/, "«Клиент»");
+      result.message = result.message.replace(
+        /«[^»]*»/,
+        `«${t("order.clientGeneric")}»`
+      );
     }
 
     return {
@@ -1014,7 +1013,7 @@ const EditOrderModal = ({
     (msg) => {
       if (!msg) return msg;
       if (access?.canSeeClientPII) return msg;
-      return msg.replace(/«[^»]*»/, "«Клиент»");
+      return msg.replace(/«[^»]*»/, `«${t("order.clientGeneric")}»`);
     },
     [access?.canSeeClientPII]
   );
@@ -1264,7 +1263,7 @@ const EditOrderModal = ({
                 }}
               >
                 {permissions.viewOnly
-                  ? "Просмотреть заказ"
+                  ? t("order.viewOrder")
                   : t("order.editOrder")}{" "}
                 №{order?.orderNumber != null && order.orderNumber !== ""
                   ? String(order.orderNumber)
@@ -1410,7 +1409,9 @@ const EditOrderModal = ({
                               mb: 0.5,
                             }}
                           >
-                            Ручная цена (авто: €{manualLabelAutoPrice.toFixed(2)})
+                            {t("order.manualPriceLabel", {
+                              price: manualLabelAutoPrice.toFixed(2),
+                            })}
                           </Typography>
                           <Button
                             size="small"
@@ -1435,7 +1436,7 @@ const EditOrderModal = ({
                               minWidth: "auto",
                             }}
                           >
-                            Вернуть автоматическую цену
+                            {t("order.resetAutoPrice")}
                           </Button>
                         </Box>
                       )}
@@ -1446,7 +1447,7 @@ const EditOrderModal = ({
 
               {calcLoading && (
                 <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                  Пересчёт...
+                  {t("order.recalculating")}
                 </Typography>
               )}
 
@@ -1454,7 +1455,9 @@ const EditOrderModal = ({
                 <Box sx={{ mt: 1, mb: 1, px: 0.5 }}>
                   {(() => {
                     const { dailyRates, baseRentalTotal, kaskoTotal, childSeatsTotal, secondDriverTotal, deliveryIn, deliveryOut, deliveryTotal } = displayedPriceBreakdown;
-                    const hasDiscount = dailyRates?.some((d) => d.discountActive);
+                    const hasDiscount =
+                      DISCOUNT_UI_ENABLED &&
+                      dailyRates?.some((d) => d.discountActive);
                     const activeDiscountValue =
                       activeDiscount?.type === "fixed"
                         ? `€${Number(activeDiscount?.value || 0)}`
@@ -1462,7 +1465,7 @@ const EditOrderModal = ({
 
                     return (
                       <>
-                        {(activeDiscount || hasDiscount) && (
+                        {DISCOUNT_UI_ENABLED && (activeDiscount || hasDiscount) && (
                           <Box
                             sx={{
                               display: "flex",
@@ -1478,8 +1481,12 @@ const EditOrderModal = ({
                           >
                             <Typography variant="caption" sx={{ fontWeight: 700, fontSize: "0.75rem" }}>
                               {activeDiscount
-                                ? `Скидка ${activeDiscountValue} применена`
-                                : `Скидка ${dailyRates.find((d) => d.discountActive)?.discount || 0}% применена`}
+                                ? t("order.discountApplied", {
+                                    value: activeDiscountValue,
+                                  })
+                                : t("order.discountApplied", {
+                                    value: `${dailyRates.find((d) => d.discountActive)?.discount || 0}%`,
+                                  })}
                             </Typography>
                           </Box>
                         )}
@@ -1498,7 +1505,7 @@ const EditOrderModal = ({
                         >
                           <Box>
                             <Typography variant="caption" sx={{ fontSize: "inherit", color: "inherit" }}>
-                              Аренда: <b>€{baseRentalTotal}</b>
+                              {t("order.rentalLabel")}: <b>€{baseRentalTotal}</b>
                             </Typography>
                           </Box>
                           {kaskoTotal > 0 && (
@@ -1511,34 +1518,64 @@ const EditOrderModal = ({
                           {childSeatsTotal > 0 && (
                             <Box>
                               <Typography variant="caption" sx={{ fontSize: "inherit", color: "inherit" }}>
-                                · Кресла: <b>€{childSeatsTotal}</b>
+                                · {t("order.childSeatsShort")}: <b>€{childSeatsTotal}</b>
                               </Typography>
                             </Box>
                           )}
                           {secondDriverTotal > 0 && (
                             <Box>
                               <Typography variant="caption" sx={{ fontSize: "inherit", color: "inherit" }}>
-                                · 2-й водитель: <b>€{secondDriverTotal}</b>
+                                · {t("order.secondDriverShort")}: <b>€{secondDriverTotal}</b>
                               </Typography>
                             </Box>
                           )}
-                          <Box>
-                            <Typography variant="caption" sx={{ fontSize: "inherit", color: "inherit" }}>
-                              · Доставка: <b>€{deliveryTotal}</b>
-                              {(deliveryIn > 0 || deliveryOut > 0) &&
-                                deliveryIn !== deliveryOut && (
-                                  <span style={{ opacity: 0.7 }}>
-                                    {" "}
-                                    (туда €{deliveryIn} + обратно €{deliveryOut})
-                                  </span>
-                                )}
-                              {deliveryTotal === 0 &&
-                                deliveryIn === 0 &&
-                                deliveryOut === 0 && (
-                                  <span style={{ opacity: 0.7 }}> (нет / бесплатно)</span>
-                                )}
-                            </Typography>
-                          </Box>
+                          {SINGLE_PROPERTY_MODE ? (
+                            Boolean(editedOrder?.needsTransfer) ? (
+                              <Box>
+                                <Typography
+                                  variant="caption"
+                                  sx={{ fontSize: "inherit", color: "inherit" }}
+                                >
+                                  · {t("order.transferLabelShort")}:{" "}
+                                  <b>€{Number(deliveryTotal) || 0}</b>
+                                  {(Number(deliveryTotal) || 0) === 0 ? (
+                                    <span style={{ opacity: 0.7 }}>
+                                      {" "}
+                                      {t("order.transferNotPriced")}
+                                    </span>
+                                  ) : null}
+                                </Typography>
+                              </Box>
+                            ) : null
+                          ) : (
+                            <Box>
+                              <Typography
+                                variant="caption"
+                                sx={{ fontSize: "inherit", color: "inherit" }}
+                              >
+                                · {t("order.deliveryLabelShort")}:{" "}
+                                <b>€{deliveryTotal}</b>
+                                {(deliveryIn > 0 || deliveryOut > 0) &&
+                                  deliveryIn !== deliveryOut && (
+                                    <span style={{ opacity: 0.7 }}>
+                                      {" "}
+                                      {t("order.deliveryRoundTrip", {
+                                        in: deliveryIn,
+                                        out: deliveryOut,
+                                      })}
+                                    </span>
+                                  )}
+                                {deliveryTotal === 0 &&
+                                  deliveryIn === 0 &&
+                                  deliveryOut === 0 && (
+                                    <span style={{ opacity: 0.7 }}>
+                                      {" "}
+                                      {t("order.deliveryFree")}
+                                    </span>
+                                  )}
+                              </Typography>
+                            </Box>
+                          )}
                         </Box>
 
                         {dailyRates && dailyRates.length > 0 && (
@@ -1558,8 +1595,10 @@ const EditOrderModal = ({
                                 }}
                               >
                                 {isPriceBreakdownExpanded
-                                  ? "Скрыть разбивку по дням"
-                                  : `Показать разбивку по дням (${dailyRates.length})`}
+                                  ? t("order.hideDailyBreakdown")
+                                  : t("order.showDailyBreakdown", {
+                                      count: dailyRates.length,
+                                    })}
                               </Button>
                             </Box>
 
@@ -1600,12 +1639,12 @@ const EditOrderModal = ({
                                   <thead>
                                     <tr>
                                       <th>#</th>
-                                      <th>Дата</th>
-                                      <th>Сезон</th>
-                                      <th>Тариф</th>
-                                      <th>Цена</th>
-                                      {hasDiscount && <th>Скидка</th>}
-                                      {hasDiscount && <th>Итог</th>}
+                                      <th>{t("order.dateCol")}</th>
+                                      <th>{t("order.seasonCol")}</th>
+                                      <th>{t("order.rateCol")}</th>
+                                      <th>{t("order.priceCol")}</th>
+                                      {hasDiscount && <th>{t("order.discountCol")}</th>}
+                                      {hasDiscount && <th>{t("order.totalCol")}</th>}
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -1670,21 +1709,23 @@ const EditOrderModal = ({
                     sx={{ p: 0, minWidth: "auto", fontSize: "0.7rem", textTransform: "none" }}
                   >
                     {isPriceHistoryExpanded
-                      ? "Скрыть историю расчётов"
-                      : `История расчётов (${storedBreakdown.history.length})`}
+                      ? t("order.hideCalcHistory")
+                      : t("order.calcHistory", {
+                          count: storedBreakdown.history.length,
+                        })}
                   </Button>
 
                   {isPriceHistoryExpanded && (
                     <Box sx={{ mt: 0.5, maxHeight: 200, overflowY: "auto" }}>
                       {[...storedBreakdown.history].reverse().map((entry, i) => {
                         const SOURCE_LABELS = {
-                          client_booking: "Бронирование",
-                          admin_creation: "Создание",
-                          admin_edit: "Редактирование",
-                          admin_edit_confirmed: "Изм. подтверждённого",
-                          confirmation: "Подтверждение",
-                          unconfirm: "Снятие подтверждения",
-                          system: "Система",
+                          client_booking: t("order.sourceClientBooking"),
+                          admin_creation: t("order.sourceAdminCreation"),
+                          admin_edit: t("order.sourceAdminEdit"),
+                          admin_edit_confirmed: t("order.sourceAdminEditConfirmed"),
+                          confirmation: t("order.sourceConfirmation"),
+                          unconfirm: t("order.sourceUnconfirm"),
+                          system: t("order.sourceSystem"),
                         };
                         return (
                           <Box
@@ -1702,7 +1743,16 @@ const EditOrderModal = ({
                               <Typography variant="caption" sx={{ fontWeight: 700, fontSize: "0.7rem" }}>
                                 €{entry.totalPrice}
                                 {(entry.deliveryTotal || 0) > 0 && (
-                                  <span style={{ opacity: 0.7, fontWeight: 400 }}> + дост. €{entry.deliveryTotal}</span>
+                                  <span style={{ opacity: 0.7, fontWeight: 400 }}>
+                                    {" "}
+                                    {SINGLE_PROPERTY_MODE
+                                      ? t("order.transferShortPlus", {
+                                          amount: entry.deliveryTotal,
+                                        })
+                                      : t("order.deliveryShortPlus", {
+                                          amount: entry.deliveryTotal,
+                                        })}
+                                  </span>
                                 )}
                               </Typography>
                               <Typography variant="caption" sx={{ color: "text.secondary", fontSize: "0.62rem" }}>
@@ -1774,7 +1824,7 @@ const EditOrderModal = ({
                       "& .MuiAlert-message": { fontWeight: 600 },
                     }}
                   >
-                    Оплачен и закрыт
+                    {t("order.paidAndClosed")}
                   </Alert>
                 )}
                 <Box
@@ -1803,7 +1853,7 @@ const EditOrderModal = ({
                       editedOrder?.confirmed &&
                       isClientOrder &&
                       !isCurrentUserSuperAdmin
-                        ? "Нельзя снять подтверждение у текущего заказа"
+                        ? t("order.cannotUnconfirmCurrent")
                         : maskConfirmationConflictPII(
                             confirmationCheck.message
                           ) || ""
@@ -1840,7 +1890,7 @@ const EditOrderModal = ({
                       loading={closeOrderUpdating}
                       disabled={closeOrderUpdating || isUpdating}
                       color="primary"
-                      label="Закрыть заказ"
+                      label={t("order.closeOrder")}
                       sx={{
                         flex: 1,
                         backgroundColor: ORDER_COLORS.PAID_AND_CLOSED.main,
@@ -1965,7 +2015,7 @@ const EditOrderModal = ({
                         variant="body2"
                         sx={{ color: "error.main", fontWeight: 500 }}
                       >
-                        🔴 Невозможно подтвердить заказ
+                        🔴 {t("order.cannotConfirmOrder")}
                       </Typography>
                       <Typography
                         variant="body2"
@@ -2249,7 +2299,7 @@ const EditOrderModal = ({
                   <TextField
                     label={
                       SINGLE_PROPERTY_MODE
-                        ? "Дата заезда"
+                        ? t("order.checkInDate")
                         : t("order.pickupDate")
                     }
                     type="date"
@@ -2279,7 +2329,7 @@ const EditOrderModal = ({
                   <TextField
                     label={
                       SINGLE_PROPERTY_MODE
-                        ? "Время заезда"
+                        ? t("order.checkInTime")
                         : t("order.pickupTime")
                     }
                     type="time"
@@ -2324,7 +2374,7 @@ const EditOrderModal = ({
                   <TextField
                     label={
                       SINGLE_PROPERTY_MODE
-                        ? "Дата выезда"
+                        ? t("order.checkOutDate")
                         : t("order.returnDate")
                     }
                     type="date"
@@ -2358,7 +2408,7 @@ const EditOrderModal = ({
                   <TextField
                     label={
                       SINGLE_PROPERTY_MODE
-                        ? "Время выезда"
+                        ? t("order.checkOutTime")
                         : t("order.returnTime")
                     }
                     type="time"
@@ -2445,7 +2495,7 @@ const EditOrderModal = ({
                       variant="body2"
                       sx={{ color: "error.main", fontWeight: 500 }}
                     >
-                      🔴 Невозможно сохранить изменения
+                      🔴 {t("order.cannotSaveChanges")}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -2612,7 +2662,7 @@ const EditOrderModal = ({
                     >
                       {isPickupAirport && (
                         <TextField
-                          label={t("order.flightNumber") || "Номер рейса"}
+                          label={t("order.flightNumber")}
                           value={editedOrder.flightNumber || ""}
                           onChange={(e) =>
                             updateField("flightNumber", e.target.value)
@@ -2633,10 +2683,7 @@ const EditOrderModal = ({
                       )}
                       {isPickupThessaloniki && (
                         <TextField
-                          label={
-                            t("order.thessalonikiHotelOrAddress") ||
-                            "Hotel or address"
-                          }
+                          label={t("order.thessalonikiHotelOrAddress")}
                           value={editedOrder.placeInDetail || ""}
                           onChange={(e) =>
                             updateField("placeInDetail", e.target.value)
@@ -2656,10 +2703,7 @@ const EditOrderModal = ({
                       )}
                       {isReturnThessaloniki && (
                         <TextField
-                          label={
-                            t("order.thessalonikiHotelOrAddress") ||
-                            "Hotel or address"
-                          }
+                          label={t("order.thessalonikiHotelOrAddress")}
                           value={editedOrder.placeOutDetail || ""}
                           onChange={(e) =>
                             updateField("placeOutDetail", e.target.value)
@@ -2752,7 +2796,7 @@ const EditOrderModal = ({
                   {editedOrder.insurance === "CDW" && (
                     <TextField
                       name="franchiseOrder"
-                      label={t("car.franchise") || "Франшиза заказа"}
+                      label={t("car.franchise")}
                       type="number"
                       value={editedOrder.franchiseOrder ?? ""}
                       onChange={(e) =>
@@ -3162,7 +3206,7 @@ const EditOrderModal = ({
                               <DriftBadge
                                 frozenValue={getDrift("secondDriver").frozen}
                                 currentValue={getDrift("secondDriver").current}
-                                label="Second driver"
+                                label={t("order.secondDriverShort")}
                               />
                             )}
                           </Box>
@@ -3297,7 +3341,7 @@ const EditOrderModal = ({
                       }
                     } catch (error) {
                       setUpdateMessage(
-                        error?.message || "Ошибка обновления заказа"
+                        error?.message || t("order.orderUpdateError")
                       );
                     } finally {
                       setIsUpdating(false);
@@ -3324,7 +3368,7 @@ const EditOrderModal = ({
                   }}
                   title={
                     !permissions.canDelete
-                      ? "You don't have permission to delete this order"
+                      ? t("order.noDeletePermission")
                       : t("order.deleteOrder")
                   }
                 />
