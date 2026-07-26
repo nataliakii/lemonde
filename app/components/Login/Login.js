@@ -8,12 +8,14 @@ import { resolveBrandConfig } from "@/domain/branding/resolveBrandConfig";
 
 const isDev = process.env.NODE_ENV === "development";
 
-const LoginForm = () => {
+const LoginForm = ({ company: companyFromServer = null }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { company } = useMainContext();
+  const { company: companyFromContext } = useMainContext();
+  // Prefer SSR company so logo/name are correct on first paint (login has no Feed).
+  const company = companyFromServer || companyFromContext;
   const brand = resolveBrandConfig(company);
   const logoSrc = brand.assets.logoMark || "/logo-mark.png";
   const brandName = brand.name || "V Luxury Suites";
