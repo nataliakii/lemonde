@@ -225,24 +225,24 @@ export function buildDayReportEmail({
     withDate(L.checkIns),
     startedOrders.length
       ? startedOrders
-          .map(
-            (o) =>
-              SINGLE_PROPERTY_MODE
-                ? `- ${o.carModel || "-"} / ${o.customerName || "-"} / ${o.phone || "-"}`
-                : `- ${o.carModel || "-"} / ${o.regNumber || o.carNumber || "-"} / ${o.customerName || "-"} / ${o.phone || "-"}`
-          )
+          .map((o) => {
+            const time = formatTime(o.timeIn) || "-";
+            return SINGLE_PROPERTY_MODE
+              ? `- ${o.carModel || "-"} / ${formatDateRange(o.rentalStartDate, o.rentalEndDate)} / ${time} / ${o.customerName || "-"} / ${o.phone || "-"}`
+              : `- ${o.carModel || "-"} / ${o.regNumber || o.carNumber || "-"} / ${formatDateRange(o.rentalStartDate, o.rentalEndDate)} / ${time} / ${o.customerName || "-"} / ${o.phone || "-"}`;
+          })
           .join("\n")
       : L.noneIn,
     "",
     withDate(L.checkOuts),
     endedOrders.length
       ? endedOrders
-          .map(
-            (o) =>
-              SINGLE_PROPERTY_MODE
-                ? `- ${o.carModel || "-"} / ${o.customerName || "-"} / ${o.phone || "-"}`
-                : `- ${o.carModel || "-"} / ${o.regNumber || o.carNumber || "-"} / ${o.customerName || "-"} / ${o.phone || "-"}`
-          )
+          .map((o) => {
+            const time = formatTime(o.timeOut) || "-";
+            return SINGLE_PROPERTY_MODE
+              ? `- ${o.carModel || "-"} / ${formatDateRange(o.rentalStartDate, o.rentalEndDate)} / ${time} / ${o.customerName || "-"} / ${o.phone || "-"}`
+              : `- ${o.carModel || "-"} / ${o.regNumber || o.carNumber || "-"} / ${formatDateRange(o.rentalStartDate, o.rentalEndDate)} / ${time} / ${o.customerName || "-"} / ${o.phone || "-"}`;
+          })
           .join("\n")
       : L.noneOut,
   ].join("\n");

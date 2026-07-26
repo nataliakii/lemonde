@@ -1,18 +1,28 @@
 import { unstable_noStore } from "next/cache";
+import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@lib/authOptions";
 import Feed from "@app/components/Feed";
 import { getCars, getCompany, getAllOrders } from "@/domain/services";
 import { COMPANY_ID } from "@/config/company";
+import { ROLE } from "@models/user";
 import WebsiteVisitsSection from "./WebsiteVisitsSection";
 
 /**
- * /admin/website-visits — изучение посещений сайта.
+ * /admin/website-visits — superadmin only (human visits; bots filtered by default).
  */
 export default async function WebsiteVisitsPage() {
   unstable_noStore();
 
   const session = await getServerSession(authOptions);
+  if (!session?.user?.isAdmin) {
+    redirect("/login");
+  }
+  const role = Number(session.user.realRole ?? session.user.role);
+  if (role !== ROLE.SUPERADMIN) {
+    redirect("/admin/orders");
+  }
+
   const [company, cars, orders] = await Promise.all([
     getCompany(COMPANY_ID),
     getCars({ session }),

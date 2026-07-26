@@ -1,6 +1,7 @@
 import { connectToDB } from "@lib/database";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requireSuperAdmin } from "@/lib/adminAuth";
 import WebsiteVisit from "@models/WebsiteVisit";
+import { buildHumansOnlyWebsiteVisitMongoClause } from "@/domain/visitors/websiteVisitNotification";
 
 function parsePositiveInt(value, fallback, { min = 1, max = 200 } = {}) {
   const n = Number.parseInt(String(value ?? ""), 10);
@@ -12,14 +13,22 @@ function parseDays(value, fallback = 7) {
   return parsePositiveInt(value, fallback, { min: 1, max: 90 });
 }
 
+function parseBool(value, fallback = true) {
+  if (value == null || value === "") return fallback;
+  const s = String(value).trim().toLowerCase();
+  if (["1", "true", "yes", "on"].includes(s)) return true;
+  if (["0", "false", "no", "off"].includes(s)) return false;
+  return fallback;
+}
+
 /**
- * GET /api/admin/website-visits
- * Query: days=7, page=1, limit=50, country=, q= (url/path/ip/city)
+ * GET /api/admin/website-visits (superadmin)
+ * Query: days=7, page=1, limit=50, country=, q=, humansOnly=1 (default)
  */
 export async function GET(request) {
   try {
     await connectToDB();
-    const { errorResponse } = await requireAdmin(request);
+    const { errorResponse } = await requireSuperAdmin(request);
     if (errorResponse) return errorResponse;
 
     const { searchParams } = new URL(request.url);
@@ -34,9 +43,14 @@ export async function GET(request) {
     });
     const country = String(searchParams.get("country") || "").trim();
     const q = String(searchParams.get("q") || "").trim();
+    const humansOnly = parseBool(searchParams.get("humansOnly"), true);
 
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
     const filter = { createdAt: { $gte: since } };
+
+    if (humansOnly) {
+      Object.assign(filter, buildHumansOnlyWebsiteVisitMongoClause());
+    }
 
     if (country) {
       filter.country = new RegExp(
@@ -112,6 +126,7 @@ export async function GET(request) {
         page,
         limit,
         days,
+        humansOnly,
         stats: {
           byDay: byDay.map((row) => ({ date: row._id, count: row.count })),
           byCountry: byCountry.map((row) => ({

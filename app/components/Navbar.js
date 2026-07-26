@@ -925,7 +925,7 @@ export default function NavBar({
                       </Typography>
                     </Link>
                     )}
-                    {!SINGLE_PROPERTY_MODE && (
+                    {isSuperAdmin && (
                     <Link href="/admin/website-visits">
                       <Typography
                         sx={{
@@ -1484,7 +1484,7 @@ export default function NavBar({
                   <ListItemText primary={t("header.deliveryZones")} />
                 </ListItem>
                 )}
-                {!SINGLE_PROPERTY_MODE && (
+                {isSuperAdmin && (
                 <ListItem
                   button
                   component={Link}

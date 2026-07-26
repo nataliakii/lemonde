@@ -15,7 +15,7 @@ import {
   TextField,
   Alert,
 } from "@mui/material";
-import { formatDate, formatDateRange } from "@utils/businessTime";
+import { formatDate, formatDateRange, formatTime } from "@utils/businessTime";
 import ModalLayout from "./ModalLayout";
 import { ActionButton } from "../index";
 import { useTranslation } from "react-i18next";
@@ -86,6 +86,9 @@ const OrdersByDateModal = ({
               {t("order.termCol")}
             </TableCell>
             <TableCell sx={{ ...cellSx, fontWeight: 600 }}>
+              {t("order.timeCol")}
+            </TableCell>
+            <TableCell sx={{ ...cellSx, fontWeight: 600 }}>
               {t("order.clientGeneric")}
             </TableCell>
             <TableCell sx={{ ...cellSx, fontWeight: 600 }}>
@@ -123,6 +126,11 @@ const OrdersByDateModal = ({
                 {order.rentalStartDate
                   ? formatDateRange(order.rentalStartDate, order.rentalEndDate)
                   : ""}
+              </TableCell>
+              <TableCell sx={cellSx}>
+                {formatTime(
+                  isStartingOrders ? order.timeIn : order.timeOut
+                ) || "—"}
               </TableCell>
               <TableCell sx={cellSx}>
                 {order._visibility?.hideClientContacts

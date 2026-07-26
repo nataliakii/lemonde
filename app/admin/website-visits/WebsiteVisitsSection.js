@@ -18,6 +18,8 @@ import {
   CircularProgress,
   Button,
   Pagination,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import TravelExploreIcon from "@mui/icons-material/TravelExplore";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -61,6 +63,8 @@ export default function WebsiteVisitsSection() {
   const [q, setQ] = useState("");
   const [qDraft, setQDraft] = useState("");
   const [country, setCountry] = useState("");
+  /** Default on: hide bot/scripted user-agents immediately. */
+  const [humansOnly, setHumansOnly] = useState(true);
   const [page, setPage] = useState(1);
   const [data, setData] = useState({
     visits: [],
@@ -77,6 +81,7 @@ export default function WebsiteVisitsSection() {
         days: String(days),
         page: String(page),
         limit: "50",
+        humansOnly: humansOnly ? "1" : "0",
       });
       if (q) params.set("q", q);
       if (country) params.set("country", country);
@@ -93,7 +98,7 @@ export default function WebsiteVisitsSection() {
     } finally {
       setLoading(false);
     }
-  }, [days, page, q, country]);
+  }, [days, page, q, country, humansOnly]);
 
   useEffect(() => {
     fetchVisits();
@@ -178,6 +183,20 @@ export default function WebsiteVisitsSection() {
             }}
             placeholder="/en/cars, IP, city…"
             sx={{ flex: 1, minWidth: 200 }}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={humansOnly}
+                onChange={(e) => {
+                  setPage(1);
+                  setHumansOnly(e.target.checked);
+                }}
+                color="primary"
+              />
+            }
+            label={t("admin.visits.humansOnly")}
+            sx={{ whiteSpace: "nowrap", ml: 0.5 }}
           />
           <Button
             variant="contained"

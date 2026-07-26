@@ -257,6 +257,7 @@
     "conflictWithEnd": "Conflict with booking end:",
     "conflictInRange": "There are existing bookings in the selected range:",
     "termCol": "Dates",
+    "timeCol": "Time",
     "cannotEditStartDate": "Cannot edit start date",
     "cannotEditStartTime": "Cannot edit start time",
     "cannotEditEndDate": "Cannot edit end date",
@@ -570,13 +571,14 @@
       "bulkOffline": "Bulk offline"
     },
     "visits": {
-      "subtitle": "Human visits with geo — saved for study (Telegram still notifies).",
+      "subtitle": "Human visits with geo — bots filtered by default (Telegram still notifies).",
       "refresh": "Refresh",
       "period": "Period",
       "days": "{{count}} days",
       "country": "Country",
       "search": "Search",
       "apply": "Apply",
+      "humansOnly": "Hide bots",
       "total": "Total visits: {{count}}",
       "byDay": "By day",
       "byCountry": "Top countries",

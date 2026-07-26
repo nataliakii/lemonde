@@ -119,6 +119,7 @@ export default function OrdersTableSection() {
     conflictHighlightById,
   } = useMainContext();
   const { data: session } = useSession();
+  const isSuperAdmin = Number(session?.user?.role) === ROLE.SUPERADMIN;
   
   // ─────────────────────────────────────────────────────────────
   // DATA: same pipeline as calendar (MainContext.allOrders + fetchAndUpdateOrders → /api/order/refetch → getAllOrders)
@@ -271,8 +272,13 @@ export default function OrdersTableSection() {
   /** Если true — не показываем заказы, у которых возврат уже в прошлом. */
   const [hidePastOrders, setHidePastOrders] = useState(false);
 
-  // Companies for owner filter (superadmin API; fallback from cars)
+  // Companies for owner filter — superadmin only (simple admin has no company filter)
   useEffect(() => {
+    if (!isSuperAdmin) {
+      setCompanies([]);
+      setSelectedOwnerId("");
+      return undefined;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -299,7 +305,7 @@ export default function OrdersTableSection() {
     return () => {
       cancelled = true;
     };
-  }, [cars]);
+  }, [cars, isSuperAdmin]);
 
   // ─────────────────────────────────────────────────────────────
   // PAGINATION STATE
@@ -340,8 +346,8 @@ export default function OrdersTableSection() {
         if (orderCarId !== selectedCar._id) return false;
       }
 
-      // 1b. Company / owner filter
-      if (selectedOwnerId) {
+      // 1b. Company / owner filter (superadmin only)
+      if (isSuperAdmin && selectedOwnerId) {
         const oid = resolveOrderOwnerId(order, cars);
         if (String(oid || "") !== String(selectedOwnerId)) return false;
       }
@@ -426,6 +432,7 @@ export default function OrdersTableSection() {
     cars,
     selectedCar,
     selectedOwnerId,
+    isSuperAdmin,
     statusFilter,
     originFilter,
     stubFilter,
@@ -994,24 +1001,26 @@ export default function OrdersTableSection() {
             alignItems={{ xs: "stretch", sm: "center" }}
             flexWrap="wrap"
           >
-            {/* Company / owner filter */}
-            <FormControl size="small" sx={{ minWidth: 180 }}>
-              <InputLabel>Company</InputLabel>
-              <Select
-                value={selectedOwnerId}
-                onChange={(e) =>
-                  handleFilterChange(setSelectedOwnerId)(e.target.value)
-                }
-                label="Company"
-              >
-                <MenuItem value="">All companies</MenuItem>
-                {companies.map((c) => (
-                  <MenuItem key={String(c._id)} value={String(c._id)}>
-                    {c.name || String(c._id)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            {/* Company / owner filter — superadmin only */}
+            {isSuperAdmin && (
+              <FormControl size="small" sx={{ minWidth: 180 }}>
+                <InputLabel>Company</InputLabel>
+                <Select
+                  value={selectedOwnerId}
+                  onChange={(e) =>
+                    handleFilterChange(setSelectedOwnerId)(e.target.value)
+                  }
+                  label="Company"
+                >
+                  <MenuItem value="">All companies</MenuItem>
+                  {companies.map((c) => (
+                    <MenuItem key={String(c._id)} value={String(c._id)}>
+                      {c.name || String(c._id)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
 
             {/* Status Filter */}
             <FormControl size="small" sx={{ minWidth: 140 }}>

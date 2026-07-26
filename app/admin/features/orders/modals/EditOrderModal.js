@@ -622,13 +622,19 @@ const EditOrderModal = ({
 
   const handleAdminApprovedToggle = async () => {
     if (permissions.viewOnly || !editedOrder?._id) return;
-    if (!orderRequiresAdminApproval(editedOrder)) return;
+    if (!orderRequiresAdminApproval(editedOrder)) {
+      showMessage(t("order.adminApprovedUpdateFailed"), true);
+      return;
+    }
     setConfirmToggleUpdating(true);
     setUpdateMessage(null);
     try {
       const result = await toggleAdminApprovedStatus(editedOrder._id);
       if (!result.success) {
-        setUpdateMessage(result.message);
+        showMessage(
+          result.message || t("order.adminApprovedUpdateFailed"),
+          true
+        );
         return;
       }
       let freshOrder = result.updatedOrder;
@@ -639,20 +645,38 @@ const EditOrderModal = ({
         // keep result.updatedOrder
       }
       if (freshOrder) {
-        setEditedOrder((prev) => ({
-          ...prev,
+        const transformedOrder = {
           ...freshOrder,
+          rentalStartDate: athensStartOfDay(
+            formatDateYYYYMMDD(fromServerUTC(freshOrder.rentalStartDate))
+          ),
+          rentalEndDate: athensStartOfDay(
+            formatDateYYYYMMDD(fromServerUTC(freshOrder.rentalEndDate))
+          ),
+          timeIn: fromServerUTC(freshOrder.timeIn),
+          timeOut: fromServerUTC(freshOrder.timeOut),
           adminApproved: Boolean(freshOrder.adminApproved),
           adminApprovedAt: freshOrder.adminApprovedAt ?? null,
           adminApprovedBy: freshOrder.adminApprovedBy ?? null,
-        }));
+          OverridePrice:
+            freshOrder.OverridePrice !== undefined
+              ? freshOrder.OverridePrice
+              : null,
+        };
+        setEditedOrder(transformedOrder);
+        if (typeof onSave === "function") {
+          onSave(transformedOrder);
+        }
       }
       if (typeof fetchAndUpdateOrders === "function") {
         await fetchAndUpdateOrders();
       }
-      setUpdateMessage(result.message || t("order.adminApprovedUpdated"));
+      showMessage(result.message || t("order.adminApprovedUpdated"));
     } catch (error) {
-      setUpdateMessage(error?.message || t("order.adminApprovedUpdateFailed"));
+      showMessage(
+        error?.message || t("order.adminApprovedUpdateFailed"),
+        true
+      );
     } finally {
       setConfirmToggleUpdating(false);
     }
@@ -1944,6 +1968,7 @@ const EditOrderModal = ({
                     <ActionButton
                       fullWidth
                       onClick={handleAdminApprovedToggle}
+                      loading={confirmToggleUpdating}
                       disabled={
                         isPaidAndClosed ||
                         confirmToggleUpdating ||

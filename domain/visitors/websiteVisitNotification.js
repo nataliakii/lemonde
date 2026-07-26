@@ -238,6 +238,22 @@ export function isSuspiciousVisitUserAgent(userAgent) {
   return !BROWSER_USER_AGENT_RE.test(normalized);
 }
 
+/** Mongo clause for admin Visits: drop bot/scripted UAs (default humans-only view). */
+export function buildHumansOnlyWebsiteVisitMongoClause() {
+  return {
+    userAgent: {
+      $exists: true,
+      $type: "string",
+      $ne: "",
+      $not: {
+        $regex:
+          "(bot|crawler|spider|facebookexternalhit|slackbot|telegrambot|discordbot|googlebot|bingbot|yandexbot|duckduckbot|baiduspider|semrushbot|ahrefsbot|headless|phantomjs|selenium|playwright|puppeteer|cypress|curl|wget|python|aiohttp|axios|node-fetch|undici|okhttp|go-http-client|postmanruntime|insomnia|libwww-perl|scrapy|httpclient|java/)",
+        $options: "i",
+      },
+    },
+  };
+}
+
 export function shouldSkipWebsiteVisitRequest(request) {
   const method = String(request?.method || "GET").toUpperCase();
   if (method !== "GET") return true;
