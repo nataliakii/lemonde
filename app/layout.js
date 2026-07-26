@@ -21,6 +21,13 @@ const defaultLocale = getDefaultLocale();
 const multilangKeywords = getPrimaryKeywords(8);
 const GA_MEASUREMENT_ID = "G-FY6325TNLP";
 
+function toAbsoluteAssetUrl(baseUrl, assetUrl, fallbackPath) {
+  const raw = String(assetUrl || "").trim() || fallbackPath;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  const path = raw.startsWith("/") ? raw : `/${raw}`;
+  return `${baseUrl}${path}`;
+}
+
 export async function generateMetadata() {
   let company = null;
   try {
@@ -30,10 +37,15 @@ export async function generateMetadata() {
   }
   const seoConfig = getSeoConfig(company);
   const brand = resolveBrandConfig(company);
-  const logoUrl = brand.assets.logoMark || `${seoConfig.baseUrl}/logo-mark.png`;
+  const logoUrl = toAbsoluteAssetUrl(
+    seoConfig.baseUrl,
+    brand.assets.logoMark,
+    "/logo-mark.png"
+  );
   const faviconUrl = brand.assets.favicon || "/favicon.png";
-  const ogUrl =
-    brand.assets.ogImage || logoUrl || `${seoConfig.baseUrl}/logo-mark.png`;
+  const ogUrl = brand.assets.ogImage
+    ? toAbsoluteAssetUrl(seoConfig.baseUrl, brand.assets.ogImage, "/logo-mark.png")
+    : logoUrl;
 
   return {
     metadataBase: new URL(seoConfig.baseUrl),
@@ -107,16 +119,28 @@ export default async function RootLayout({ children }) {
   }
   const seoConfig = getSeoConfig(company);
   const brand = resolveBrandConfig(company);
+<<<<<<< HEAD
   const logoUrl = brand.assets.logoMark || `${seoConfig.baseUrl}/logo-mark.png`;
+=======
+  const logoUrl = toAbsoluteAssetUrl(
+    seoConfig.baseUrl,
+    brand.assets.logoMark,
+    "/logo-mark.png"
+  );
+>>>>>>> main
 
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: seoConfig.siteName,
     url: seoConfig.baseUrl,
+<<<<<<< HEAD
     logo: logoUrl.startsWith("http")
       ? logoUrl
       : `${seoConfig.baseUrl}${logoUrl.startsWith("/") ? "" : "/"}${logoUrl}`,
+=======
+    logo: logoUrl,
+>>>>>>> main
     sameAs: [
       seoConfig.social.facebook,
       seoConfig.social.instagram,
