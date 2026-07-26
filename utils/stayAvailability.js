@@ -1,9 +1,12 @@
 import dayjs from "dayjs";
-import { extractArraysOfStartEndConfPending } from "@/domain/calendar/functions";
+import { getOccupiedNightKeys } from "@utils/suiteBlockedNights";
 
 /**
  * Nights of a stay are [checkIn, checkOut) — checkout day is free for the next guest.
- * A suite is unavailable if any night overlaps a blocking (confirmed) booking day.
+ * A suite is unavailable if any occupied night overlaps that range.
+ *
+ * Uses suite inventory holds (confirmed, offline stubs, pending website requests,
+ * and admin drafts) — not car-rental time-buffer coloring.
  */
 export function isApartmentAvailableForStay(orders, checkIn, checkOut) {
   if (!checkIn || !checkOut) return true;
@@ -13,14 +16,11 @@ export function isApartmentAvailableForStay(orders, checkIn, checkOut) {
     return false;
   }
 
-  const { confirmed } = extractArraysOfStartEndConfPending(orders || []);
-  const confirmedSet = new Set(
-    (confirmed || []).map((d) => dayjs(d).format("YYYY-MM-DD"))
-  );
+  const occupied = getOccupiedNightKeys(orders, { inventoryHold: true });
 
   let cursor = start;
   while (cursor.isBefore(end, "day")) {
-    if (confirmedSet.has(cursor.format("YYYY-MM-DD"))) {
+    if (occupied.has(cursor.format("YYYY-MM-DD"))) {
       return false;
     }
     cursor = cursor.add(1, "day");

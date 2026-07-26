@@ -399,12 +399,36 @@ export const MainContextProvider = ({
   }, []); // company не нужен в зависимостях, так как мы используем его только для логирования
   const ordersByCarId = useCallback(
     (carId) => {
-      return allOrders?.filter((order) => {
-        const orderCarId = order.car?._id ?? order.car;
-        return orderCarId != null && String(orderCarId) === String(carId);
-      }) ?? [];
+      const car = (cars || []).find((c) => String(c?._id) === String(carId));
+      const carNumber = car?.carNumber != null ? String(car.carNumber) : "";
+      const regNumber = car?.regNumber != null ? String(car.regNumber) : "";
+
+      return (
+        allOrders?.filter((order) => {
+          const orderCarId = order.car?._id ?? order.car;
+          if (orderCarId != null && String(orderCarId) === String(carId)) {
+            return true;
+          }
+          // Fallback after apartment reseed: orders may still point at old ObjectIds
+          if (
+            carNumber &&
+            order.carNumber != null &&
+            String(order.carNumber) === carNumber
+          ) {
+            return true;
+          }
+          if (
+            regNumber &&
+            order.regNumber != null &&
+            String(order.regNumber) === regNumber
+          ) {
+            return true;
+          }
+          return false;
+        }) ?? []
+      );
     },
-    [allOrders]
+    [allOrders, cars]
   );
 
   // 🎯 Computed map: какие pending заказы НЕ МОГУТ быть подтверждены
