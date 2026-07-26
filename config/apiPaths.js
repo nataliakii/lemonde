@@ -43,6 +43,7 @@ export const API_PATHS = {
 
   ADMIN_ORDERS: "/api/admin/orders",
   ADMIN_ORDERS_SEND_CONFIRMATION: "/api/admin/orders/send-confirmation",
+  ADMIN_ORDERS_SEND_REFUSAL: "/api/admin/orders/send-refusal",
 
   DISCOUNT: "/api/discount",
   SEND_EMAIL: "/api/sendEmail",

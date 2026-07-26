@@ -173,6 +173,7 @@ const CustomCalendarPicker = ({
   startDate,
   endDate,
 }) => {
+  const { t } = useTranslation();
   const { confirmed, pending } = analyzeDates(orders);
 
   const isConfirmedDate = (date) => {
@@ -239,7 +240,7 @@ const CustomCalendarPicker = ({
         },
       };
       disabled = true;
-      tooltipText = "Недоступно для бронирования";
+      tooltipText = t("order.unavailableDate");
     } else if (isDatePending(day)) {
       customSx = {
         backgroundColor: "#fff3e0",
@@ -248,7 +249,7 @@ const CustomCalendarPicker = ({
           backgroundColor: "#ffe0b2",
         },
       };
-      tooltipText = "Ожидает подтверждения";
+      tooltipText = t("order.not100Date");
     } else if (
       (isStartDate(day) && isConfirmedDate(day)) ||
       (isEndDate(day) && isConfirmedDate(day))
@@ -260,7 +261,7 @@ const CustomCalendarPicker = ({
           backgroundColor: "#ffe0b2",
         },
       };
-      tooltipText = "Начало другого бронирования";
+      tooltipText = t("order.calendarStartOtherBooking");
     } else if (
       (isStartDate(day) && isDatePending(day)) ||
       (isEndDate(day) && isDatePending(day))
@@ -273,7 +274,7 @@ const CustomCalendarPicker = ({
         },
       };
 
-      tooltipText = "Окончание другого бронирования";
+      tooltipText = t("order.calendarEndOtherBooking");
     }
 
     return (

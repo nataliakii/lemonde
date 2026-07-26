@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { TableCell } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { calendarStyles } from "@/theme";
 
 /**
@@ -21,14 +22,16 @@ export default function CalendarDayCell({
   onMouseEnter, 
   onMouseLeave, 
   children,
-  title = "Нажмите для просмотра заказов",
+  title,
   sx = {}
 }) {
+  const { t } = useTranslation();
+  const resolvedTitle = title ?? t("suites.clickToViewDayOrders");
   return (
     <TableCell
       data-col-index={colIndex}
       align="center"
-      title={title}
+      title={resolvedTitle}
       className={isToday ? "today-column-bg" : undefined}
       sx={{
         ...calendarStyles.headerDayCell,

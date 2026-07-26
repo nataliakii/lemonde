@@ -2,9 +2,7 @@ import mongoose from "mongoose";
 import { Order } from "@models/order";
 import { connectToDB } from "@lib/database";
 import { requireAdmin } from "@/lib/adminAuth";
-import {
-  orderRequiresAdminApproval,
-} from "@/domain/orders/adminApproval";
+import { orderRequiresAdminApproval } from "@/domain/orders/adminApproval";
 import { isOrderPaidAndClosed } from "@/domain/orders/orderStatus";
 import { applyVisibilityToOrders } from "@/domain/orders/orderVisibility";
 import { toPlain } from "@/domain/services/toPlain";
@@ -19,9 +17,11 @@ function toObjectIdOrNull(value) {
 }
 
 /**
- * PATCH — toggle adminApproved for website / superadmin-created orders.
- * Admin and Superadmin may toggle (e.g. Superadmin after a phone booking).
- * Closed and offline orders are rejected.
+ * PATCH — set/clear adminApproved or adminRefused (mutually exclusive).
+ * Body (optional): { action: "approve" | "refuse" }
+ * - approve: toggle Admin OK (clears refuse when approving)
+ * - refuse: toggle Admin refused (clears approve when refusing)
+ * - omitted: legacy toggle of adminApproved only (also clears refuse when approving)
  */
 export const PATCH = async (request, { params }) => {
   try {
@@ -67,13 +67,44 @@ export const PATCH = async (request, { params }) => {
       );
     }
 
-    const next = !Boolean(order.adminApproved);
-    order.adminApproved = next;
-    order.adminApprovedAt = next ? new Date() : null;
-    // Env bootstrap users use ids like "admin" — not valid ObjectIds; skip cast errors.
-    order.adminApprovedBy = next
-      ? toObjectIdOrNull(session.user?.id || session.user?._id)
-      : null;
+    let body = {};
+    try {
+      body = await request.json();
+    } catch {
+      body = {};
+    }
+    const action =
+      body?.action === "refuse" || body?.action === "approve"
+        ? body.action
+        : "approve";
+
+    const actorId = toObjectIdOrNull(session.user?.id || session.user?._id);
+    const now = new Date();
+    let message = "";
+
+    if (action === "refuse") {
+      const next = !Boolean(order.adminRefused);
+      order.adminRefused = next;
+      order.adminRefusedAt = next ? now : null;
+      order.adminRefusedBy = next ? actorId : null;
+      if (next) {
+        order.adminApproved = false;
+        order.adminApprovedAt = null;
+        order.adminApprovedBy = null;
+      }
+      message = next ? "Admin refused" : "Admin refusal removed";
+    } else {
+      const next = !Boolean(order.adminApproved);
+      order.adminApproved = next;
+      order.adminApprovedAt = next ? now : null;
+      order.adminApprovedBy = next ? actorId : null;
+      if (next) {
+        order.adminRefused = false;
+        order.adminRefusedAt = null;
+        order.adminRefusedBy = null;
+      }
+      message = next ? "Admin approved" : "Admin approval removed";
+    }
 
     await order.save();
 
@@ -84,7 +115,7 @@ export const PATCH = async (request, { params }) => {
       JSON.stringify({
         success: true,
         data: visible,
-        message: next ? "Admin approved" : "Admin approval removed",
+        message,
       }),
       { status: 200, headers: JSON_HEADERS }
     );

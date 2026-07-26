@@ -14,6 +14,7 @@ import { getCustomerEmailStrings, normalizeEmailLocale } from "@locales/customer
 import { fromServerUTC, formatTimeHHMM } from "@/domain/time/athensTime";
 import { renderCustomerOrderConfirmation } from "@/app/ui/email/templates/customerOrderConfirmation";
 import { renderCustomerOfficialConfirmation } from "@/app/ui/email/templates/customerOfficialConfirmation";
+import { renderCustomerBookingRefusal } from "@/app/ui/email/templates/customerBookingRefusal";
 import { renderAdminOrderNotificationHtml } from "@/app/ui/email/templates/adminOrderNotification";
 import { getSecondDriverPriceLabelValue } from "@utils/secondDriverPricing";
 import { withTestOrderEmailSubject } from "@/domain/orders/testOrderMarkers";
@@ -539,6 +540,81 @@ export function renderCustomerOfficialConfirmationEmail(payload) {
   };
 
   return { title, text, html, pdfFileName, pdfData };
+}
+
+/**
+ * Renders customer booking refusal email (dates unavailable / request declined).
+ * @param {import("@/domain/orders/orderNotificationDispatcher").NotificationPayload} payload
+ * @returns {{ title: string, text: string, html: string }}
+ */
+export function renderCustomerBookingRefusalEmail(payload) {
+  const vm = buildCustomerEmailViewModel(payload);
+  const {
+    t,
+    fromStr,
+    toStr,
+    carDisplay,
+    customerName,
+    orderNum,
+    rentalPeriodWithTime,
+    officialGreeting,
+  } = vm;
+  const fromLocalhost = Boolean(payload.fromLocalhost);
+
+  const baseTitle = t.refusalTitle || "Booking request update";
+  const title = withTestOrderEmailSubject(baseTitle, fromLocalhost);
+  const intro =
+    t.refusalIntro ||
+    "Unfortunately we are unable to confirm your reservation for the requested dates.";
+  const detailsHeading = t.refusalDetailsHeading || "Request details";
+  const closing =
+    t.refusalClosing ||
+    "If your plans are flexible, reply to this email and we will gladly help you find alternative dates.";
+  const orderNumberLabel = t.orderNumberLabel || "Order number";
+  const vehicleLabel = t.vehicleLabel || "Suite";
+  const rentalPeriodLabel = t.rentalPeriodLabel || "Stay dates";
+  const rentalPeriodValue =
+    rentalPeriodWithTime ||
+    (t.rentalPeriod || "")
+      .replace("{{from}}", fromStr || "—")
+      .replace("{{to}}", toStr || "—");
+  const orderNumberValue = orderNum ? String(orderNum) : "—";
+  const greeting =
+    officialGreeting ||
+    (t.greeting || "Dear {{CustomerName}},").replace(
+      "{{CustomerName}}",
+      customerName || "Guest"
+    );
+
+  const html = renderCustomerBookingRefusal({
+    title,
+    greeting,
+    intro,
+    detailsHeading,
+    orderNumberLabel,
+    orderNumberValue,
+    vehicleLabel,
+    vehicleValue: carDisplay || "—",
+    rentalPeriodLabel,
+    rentalPeriodValue: rentalPeriodValue || "—",
+    closing,
+  });
+
+  const text = [
+    title,
+    "",
+    greeting,
+    "",
+    intro,
+    "",
+    `${orderNumberLabel}: ${orderNumberValue}`,
+    `${vehicleLabel}: ${carDisplay || "—"}`,
+    `${rentalPeriodLabel}: ${rentalPeriodValue || "—"}`,
+    "",
+    closing,
+  ].join("\n");
+
+  return { title, text, html };
 }
 
 /**

@@ -103,6 +103,28 @@ const OrderSchema = new mongoose.Schema({
     ref: "User",
     default: null,
   },
+  /**
+   * Staff refused the booking (mutually exclusive with adminApproved).
+   * After refuse, superadmin may send a refusal email to the guest.
+   */
+  adminRefused: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
+  adminRefusedAt: {
+    type: Date,
+    default: null,
+  },
+  adminRefusedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+  IsRefusalEmailSent: {
+    type: Boolean,
+    default: false,
+  },
   /** Partner response from company notification email (not the same as confirmed). */
   companyEmailDecision: {
     type: String,
@@ -800,6 +822,29 @@ if (Order?.schema && !Order.schema.path("adminApproved")) {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
+    },
+  });
+}
+
+if (Order?.schema && !Order.schema.path("adminRefused")) {
+  Order.schema.add({
+    adminRefused: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    adminRefusedAt: {
+      type: Date,
+      default: null,
+    },
+    adminRefusedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    IsRefusalEmailSent: {
+      type: Boolean,
+      default: false,
     },
   });
 }

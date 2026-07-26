@@ -34,7 +34,7 @@ export const terms = {
       {
         heading: "5. Rates, payment & deposit",
         body:
-          "Prices are shown per night for the selected dates and options (for example airport transfer or baby crib), unless stated otherwise. Local taxes may apply as required by Greek law.\n\nPayment method, timing (prepayment / balance), and any security deposit are confirmed when we accept the booking. The deposit, if required, is held against damage, excessive cleaning, missing items, or unpaid extras, and the unused part is returned after check-out according to the method agreed.",
+          "Prices are shown per night for the selected dates and options (for example airport transfer or baby crib), unless stated otherwise. Local taxes may apply as required by Greek law.\n\nPayment method, timing (prepayment / balance), and any security deposit are confirmed when we accept the booking. The deposit, if required, is held against damage, excessive cleaning, missing items, or unpaid extras, and the unused part is returned after check-out according to the method agreed.\n\nIn some cases, certain apartment numbers may require a non-refundable deposit. Such cases are discussed and agreed separately before confirmation.",
       },
       {
         heading: "6. House rules",
@@ -109,7 +109,7 @@ export const terms = {
       {
         heading: "5. Цены, оплата и депозит",
         body:
-          "Цены указаны за ночь на выбранные даты и опции (например трансфер или детская кроватка), если не сказано иное. Могут применяться местные налоги по законодательству Греции.\n\nСпособ и сроки оплаты, а также залог (если нужен) подтверждаются при принятии брони. Залог удерживается на случай ущерба, чрезмерной уборки, пропажи имущества или неоплаченных доплат; неиспользованная часть возвращается после выезда согласованным способом.",
+          "Цены указаны за ночь на выбранные даты и опции (например трансфер или детская кроватка), если не сказано иное. Могут применяться местные налоги по законодательству Греции.\n\nСпособ и сроки оплаты, а также залог (если нужен) подтверждаются при принятии брони. Залог удерживается на случай ущерба, чрезмерной уборки, пропажи имущества или неоплаченных доплат; неиспользованная часть возвращается после выезда согласованным способом.\n\nВ отдельных случаях некоторые номера могут требовать невозвратный депозит. Такие случаи обсуждаются и согласовываются отдельно до подтверждения брони.",
       },
       {
         heading: "6. Правила дома",
@@ -185,7 +185,7 @@ export const terms = {
       {
         heading: "5. Τιμές, πληρωμή & εγγύηση",
         body:
-          "Οι τιμές εμφανίζονται ανά διανυκτέρευση για τις επιλεγμένες ημερομηνίες και επιλογές (π.χ. transfer ή κούνια μωρού), εκτός αν αναφέρεται διαφορετικά. Ενδέχεται να ισχύουν τοπικοί φόροι σύμφωνα με την ελληνική νομοθεσία.\n\nΤρόπος/χρόνος πληρωμής και τυχόν εγγύηση επιβεβαιώνονται με την αποδοχή. Η εγγύηση καλύπτει ζημιές, υπερβολικό καθαρισμό, ελλείποντα αντικείμενα ή απλήρωτα έξτρα· το αχρησιμοποίητο μέρος επιστρέφεται μετά το check-out.",
+          "Οι τιμές εμφανίζονται ανά διανυκτέρευση για τις επιλεγμένες ημερομηνίες και επιλογές (π.χ. transfer ή κούνια μωρού), εκτός αν αναφέρεται διαφορετικά. Ενδέχεται να ισχύουν τοπικοί φόροι σύμφωνα με την ελληνική νομοθεσία.\n\nΤρόπος/χρόνος πληρωμής και τυχόν εγγύηση επιβεβαιώνονται με την αποδοχή. Η εγγύηση καλύπτει ζημιές, υπερβολικό καθαρισμό, ελλείποντα αντικείμενα ή απλήρωτα έξτρα· το αχρησιμοποίητο μέρος επιστρέφεται μετά το check-out.\n\nΣε ορισμένες περιπτώσεις, συγκεκριμένοι αριθμοί διαμερισμάτων ενδέχεται να απαιτούν μη επιστρέψιμη προκαταβολή/εγγύηση. Τέτοιες περιπτώσεις συζητούνται και συμφωνούνται ξεχωριστά πριν την επιβεβαίωση.",
       },
       {
         heading: "6. Κανόνες καταλύματος",

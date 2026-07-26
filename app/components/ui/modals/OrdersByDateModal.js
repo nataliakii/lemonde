@@ -51,6 +51,7 @@ const OrdersByDateModal = ({
 
   const cellSx = {
     whiteSpace: "nowrap",
+    textAlign: "center",
   };
 
   const formatPlaceWithThessalonikiDetail = (place, detail) => {

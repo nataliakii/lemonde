@@ -1,8 +1,10 @@
 /**
- * Admin approval workflow (suites / staff review before client confirmation email).
+ * Admin approval / refusal workflow (suites / staff review before client emails).
  *
  * Applies to website bookings (my_order) and orders created by a superadmin.
  * Offline stubs do not require this step.
+ *
+ * adminApproved and adminRefused are mutually exclusive.
  */
 
 import { isOrderPaidAndClosed } from "@/domain/orders/orderStatus";
@@ -28,7 +30,15 @@ export function orderRequiresAdminApproval(order) {
  * @returns {boolean}
  */
 export function isOrderAdminApproved(order) {
-  return Boolean(order?.adminApproved);
+  return Boolean(order?.adminApproved) && !Boolean(order?.adminRefused);
+}
+
+/**
+ * @param {Object|null|undefined} order
+ * @returns {boolean}
+ */
+export function isOrderAdminRefused(order) {
+  return Boolean(order?.adminRefused) && !Boolean(order?.adminApproved);
 }
 
 /**
@@ -40,19 +50,35 @@ export function isOrderAdminApproved(order) {
  */
 export function canSendClientConfirmationEmail(order) {
   if (!order) return false;
+  if (isOrderAdminRefused(order)) return false;
   if (!orderRequiresAdminApproval(order)) return true;
   return isOrderAdminApproved(order);
 }
 
 /**
+ * Superadmin may send a refusal email only after admin marked the order refused.
+ *
+ * @param {Object|null|undefined} order
+ * @returns {boolean}
+ */
+export function canSendClientRefusalEmail(order) {
+  if (!order) return false;
+  if (!orderRequiresAdminApproval(order)) return false;
+  return isOrderAdminRefused(order);
+}
+
+/**
  * Visual stage for calendar / badges.
- * @returns {"closed"|"stub"|"confirmed"|"adminApproved"|"pending"}
+ * @returns {"closed"|"stub"|"confirmed"|"adminApproved"|"adminRefused"|"pending"}
  */
 export function getOrderApprovalStage(order) {
   if (!order) return "pending";
   if (isOrderPaidAndClosed(order.status)) return "closed";
   if (order.offline === true) return "stub";
   if (order.confirmed === true) return "confirmed";
+  if (orderRequiresAdminApproval(order) && isOrderAdminRefused(order)) {
+    return "adminRefused";
+  }
   if (
     orderRequiresAdminApproval(order) &&
     isOrderAdminApproved(order) &&

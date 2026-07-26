@@ -482,7 +482,11 @@ export const changeRentalDates = async (
  *   conflicts?: Array
  * }}
  */
-export const toggleAdminApprovedStatus = async (orderId) => {
+/**
+ * @param {string} orderId
+ * @param {"approve"|"refuse"} [action="approve"]
+ */
+export const toggleAdminApprovedStatus = async (orderId, action = "approve") => {
   try {
     const response = await fetch(
       getApiUrl(API_PATHS.ORDER_UPDATE_SWITCH_ADMIN_APPROVED(orderId)),
@@ -493,6 +497,9 @@ export const toggleAdminApprovedStatus = async (orderId) => {
         },
         cache: "no-store",
         credentials: "include",
+        body: JSON.stringify({
+          action: action === "refuse" ? "refuse" : "approve",
+        }),
       }
     );
     const data = await response.json();

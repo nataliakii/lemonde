@@ -65,6 +65,9 @@ import {
 } from "@utils/action";
 import {
   canSendClientConfirmationEmail,
+  canSendClientRefusalEmail,
+  isOrderAdminApproved,
+  isOrderAdminRefused,
   orderRequiresAdminApproval,
 } from "@/domain/orders/adminApproval";
 import { RenderSelectField } from "@/app/components/ui/inputs/Fields";
@@ -583,6 +586,7 @@ const EditOrderModal = ({
   const [confirmToggleUpdating, setConfirmToggleUpdating] = useState(false);
   const [closeOrderUpdating, setCloseOrderUpdating] = useState(false);
   const [isSendingConfirmation, setIsSendingConfirmation] = useState(false);
+  const [isSendingRefusal, setIsSendingRefusal] = useState(false);
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   const [isPriceBreakdownExpanded, setIsPriceBreakdownExpanded] = useState(false);
   const [isPriceHistoryExpanded, setIsPriceHistoryExpanded] = useState(false);
@@ -620,19 +624,27 @@ const EditOrderModal = ({
     setIsPriceBreakdownExpanded(false);
   }, [order?._id]);
 
-  const handleAdminApprovedToggle = async () => {
+  const handleAdminApprovalAction = async (action = "approve") => {
     if (permissions.viewOnly || !editedOrder?._id) return;
     if (!orderRequiresAdminApproval(editedOrder)) {
-      showMessage(t("order.adminApprovedUpdateFailed"), true);
+      showMessage(
+        action === "refuse"
+          ? t("order.adminRefusedUpdateFailed")
+          : t("order.adminApprovedUpdateFailed"),
+        true
+      );
       return;
     }
     setConfirmToggleUpdating(true);
     setUpdateMessage(null);
     try {
-      const result = await toggleAdminApprovedStatus(editedOrder._id);
+      const result = await toggleAdminApprovedStatus(editedOrder._id, action);
       if (!result.success) {
         showMessage(
-          result.message || t("order.adminApprovedUpdateFailed"),
+          result.message ||
+            (action === "refuse"
+              ? t("order.adminRefusedUpdateFailed")
+              : t("order.adminApprovedUpdateFailed")),
           true
         );
         return;
@@ -658,6 +670,10 @@ const EditOrderModal = ({
           adminApproved: Boolean(freshOrder.adminApproved),
           adminApprovedAt: freshOrder.adminApprovedAt ?? null,
           adminApprovedBy: freshOrder.adminApprovedBy ?? null,
+          adminRefused: Boolean(freshOrder.adminRefused),
+          adminRefusedAt: freshOrder.adminRefusedAt ?? null,
+          adminRefusedBy: freshOrder.adminRefusedBy ?? null,
+          IsRefusalEmailSent: Boolean(freshOrder.IsRefusalEmailSent),
           OverridePrice:
             freshOrder.OverridePrice !== undefined
               ? freshOrder.OverridePrice
@@ -671,10 +687,18 @@ const EditOrderModal = ({
       if (typeof fetchAndUpdateOrders === "function") {
         await fetchAndUpdateOrders();
       }
-      showMessage(result.message || t("order.adminApprovedUpdated"));
+      showMessage(
+        result.message ||
+          (action === "refuse"
+            ? t("order.adminRefusedUpdated")
+            : t("order.adminApprovedUpdated"))
+      );
     } catch (error) {
       showMessage(
-        error?.message || t("order.adminApprovedUpdateFailed"),
+        error?.message ||
+          (action === "refuse"
+            ? t("order.adminRefusedUpdateFailed")
+            : t("order.adminApprovedUpdateFailed")),
         true
       );
     } finally {
@@ -848,6 +872,70 @@ const EditOrderModal = ({
       setSnackbarOpen(true);
     } finally {
       setIsSendingConfirmation(false);
+    }
+  };
+
+  const handleSendRefusalEmail = async () => {
+    if (isSendingRefusal) return;
+    if (!isCurrentUserSuperAdmin) return;
+    if (!canSendRefusalEmail) return;
+
+    const orderId = editedOrder?._id || order?._id;
+    if (!orderId) {
+      setUpdateMessage(t("order.refusalEmailFailed"));
+      setSnackbarOpen(true);
+      return;
+    }
+
+    const isAdminCreatedOrder = (editedOrder ?? order)?.my_order !== true;
+    const locale = isAdminCreatedOrder
+      ? "en"
+      : String(i18n?.resolvedLanguage || i18n?.language || "en")
+          .split("-")[0]
+          .toLowerCase();
+
+    setIsSendingRefusal(true);
+    setUpdateMessage(null);
+
+    try {
+      const response = await fetch("/api/admin/orders/send-refusal", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ orderId, locale }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const detail =
+          data?.error && data?.message
+            ? `${data.message}: ${data.error}`
+            : data?.error || data?.message || `HTTP ${response.status}`;
+        throw new Error(detail);
+      }
+
+      setEditedOrder((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          IsRefusalEmailSent: true,
+        };
+      });
+      showMessage(
+        data?.sentTo
+          ? `${t("order.refusalEmailSent")}: ${data.sentTo}`
+          : t("order.refusalEmailSent")
+      );
+    } catch (error) {
+      setUpdateMessage(
+        `${t("order.refusalEmailFailed")}: ${
+          error?.message || t("basic.error")
+        }`
+      );
+      setSnackbarOpen(true);
+    } finally {
+      setIsSendingRefusal(false);
     }
   };
 
@@ -1198,12 +1286,17 @@ const EditOrderModal = ({
     };
   }, [confirmationEmailHistory, editedOrder]);
   const needsAdminApproval = orderRequiresAdminApproval(editedOrder);
-  const isAdminApproved = Boolean(editedOrder?.adminApproved);
+  const isAdminApproved = isOrderAdminApproved(editedOrder);
+  const isAdminRefused = isOrderAdminRefused(editedOrder);
   const canSendConfirmationEmail =
     Boolean(editedOrder?._id) &&
     hasCustomerEmail &&
     (!resendState.hasPrevious || resendState.hasChanges) &&
     canSendClientConfirmationEmail(editedOrder);
+  const canSendRefusalEmail =
+    Boolean(editedOrder?._id) &&
+    hasCustomerEmail &&
+    canSendClientRefusalEmail(editedOrder);
   const isPickupAirport =
     String(editedOrder?.placeIn || "")
       .trim()
@@ -1216,10 +1309,17 @@ const EditOrderModal = ({
   );
   const sendConfirmationEmailDisabledReason = !hasCustomerEmail
     ? t("order.sendConfirmationEmailNoEmail")
+    : isAdminRefused
+    ? t("order.sendConfirmationBlockedByRefusal")
     : needsAdminApproval && !isAdminApproved
     ? t("order.sendConfirmationNeedsAdminApproval")
     : resendState.hasPrevious && !resendState.hasChanges
     ? t("order.sendConfirmationEmailNoChanges")
+    : "";
+  const sendRefusalEmailDisabledReason = !hasCustomerEmail
+    ? t("order.sendRefusalEmailNoEmail")
+    : !isAdminRefused
+    ? t("order.sendRefusalNeedsAdminRefusal")
     : "";
 
   const discountHistory = useMemo(
@@ -1933,6 +2033,7 @@ const EditOrderModal = ({
                 )}
                 {needsAdminApproval &&
                   !isAdminApproved &&
+                  !isAdminRefused &&
                   !editedOrder?.confirmed && (
                     <Alert severity="warning" sx={{ mb: 1 }}>
                       {isCurrentUserSuperAdmin
@@ -1940,6 +2041,13 @@ const EditOrderModal = ({
                         : t("order.awaitingAdminApproval")}
                     </Alert>
                   )}
+                {needsAdminApproval && isAdminRefused && (
+                  <Alert severity="error" sx={{ mb: 1 }}>
+                    {isCurrentUserSuperAdmin
+                      ? t("order.adminRefusedReadyForSa")
+                      : t("order.adminRefusedMarked")}
+                  </Alert>
+                )}
                 {needsAdminApproval &&
                   isAdminApproved &&
                   !editedOrder?.confirmed &&
@@ -1962,12 +2070,13 @@ const EditOrderModal = ({
                     display: "flex",
                     gap: formMetrics.actionButtonsGap,
                     flexDirection: { xs: "column", sm: "row" },
+                    flexWrap: "wrap",
                   }}
                 >
                   {needsAdminApproval && (
                     <ActionButton
                       fullWidth
-                      onClick={handleAdminApprovedToggle}
+                      onClick={() => handleAdminApprovalAction("approve")}
                       loading={confirmToggleUpdating}
                       disabled={
                         isPaidAndClosed ||
@@ -1987,6 +2096,7 @@ const EditOrderModal = ({
                       }
                       sx={{
                         flex: 1,
+                        minWidth: { sm: 140 },
                         ...formMetrics.compactActionButtonSx,
                         ...(isAdminApproved
                           ? {
@@ -2002,13 +2112,42 @@ const EditOrderModal = ({
                       }}
                     />
                   )}
+                  {needsAdminApproval && (
+                    <ActionButton
+                      fullWidth
+                      onClick={() => handleAdminApprovalAction("refuse")}
+                      loading={confirmToggleUpdating}
+                      disabled={
+                        isPaidAndClosed ||
+                        confirmToggleUpdating ||
+                        permissions.viewOnly
+                      }
+                      color={isAdminRefused ? "warning" : "error"}
+                      label={
+                        isAdminRefused
+                          ? t("order.adminRefused")
+                          : t("order.adminRefuse")
+                      }
+                      title={
+                        isAdminRefused
+                          ? t("order.adminRefusedTip")
+                          : t("order.adminRefuseTip")
+                      }
+                      sx={{
+                        flex: 1,
+                        minWidth: { sm: 140 },
+                        ...formMetrics.compactActionButtonSx,
+                      }}
+                    />
+                  )}
                   <ActionButton
                     fullWidth
                     onClick={handleConfirmationToggle}
                     disabled={
                       isPaidAndClosed ||
                       confirmToggleUpdating ||
-                      isConfirmationDisabled
+                      isConfirmationDisabled ||
+                      isAdminRefused
                     }
                     color={editedOrder?.confirmed ? "success" : "primary"}
                     label={
@@ -2017,40 +2156,60 @@ const EditOrderModal = ({
                         : t("order.orderNotConfirmed")
                     }
                     title={
-                      permissions.isCurrentOrder &&
-                      editedOrder?.confirmed &&
-                      isClientOrder &&
-                      !isCurrentUserSuperAdmin
+                      isAdminRefused
+                        ? t("order.cannotConfirmWhenRefused")
+                        : permissions.isCurrentOrder &&
+                          editedOrder?.confirmed &&
+                          isClientOrder &&
+                          !isCurrentUserSuperAdmin
                         ? t("order.cannotUnconfirmCurrent")
                         : maskConfirmationConflictPII(
                             confirmationCheck.message
                           ) || ""
                     }
                     sx={{
-                      ...(isConfirmationDisabled
+                      ...(isConfirmationDisabled || isAdminRefused
                         ? disabledStyles
                         : enabledStyles),
                       flex: 1,
+                      minWidth: { sm: 140 },
                       ...formMetrics.compactActionButtonSx,
                     }}
                   />
-                  {isCurrentUserSuperAdmin && (
-                    <ActionButton
-                      fullWidth
-                      onClick={handleSendConfirmationEmail}
-                      loading={isSendingConfirmation}
-                      disabled={
-                        isSendingConfirmation || !canSendConfirmationEmail
-                      }
-                      color="secondary"
-                      label={t("order.sendConfirmationEmail")}
-                      title={sendConfirmationEmailDisabledReason}
-                      sx={{
-                        flex: 1,
-                        ...formMetrics.compactActionButtonSx,
-                      }}
-                    />
-                  )}
+                  {isCurrentUserSuperAdmin &&
+                    (isAdminRefused ? (
+                      <ActionButton
+                        fullWidth
+                        onClick={handleSendRefusalEmail}
+                        loading={isSendingRefusal}
+                        disabled={isSendingRefusal || !canSendRefusalEmail}
+                        color="error"
+                        label={t("order.sendRefusalEmail")}
+                        title={sendRefusalEmailDisabledReason}
+                        sx={{
+                          flex: 1,
+                          minWidth: { sm: 160 },
+                          ...formMetrics.compactActionButtonSx,
+                        }}
+                      />
+                    ) : (
+                      <ActionButton
+                        fullWidth
+                        onClick={handleSendConfirmationEmail}
+                        loading={isSendingConfirmation}
+                        disabled={
+                          isSendingConfirmation || !canSendConfirmationEmail
+                        }
+                        color="secondary"
+                        label={t("order.sendConfirmationEmail")}
+                        title={sendConfirmationEmailDisabledReason}
+                        sx={{
+                          flex: 1,
+                          minWidth: { sm: 160 },
+                          ...formMetrics.compactActionButtonSx,
+                        }}
+                      />
+                    ))}
                   {showCloseOrderButton && canCloseOrder && (
                     <ActionButton
                       fullWidth

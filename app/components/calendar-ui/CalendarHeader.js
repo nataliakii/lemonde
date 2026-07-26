@@ -325,7 +325,10 @@ export default function CalendarHeader({
             onMouseLeave={() =>
               calendarRef?.current?.removeAttribute("data-hover-col")
             }
-            title={`${weekdayFull ? `${weekdayFull}, ` : ""}${day.date}. Нажмите для просмотра всех начинающихся и заканчивающихся заказов на эту дату`}
+            title={t("suites.dayHeaderTooltip", {
+              weekday: weekdayFull ? `${weekdayFull}, ` : "",
+              date: day.date,
+            })}
             sx={{
               py: 0,
               px: 0.25,

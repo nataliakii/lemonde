@@ -1,7 +1,9 @@
 import {
   canSendClientConfirmationEmail,
+  canSendClientRefusalEmail,
   getOrderApprovalStage,
   isOrderAdminApproved,
+  isOrderAdminRefused,
   orderRequiresAdminApproval,
 } from "../adminApproval";
 import { getOrderColor } from "../getOrderColor";
@@ -43,6 +45,19 @@ describe("adminApproval helpers", () => {
     expect(
       canSendClientConfirmationEmail({ ...order, adminApproved: true })
     ).toBe(true);
+  });
+
+  test("refuse blocks confirmation and unlocks refusal email", () => {
+    const refused = {
+      my_order: true,
+      adminRefused: true,
+      adminApproved: false,
+    };
+    expect(isOrderAdminRefused(refused)).toBe(true);
+    expect(isOrderAdminApproved(refused)).toBe(false);
+    expect(canSendClientConfirmationEmail(refused)).toBe(false);
+    expect(canSendClientRefusalEmail(refused)).toBe(true);
+    expect(getOrderApprovalStage(refused)).toBe("adminRefused");
   });
 
   test("stage and color: pending → adminApproved → confirmed", () => {
