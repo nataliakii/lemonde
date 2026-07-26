@@ -315,8 +315,6 @@ const CustomCalendarPicker = ({
     }
   };
 
-  const { t } = useTranslation();
-
   return (
     <Box sx={{ maxWidth: 400, p: 2 }}>
       <DateRangePicker
