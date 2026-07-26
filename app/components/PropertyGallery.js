@@ -66,10 +66,10 @@ export default function PropertyGallery({
         background: `
           linear-gradient(
             180deg,
-            #2A2520 0%,
-            #1A1612 56px,
-            #EDEBE7 56px,
-            #EDEBE7 100%
+            #1B1E24 0%,
+            #0E1014 56px,
+            #F4F5F7 56px,
+            #F4F5F7 100%
           )
         `,
       }}

@@ -16,6 +16,7 @@ import { getCars, getCompany, getActiveOrders } from "@/domain/services";
 import { buildHubJsonLd } from "@/services/seo/jsonLdBuilder";
 import { buildHubMetadata } from "@/services/seo/metadataBuilder";
 import { resolveBrandConfig } from "@/domain/branding/resolveBrandConfig";
+import { buildApartmentPhotoMix } from "@/domain/branding/buildApartmentPhotoMix";
 import { DEFAULT_PROPERTY_GALLERY } from "@/domain/services/ensureCarsNkCompany";
 
 /** Always render with live Mongo data — avoid baking failed builds into static HTML. */
@@ -73,11 +74,17 @@ export default async function LocalizedHomePage({ params }) {
 
   const copy = HERO_COPY[locale] || HERO_COPY.en;
   const brand = resolveBrandConfig(companyData, locale);
+  // Homepage strip: mix Cloudinary photos from all suites (round-robin).
+  // Fallback to company.assets.galleryImages / defaults only if inventory has none.
+  const apartmentPhotoMix = buildApartmentPhotoMix(carsData, { max: 36 });
   const galleryImages =
-    brand.assets.galleryImages.length > 0
-      ? brand.assets.galleryImages
-      : DEFAULT_PROPERTY_GALLERY;
-  const heroImage = brand.assets.heroImages[0] || "";
+    apartmentPhotoMix.length > 0
+      ? apartmentPhotoMix
+      : brand.assets.galleryImages.length > 0
+        ? brand.assets.galleryImages
+        : DEFAULT_PROPERTY_GALLERY;
+  const heroImage =
+    brand.assets.heroImages[0] || apartmentPhotoMix[0] || "";
 
   return (
     <>
