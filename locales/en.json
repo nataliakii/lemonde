@@ -416,7 +416,8 @@
     "monthSelect": "Select month",
     "yearSelect": "Select year",
     "thisMonth": "this month",
-    "nextMonthLabel": "next month"
+    "nextMonthLabel": "next month",
+    "today": "Today"
   },
   "timeAdjust": {
     "overridePending": "Confirmed order will override pending request",
@@ -549,7 +550,7 @@
       "deliveryInLegend": "Delivery rate in legend",
       "conflictBadges": "Conflict badges (when shown)",
       "highlightToday": "Highlight today's column",
-      "autoScrollToday": "Auto-scroll to today (narrow screen)",
+      "autoScrollToday": "Auto-scroll to today",
       "bufferSettings": "Buffer settings between check-ins",
       "legend": "Legend",
       "bulkOffline": "Bulk offline"

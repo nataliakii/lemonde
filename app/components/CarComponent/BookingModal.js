@@ -618,10 +618,22 @@ const BookingModal = ({
         totalPrice: Number(daysAndTotal.totalPrice) || 0,
         franchiseOrder: Number(franchiseOrder) || 0,
         orderNumber: orderNumber,
-        placeIn: canonIn || placeIn,
-        placeOut: canonOut || placeOut,
-        placeInDetail: String(placeInDetail || "").trim(),
-        placeOutDetail: String(placeOutDetail || "").trim(),
+        placeIn: SIMPLIFIED_CLIENT_BOOKING
+          ? String(
+              company?.address || company?.name || "Le Monde Suites, Nea Kallikratia"
+            ).trim()
+          : canonIn || placeIn,
+        placeOut: SIMPLIFIED_CLIENT_BOOKING
+          ? String(
+              company?.address || company?.name || "Le Monde Suites, Nea Kallikratia"
+            ).trim()
+          : canonOut || placeOut,
+        placeInDetail: SIMPLIFIED_CLIENT_BOOKING
+          ? ""
+          : String(placeInDetail || "").trim(),
+        placeOutDetail: SIMPLIFIED_CLIENT_BOOKING
+          ? ""
+          : String(placeOutDetail || "").trim(),
         flightNumber: flightNumber,
         locale: lang || "en",
         drivingLicenceUrls,

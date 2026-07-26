@@ -7,7 +7,13 @@ import React, {
   useRef,
   useDeferredValue,
 } from "react";
-import { Grid, Container, Typography, Box } from "@mui/material";
+import {
+  Grid,
+  Container,
+  Typography,
+  Box,
+  CircularProgress,
+} from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
@@ -17,6 +23,7 @@ import ApartmentCard from "./ApartmentCard";
 import { carMatchesSearchQuery } from "@utils/carSearch";
 import { isApartmentAvailableForStay } from "@utils/stayAvailability";
 import { SINGLE_PROPERTY_MODE, DISCOUNT_UI_ENABLED } from "@config/domain";
+import { useStayCatalogPricing } from "@/hooks/useStayCatalogPricing";
 
 const Section = styled("section")(() => ({
   backgroundColor: "transparent",
@@ -154,6 +161,13 @@ function CarGrid() {
   const noCarsMatchFilters =
     Array.isArray(cars) && cars.length > 0 && filteredCars.length === 0;
 
+  const hasStayDates = Boolean(suitesMode && stayCheckIn && stayCheckOut);
+  const { pricesById, loading: stayPricesLoading } = useStayCatalogPricing(
+    hasStayDates ? filteredCars : [],
+    hasStayDates ? stayCheckIn : null,
+    hasStayDates ? stayCheckOut : null
+  );
+
   if (suitesMode) {
     return (
       <Box
@@ -192,12 +206,46 @@ function CarGrid() {
                 gap: { xs: 3, md: 4.5 },
               }}
             >
+              {hasStayDates && stayPricesLoading ? (
+                <Box
+                  role="status"
+                  aria-live="polite"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 1.25,
+                    py: 1.5,
+                    px: 2,
+                    mb: { xs: -1, md: -1.5 },
+                  }}
+                >
+                  <CircularProgress
+                    size={22}
+                    thickness={4}
+                    sx={{ color: "primary.main" }}
+                  />
+                  <Typography
+                    sx={{
+                      fontFamily: "var(--font-body)",
+                      color: "text.secondary",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    Calculating prices for your dates…
+                  </Typography>
+                </Box>
+              ) : null}
               {filteredCars?.map((car, index) => (
                 <ApartmentCard
                   key={car._id}
                   apartment={car}
                   isFirst={index === 0}
                   index={index}
+                  stayPrice={
+                    hasStayDates ? pricesById[String(car._id)] || null : null
+                  }
+                  stayPriceLoading={hasStayDates && stayPricesLoading}
                 />
               ))}
             </Box>

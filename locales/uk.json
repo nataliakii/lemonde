@@ -307,7 +307,8 @@
     "monthSelect": "Оберіть місяць",
     "yearSelect": "Оберіть рік",
     "thisMonth": "цей місяць",
-    "nextMonthLabel": "наступний місяць"
+    "nextMonthLabel": "наступний місяць",
+    "today": "Сьогодні"
   },
   "timeAdjust": {
     "overridePending": "Підтверджене замовлення перевизначить очікуючу заявку",

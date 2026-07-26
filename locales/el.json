@@ -418,7 +418,8 @@
     "monthSelect": "Επιλογή μήνα",
     "yearSelect": "Επιλογή έτους",
     "thisMonth": "τρέχων μήνας",
-    "nextMonthLabel": "επόμενος μήνας"
+    "nextMonthLabel": "επόμενος μήνας",
+    "today": "Σήμερα"
   },
   "timeAdjust": {
     "overridePending": "Η επιβεβαιωμένη κράτηση θα αντικαταστήσει την εκκρεμή",
@@ -551,7 +552,7 @@
       "deliveryInLegend": "Τιμή παράδοσης στο υπόμνημα",
       "conflictBadges": "Σήματα συγκρούσεων (όταν εμφανίζονται)",
       "highlightToday": "Επισήμανση στήλης «σήμερα»",
-      "autoScrollToday": "Αυτόματη κύλιση στο σήμερα (στενή οθόνη)",
+      "autoScrollToday": "Αυτόματη κύλιση στο σήμερα",
       "bufferSettings": "Ρυθμίσεις buffer μεταξύ check-in",
       "legend": "Υπόμνημα",
       "bulkOffline": "Μαζικά offline"

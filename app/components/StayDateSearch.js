@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Box, Button, Typography } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Box, Button, Typography, useMediaQuery } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import { DateRangePicker } from "@mui/x-date-pickers-pro/DateRangePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
@@ -12,21 +13,38 @@ function isPastDay(date, today) {
   return Boolean(date && date.isValid() && date.isBefore(today, "day"));
 }
 
+const fieldSx = {
+  minWidth: { xs: "100%", sm: 156 },
+  bgcolor: "rgba(255,255,255,0.06)",
+  borderRadius: 1,
+  "& .MuiOutlinedInput-root": {
+    color: "#F5F0E6",
+    "& fieldset": { borderColor: "rgba(201,162,39,0.35)" },
+    "&:hover fieldset": { borderColor: "rgba(201,162,39,0.55)" },
+    "&.Mui-focused fieldset": { borderColor: "rgba(201,162,39,0.85)" },
+  },
+  "& .MuiInputLabel-root": { color: "rgba(232,213,163,0.75)" },
+  "& .MuiSvgIcon-root": { color: "rgba(201,162,39,0.85)" },
+};
+
 /**
- * Check-in / check-out search for apartment catalog.
- * Past dates are not selectable.
+ * Booking-style stay search: Check-in + Check-out open one shared range calendar.
+ * First click = check-in, second = check-out; then filters free suites
+ * and triggers async price calculation in the grid.
  */
 export default function StayDateSearch() {
   const { stayCheckIn, stayCheckOut, setStayDates, clearStayDates } =
     useMainContext();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const today = useMemo(() => dayjs().startOf("day"), []);
-  const [checkIn, setCheckIn] = useState(() => {
-    const v = stayCheckIn ? dayjs(stayCheckIn) : null;
-    return isPastDay(v, today) ? null : v;
-  });
-  const [checkOut, setCheckOut] = useState(() => {
-    const v = stayCheckOut ? dayjs(stayCheckOut) : null;
-    return isPastDay(v, today) ? null : v;
+  const [range, setRange] = useState(() => {
+    const nextIn = stayCheckIn ? dayjs(stayCheckIn) : null;
+    const nextOut = stayCheckOut ? dayjs(stayCheckOut) : null;
+    if (isPastDay(nextIn, today) || isPastDay(nextOut, today)) {
+      return [null, null];
+    }
+    return [nextIn, nextOut];
   });
   const [error, setError] = useState("");
 
@@ -35,65 +53,73 @@ export default function StayDateSearch() {
     const nextOut = stayCheckOut ? dayjs(stayCheckOut) : null;
     if (isPastDay(nextIn, today) || isPastDay(nextOut, today)) {
       clearStayDates();
-      setCheckIn(null);
-      setCheckOut(null);
+      setRange([null, null]);
       return;
     }
-    setCheckIn(nextIn);
-    setCheckOut(nextOut);
+    setRange([nextIn, nextOut]);
   }, [stayCheckIn, stayCheckOut, today, clearStayDates]);
 
-  const handleCheckInChange = (v) => {
-    if (isPastDay(v, today)) {
+  const applyDates = useCallback(
+    (nextIn, nextOut) => {
+      setError("");
+      if (!nextIn || !nextOut) {
+        setError("Select check-in and check-out dates.");
+        return false;
+      }
+      if (isPastDay(nextIn, today)) {
+        setError("Check-in cannot be in the past.");
+        return false;
+      }
+      if (isPastDay(nextOut, today)) {
+        setError("Check-out cannot be in the past.");
+        return false;
+      }
+      if (!nextOut.isAfter(nextIn, "day")) {
+        setError("Check-out must be after check-in.");
+        return false;
+      }
+      const inStr = nextIn.format("YYYY-MM-DD");
+      const outStr = nextOut.format("YYYY-MM-DD");
+      if (stayCheckIn === inStr && stayCheckOut === outStr) return true;
+      setStayDates({ checkIn: inStr, checkOut: outStr });
+      return true;
+    },
+    [setStayDates, stayCheckIn, stayCheckOut, today]
+  );
+
+  const handleRangeChange = (nextRange) => {
+    const nextIn = nextRange?.[0] || null;
+    const nextOut = nextRange?.[1] || null;
+    setRange([nextIn, nextOut]);
+    setError("");
+
+    if (nextIn && isPastDay(nextIn, today)) {
       setError("Check-in cannot be in the past.");
       return;
     }
-    setError("");
-    setCheckIn(v);
-    if (v && checkOut && !checkOut.isAfter(v, "day")) {
-      setCheckOut(v.add(1, "day"));
-    }
-  };
-
-  const handleCheckOutChange = (v) => {
-    if (isPastDay(v, today)) {
+    if (nextOut && isPastDay(nextOut, today)) {
       setError("Check-out cannot be in the past.");
       return;
     }
-    setError("");
-    setCheckOut(v);
+    if (nextIn && nextOut) {
+      applyDates(nextIn, nextOut);
+    }
   };
 
   const handleSearch = () => {
-    setError("");
-    if (!checkIn || !checkOut) {
-      setError("Select check-in and check-out dates.");
-      return;
-    }
-    if (isPastDay(checkIn, today)) {
-      setError("Check-in cannot be in the past.");
-      return;
-    }
-    if (isPastDay(checkOut, today)) {
-      setError("Check-out cannot be in the past.");
-      return;
-    }
-    if (!checkOut.isAfter(checkIn, "day")) {
-      setError("Check-out must be after check-in.");
-      return;
-    }
-    setStayDates({
-      checkIn: checkIn.format("YYYY-MM-DD"),
-      checkOut: checkOut.format("YYYY-MM-DD"),
-    });
+    applyDates(range[0], range[1]);
   };
 
   const handleClear = () => {
-    setCheckIn(null);
-    setCheckOut(null);
+    setRange([null, null]);
     setError("");
     clearStayDates();
   };
+
+  const nightCount =
+    stayCheckIn && stayCheckOut
+      ? dayjs(stayCheckOut).diff(dayjs(stayCheckIn), "day")
+      : 0;
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -128,10 +154,11 @@ export default function StayDateSearch() {
             color: "rgba(245,240,230,0.65)",
             fontSize: "0.92rem",
             mb: 2,
-            maxWidth: 480,
+            maxWidth: 520,
           }}
         >
-          Choose dates to see available suites. Check-in 15:00 · Check-out 11:00
+          Pick check-in and check-out in one calendar to see free suites and
+          prices. Check-in 15:00 · Check-out 11:00
         </Typography>
 
         <Box
@@ -142,58 +169,38 @@ export default function StayDateSearch() {
             alignItems: "flex-start",
           }}
         >
-          <DatePicker
-            label="Check-in"
-            value={checkIn}
-            onChange={handleCheckInChange}
+          <DateRangePicker
+            value={range}
+            onChange={handleRangeChange}
             minDate={today}
             disablePast
+            calendars={isMobile ? 1 : 2}
+            format="DD MMM YYYY"
+            localeText={{
+              start: "Check-in",
+              end: "Check-out",
+            }}
             shouldDisableDate={(date) => isPastDay(date, today)}
             slotProps={{
               textField: {
                 size: "small",
                 inputProps: { readOnly: true },
-                sx: {
-                  minWidth: { xs: "100%", sm: 168 },
-                  bgcolor: "rgba(255,255,255,0.06)",
-                  borderRadius: 1,
-                  "& .MuiOutlinedInput-root": {
-                    color: "#F5F0E6",
-                    "& fieldset": { borderColor: "rgba(201,162,39,0.35)" },
-                    "&:hover fieldset": { borderColor: "rgba(201,162,39,0.55)" },
-                  },
-                  "& .MuiInputLabel-root": { color: "rgba(232,213,163,0.75)" },
-                  "& .MuiSvgIcon-root": { color: "rgba(201,162,39,0.85)" },
-                },
+                sx: fieldSx,
               },
-            }}
-          />
-          <DatePicker
-            label="Check-out"
-            value={checkOut}
-            onChange={handleCheckOutChange}
-            minDate={checkIn ? checkIn.add(1, "day") : today.add(1, "day")}
-            disablePast
-            shouldDisableDate={(date) => {
-              if (isPastDay(date, today)) return true;
-              if (checkIn && !date.isAfter(checkIn, "day")) return true;
-              return false;
-            }}
-            slotProps={{
-              textField: {
-                size: "small",
-                inputProps: { readOnly: true },
+              popper: {
                 sx: {
-                  minWidth: { xs: "100%", sm: 168 },
-                  bgcolor: "rgba(255,255,255,0.06)",
-                  borderRadius: 1,
-                  "& .MuiOutlinedInput-root": {
-                    color: "#F5F0E6",
-                    "& fieldset": { borderColor: "rgba(201,162,39,0.35)" },
-                    "&:hover fieldset": { borderColor: "rgba(201,162,39,0.55)" },
+                  "& .MuiPaper-root": {
+                    border: "1px solid rgba(201,162,39,0.25)",
+                    boxShadow: "0 16px 48px rgba(26,22,18,0.28)",
                   },
-                  "& .MuiInputLabel-root": { color: "rgba(232,213,163,0.75)" },
-                  "& .MuiSvgIcon-root": { color: "rgba(201,162,39,0.85)" },
+                  "& .MuiDateRangePickerDay-rangeIntervalDayHighlight": {
+                    backgroundColor: "rgba(201,162,39,0.18)",
+                  },
+                  "& .MuiDateRangePickerDay-rangeIntervalDayHighlightStart, & .MuiDateRangePickerDay-rangeIntervalDayHighlightEnd, & .Mui-selected":
+                    {
+                      backgroundColor: "#C9A227 !important",
+                      color: "#1A1612 !important",
+                    },
                 },
               },
             }}
@@ -218,7 +225,7 @@ export default function StayDateSearch() {
           >
             Search
           </Button>
-          {(stayCheckIn || stayCheckOut) && (
+          {(stayCheckIn || stayCheckOut || range[0] || range[1]) && (
             <Button
               variant="text"
               onClick={handleClear}
@@ -249,16 +256,13 @@ export default function StayDateSearch() {
               letterSpacing: "0.02em",
             }}
           >
-            Showing suites for{" "}
+            Available suites for{" "}
             <Box component="span" sx={{ color: "#E8D5A3", fontWeight: 600 }}>
               {dayjs(stayCheckIn).format("D MMM")} –{" "}
               {dayjs(stayCheckOut).format("D MMM YYYY")}
             </Box>
-            {` · ${dayjs(stayCheckOut).diff(dayjs(stayCheckIn), "day")} night${
-              dayjs(stayCheckOut).diff(dayjs(stayCheckIn), "day") === 1
-                ? ""
-                : "s"
-            }`}
+            {` · ${nightCount} night${nightCount === 1 ? "" : "s"}`}
+            {" · prices calculated for these dates"}
           </Typography>
         ) : null}
       </Box>

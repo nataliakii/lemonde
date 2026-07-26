@@ -6,6 +6,7 @@ export {
   useCalendarDays,
   useMobileCalendarScroll,
   buildOrderDateRange,
+  scrollCalendarToToday,
 } from "./calendarDays";
 export { useCalendarMoveMode } from "./useCalendarMoveMode";
 export { useCalendarViewSettings } from "./useCalendarViewSettings";

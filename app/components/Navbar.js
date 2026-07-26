@@ -1340,10 +1340,9 @@ export default function NavBar({
           >
             <Link
               href={homeHref}
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none" }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none", minWidth: 0 }}
             >
               <BrandLogo href={null} markSize={32} wordmarkSx={{ fontSize: "1.2rem" }} />
-              {isAdmin && <Logo sx={{ fontSize: 12 }}>ADMIN</Logo>}
             </Link>
             <IconButton onClick={() => setDrawerOpen(false)}>
               <CloseIcon />

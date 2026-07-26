@@ -4,6 +4,7 @@ import { Order } from "@models/order";
 import { User } from "@models/user";
 import Company from "@models/company";
 import { COMPANY_ID } from "@config/company";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -383,7 +384,17 @@ async function postOrderAddHandler(request) {
     let placeOutDetailToSave = placeOutDetailTrim;
 
     const isCustomerSelfServiceBooking = myOrderToSave === true;
-    if (isCustomerSelfServiceBooking) {
+    if (isCustomerSelfServiceBooking && SINGLE_PROPERTY_MODE) {
+      // Apartment stays: no car-rental pickup/return towns — stay at the property.
+      const propertyPlace =
+        placeInToSave ||
+        placeOutToSave ||
+        "Le Monde Suites, Nea Kallikratia";
+      placeInToSave = propertyPlace;
+      placeOutToSave = placeOutToSave || propertyPlace;
+      placeInDetailToSave = placeInDetailToSave || "";
+      placeOutDetailToSave = placeOutDetailToSave || "";
+    } else if (isCustomerSelfServiceBooking) {
       const pin = placeInToSave;
       const pout = placeOutToSave;
       if (

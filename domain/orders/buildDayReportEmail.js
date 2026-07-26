@@ -1,4 +1,5 @@
 import { formatDate, formatDateRange, formatTime } from "@utils/businessTime";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 
 const LABELS = {
   en: {
@@ -96,6 +97,15 @@ function buildCheckInRows(orders) {
         String(order.placeIn || "").toLowerCase() === "airport"
           ? order.flightNumber || "-"
           : "-";
+      if (SINGLE_PROPERTY_MODE) {
+        return `<tr>
+          ${cell(order.carModel)}
+          ${cell(formatDateRange(order.rentalStartDate, order.rentalEndDate))}
+          ${cell(formatTime(order.timeIn) || "-")}
+          ${cell(order.customerName)}
+          ${cell(order.phone)}
+        </tr>`;
+      }
       return `<tr>
         ${cell(order.carModel)}
         ${cell(order.regNumber || order.carNumber)}
@@ -113,6 +123,15 @@ function buildCheckInRows(orders) {
 function buildCheckOutRows(orders) {
   return orders
     .map((order) => {
+      if (SINGLE_PROPERTY_MODE) {
+        return `<tr>
+          ${cell(order.carModel)}
+          ${cell(formatDateRange(order.rentalStartDate, order.rentalEndDate))}
+          ${cell(formatTime(order.timeOut) || "-")}
+          ${cell(order.customerName)}
+          ${cell(order.phone)}
+        </tr>`;
+      }
       return `<tr>
         ${cell(order.carModel)}
         ${cell(order.regNumber || order.carNumber)}
@@ -167,6 +186,22 @@ export function buildDayReportEmail({
   const withDate = (tpl) => tpl.replace("{{date}}", dateLabel || "");
 
   const subject = withDate(L.subject);
+  const checkInHeaders = SINGLE_PROPERTY_MODE
+    ? [L.apartment, L.dates, L.time, L.client, L.phone]
+    : [
+        L.apartment,
+        L.unit,
+        L.dates,
+        L.time,
+        L.client,
+        L.phone,
+        L.pickup,
+        L.flight,
+      ];
+  const checkOutHeaders = SINGLE_PROPERTY_MODE
+    ? [L.apartment, L.dates, L.time, L.client, L.phone]
+    : [L.apartment, L.unit, L.dates, L.time, L.client, L.phone, L.return];
+
   const html = `<!DOCTYPE html>
 <html lang="${lang}">
 <head><meta charset="UTF-8"><title>${escapeHtml(subject)}</title></head>
@@ -174,30 +209,13 @@ export function buildDayReportEmail({
   ${sectionTable({
     title: withDate(L.checkIns),
     emptyText: L.noneIn,
-    headerCells: [
-      L.apartment,
-      L.unit,
-      L.dates,
-      L.time,
-      L.client,
-      L.phone,
-      L.pickup,
-      L.flight,
-    ],
+    headerCells: checkInHeaders,
     rowsHtml: buildCheckInRows(startedOrders),
   })}
   ${sectionTable({
     title: withDate(L.checkOuts),
     emptyText: L.noneOut,
-    headerCells: [
-      L.apartment,
-      L.unit,
-      L.dates,
-      L.time,
-      L.client,
-      L.phone,
-      L.return,
-    ],
+    headerCells: checkOutHeaders,
     rowsHtml: buildCheckOutRows(endedOrders),
   })}
 </body>
@@ -209,7 +227,9 @@ export function buildDayReportEmail({
       ? startedOrders
           .map(
             (o) =>
-              `- ${o.carModel || "-"} / ${o.regNumber || o.carNumber || "-"} / ${o.customerName || "-"} / ${o.phone || "-"}`
+              SINGLE_PROPERTY_MODE
+                ? `- ${o.carModel || "-"} / ${o.customerName || "-"} / ${o.phone || "-"}`
+                : `- ${o.carModel || "-"} / ${o.regNumber || o.carNumber || "-"} / ${o.customerName || "-"} / ${o.phone || "-"}`
           )
           .join("\n")
       : L.noneIn,
@@ -219,7 +239,9 @@ export function buildDayReportEmail({
       ? endedOrders
           .map(
             (o) =>
-              `- ${o.carModel || "-"} / ${o.regNumber || o.carNumber || "-"} / ${o.customerName || "-"} / ${o.phone || "-"}`
+              SINGLE_PROPERTY_MODE
+                ? `- ${o.carModel || "-"} / ${o.customerName || "-"} / ${o.phone || "-"}`
+                : `- ${o.carModel || "-"} / ${o.regNumber || o.carNumber || "-"} / ${o.customerName || "-"} / ${o.phone || "-"}`
           )
           .join("\n")
       : L.noneOut,

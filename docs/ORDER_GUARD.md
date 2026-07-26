@@ -22,7 +22,7 @@ Guard layer for `POST /api/order/add`: ban check, rate limiting, and suspicious 
 - **IP:** `x-forwarded-for` (first hop) or `x-real-ip`, fallback `"unknown"`.
 - **Fingerprint:** `x-client-id` (optional).
 - **Rate limit key:** `fp:${fingerprint}` if fingerprint present, else `ip:${ip}` if IP ≠ unknown, else `ua:${userAgent || "na"}` so unknown-IP clients don’t share one bucket.
-- **Admin bypass:** if header `x-admin-request: 1` **AND** `getServerSession()` confirms `session.user.isAdmin`, guard is skipped. Header alone is not enough (spoofable); session proves authenticity. If header is set but no valid admin session — treated as regular client request, guard checks apply.
+- **Admin bypass:** if `getServerSession()` confirms `session.user.isAdmin`, guard is skipped (ban / rate limit / abuse). Session cookie proves authenticity; public clients without an admin session still hit all checks.
 
 ## Mongo schema: Ban
 

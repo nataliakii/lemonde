@@ -416,7 +416,8 @@
     "monthSelect": "Выберите месяц",
     "yearSelect": "Выберите год",
     "thisMonth": "этот месяц",
-    "nextMonthLabel": "следующий месяц"
+    "nextMonthLabel": "следующий месяц",
+    "today": "Сегодня"
   },
   "timeAdjust": {
     "overridePending": "Подтверждённый заказ переопределит ожидающую заявку",
@@ -549,7 +550,7 @@
       "deliveryInLegend": "Тариф доставки в легенде",
       "conflictBadges": "Бейджи конфликтов (если отображаются)",
       "highlightToday": "Подсветка колонки «сегодня»",
-      "autoScrollToday": "Автоскролл к сегодня (узкий экран)",
+      "autoScrollToday": "Автоскролл к сегодня",
       "bufferSettings": "Настройки буфера между заездами",
       "legend": "Легенда",
       "bulkOffline": "Массовые offline"

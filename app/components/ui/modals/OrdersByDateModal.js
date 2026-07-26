@@ -20,6 +20,7 @@ import ModalLayout from "./ModalLayout";
 import { ActionButton } from "../index";
 import { useTranslation } from "react-i18next";
 import { useMainContext } from "@app/Context";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 
 /**
  * Orders-by-date modal: bookings starting / ending on the selected date.
@@ -76,9 +77,11 @@ const OrdersByDateModal = ({
             <TableCell sx={{ ...cellSx, fontWeight: 600 }}>
               {t("order.car")}
             </TableCell>
-            <TableCell sx={{ ...cellSx, fontWeight: 600 }}>
-              {t("car.unitCode")}
-            </TableCell>
+            {!SINGLE_PROPERTY_MODE && (
+              <TableCell sx={{ ...cellSx, fontWeight: 600 }}>
+                {t("car.unitCode")}
+              </TableCell>
+            )}
             <TableCell sx={{ ...cellSx, fontWeight: 600 }}>
               {t("order.termCol")}
             </TableCell>
@@ -88,31 +91,34 @@ const OrdersByDateModal = ({
             <TableCell sx={{ ...cellSx, fontWeight: 600 }}>
               {t("order.phone")}
             </TableCell>
-            {isStartingOrders ? (
-              <>
+            {!SINGLE_PROPERTY_MODE &&
+              (isStartingOrders ? (
+                <>
+                  <TableCell sx={{ ...cellSx, fontWeight: 600 }}>
+                    {t("order.pickupLocation")}
+                  </TableCell>
+                  <TableCell sx={{ ...cellSx, fontWeight: 600 }}>
+                    {t("order.flightNumber")}
+                  </TableCell>
+                </>
+              ) : (
                 <TableCell sx={{ ...cellSx, fontWeight: 600 }}>
-                  {t("order.pickupLocation")}
+                  {t("order.returnLocation")}
                 </TableCell>
-                <TableCell sx={{ ...cellSx, fontWeight: 600 }}>
-                  {t("order.flightNumber")}
-                </TableCell>
-              </>
-            ) : (
-              <TableCell sx={{ ...cellSx, fontWeight: 600 }}>
-                {t("order.returnLocation")}
-              </TableCell>
-            )}
+              ))}
           </TableRow>
         </TableHead>
         <TableBody>
           {orders.map((order, idx) => (
             <TableRow key={order._id || idx}>
               <TableCell sx={cellSx}>{order.carModel}</TableCell>
-              <TableCell sx={cellSx}>
-                {getRegNumberByCarNumber
-                  ? getRegNumberByCarNumber(order.carNumber)
-                  : order.carNumber}
-              </TableCell>
+              {!SINGLE_PROPERTY_MODE && (
+                <TableCell sx={cellSx}>
+                  {getRegNumberByCarNumber
+                    ? getRegNumberByCarNumber(order.carNumber)
+                    : order.carNumber}
+                </TableCell>
+              )}
               <TableCell sx={cellSx}>
                 {order.rentalStartDate
                   ? formatDateRange(order.rentalStartDate, order.rentalEndDate)
@@ -126,28 +132,30 @@ const OrdersByDateModal = ({
               <TableCell sx={cellSx}>
                 {order._visibility?.hideClientContacts ? "—" : order.phone}
               </TableCell>
-              {isStartingOrders ? (
-                <>
+              {!SINGLE_PROPERTY_MODE &&
+                (isStartingOrders ? (
+                  <>
+                    <TableCell sx={cellSx}>
+                      {formatPlaceWithThessalonikiDetail(
+                        order.placeIn,
+                        order.placeInDetail
+                      )}
+                    </TableCell>
+                    <TableCell sx={cellSx}>
+                      {order.placeIn &&
+                      order.placeIn.toLowerCase() === "airport"
+                        ? order.flightNumber || "-"
+                        : "-"}
+                    </TableCell>
+                  </>
+                ) : (
                   <TableCell sx={cellSx}>
                     {formatPlaceWithThessalonikiDetail(
-                      order.placeIn,
-                      order.placeInDetail
+                      order.placeOut,
+                      order.placeOutDetail
                     )}
                   </TableCell>
-                  <TableCell sx={cellSx}>
-                    {order.placeIn && order.placeIn.toLowerCase() === "airport"
-                      ? order.flightNumber || "-"
-                      : "-"}
-                  </TableCell>
-                </>
-              ) : (
-                <TableCell sx={cellSx}>
-                  {formatPlaceWithThessalonikiDetail(
-                    order.placeOut,
-                    order.placeOutDetail
-                  )}
-                </TableCell>
-              )}
+                ))}
             </TableRow>
           ))}
         </TableBody>

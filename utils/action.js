@@ -249,6 +249,7 @@ export const addOrderNew = async (orderData) => {
   try {
     const response = await fetch(getApiUrl(API_PATHS.ORDER_ADD), {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },

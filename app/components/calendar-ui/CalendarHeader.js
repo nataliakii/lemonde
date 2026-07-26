@@ -7,12 +7,14 @@ import {
   Box,
   Select,
   MenuItem,
+  Button,
 } from "@mui/material";
 import dayjs from "dayjs";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { useTranslation } from "react-i18next";
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
@@ -70,8 +72,15 @@ export default function CalendarHeader({
     headerStyles,
     calendarRef,
   } = data;
-  const { onPrevMonth, onNextMonth, onMonthChange, onYearChange, onDayClick } =
-    actions;
+  const {
+    onPrevMonth,
+    onNextMonth,
+    onMonthChange,
+    onYearChange,
+    onDayClick,
+    onGoToToday,
+  } = actions;
+  const { t } = useTranslation();
 
   return (
     <TableHead>
@@ -95,10 +104,19 @@ export default function CalendarHeader({
               justifyContent: "flex-end",
               height: "100%",
               pb: HEADER_STYLES.firstCellBottomPadding,
+              gap: 0.25,
             }}
           >
-            {/* Верхняя строка: год */}
-            <Box sx={calendarStyles.yearRow}>
+            {/* Верхняя строка: год + Today */}
+            <Box
+              sx={{
+                ...calendarStyles.yearRow,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 0.5,
+              }}
+            >
               <Select
                 className="bigcalendar-year-select" // Для globals.css
                 value={year}
@@ -107,6 +125,8 @@ export default function CalendarHeader({
                 sx={{
                   ...calendarStyles.yearSelect,
                   fontSize: HEADER_STYLES.yearSelectFont,
+                  flex: 1,
+                  minWidth: 0,
                   "& .MuiSelect-select": {
                     ...((calendarStyles.yearSelect &&
                       calendarStyles.yearSelect["& .MuiSelect-select"]) ||
@@ -152,6 +172,32 @@ export default function CalendarHeader({
                   </MenuItem>
                 ))}
               </Select>
+              {typeof onGoToToday === "function" ? (
+                <Button
+                  size="small"
+                  onClick={onGoToToday}
+                  sx={{
+                    minWidth: 0,
+                    px: 0.75,
+                    py: 0.15,
+                    fontSize: "0.62rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.04em",
+                    lineHeight: 1.2,
+                    textTransform: "none",
+                    color: "secondary.main",
+                    border: "1px solid",
+                    borderColor: "primary.main",
+                    bgcolor: "rgba(201,162,39,0.12)",
+                    "&:hover": {
+                      bgcolor: "rgba(201,162,39,0.22)",
+                      borderColor: "primary.light",
+                    },
+                  }}
+                >
+                  {t("calendar.today") || "Today"}
+                </Button>
+              ) : null}
             </Box>
 
             {/* Нижняя строка: стрелки + месяц */}

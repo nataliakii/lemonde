@@ -1,7 +1,24 @@
 "use client";
 
-import React, { lazy, Suspense, useMemo, useState } from "react";
-import { Box, Button, Typography, Stack } from "@mui/material";
+import React, {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  Box,
+  Button,
+  Typography,
+  Stack,
+  CircularProgress,
+  IconButton,
+} from "@mui/material";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -16,6 +33,21 @@ import { useSnackbar } from "notistack";
 const BookingModal = lazy(() =>
   import("@app/components/CarComponent/BookingModal")
 );
+
+function isHttpUrl(src) {
+  return typeof src === "string" && /^https?:\/\//i.test(src);
+}
+
+function buildApartmentPhotos(apartment) {
+  const list = [];
+  if (apartment?.photoUrl) list.push(apartment.photoUrl);
+  if (Array.isArray(apartment?.gallery)) {
+    apartment.gallery.forEach((u) => {
+      if (u && !list.includes(u)) list.push(u);
+    });
+  }
+  return list.length ? list : [CLOUDINARY_PLACEHOLDER_PUBLIC_ID];
+}
 
 function guestsLabel(seats) {
   const n = Number(seats);
@@ -39,6 +71,8 @@ const ApartmentCard = React.memo(function ApartmentCard({
   apartment,
   isFirst = false,
   index = 0,
+  stayPrice = null,
+  stayPriceLoading = false,
 }) {
   const {
     stayCheckIn,
@@ -56,16 +90,36 @@ const ApartmentCard = React.memo(function ApartmentCard({
     ? getApartmentPath(locale, apartment.slug)
     : null;
   const [modalOpen, setModalOpen] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const scrollerRef = useRef(null);
 
   const orders = useMemo(
     () => ordersByCarId(apartment._id),
     [ordersByCarId, apartment._id]
   );
 
+  const photos = useMemo(
+    () => buildApartmentPhotos(apartment),
+    [apartment]
+  );
+  const multiPhoto = photos.length > 1;
+
+  useEffect(() => {
+    setPhotoIndex(0);
+    if (scrollerRef.current) scrollerRef.current.scrollLeft = 0;
+  }, [apartment?._id]);
+
   const priceFrom = getApartmentPriceFrom(apartment);
-  const isHttpPhoto =
-    typeof apartment?.photoUrl === "string" &&
-    /^https?:\/\//i.test(apartment.photoUrl);
+  const stayNights =
+    stayCheckIn && stayCheckOut
+      ? dayjs(stayCheckOut).diff(dayjs(stayCheckIn), "day")
+      : 0;
+  const stayTotal =
+    stayPrice?.totalPrice != null && Number.isFinite(Number(stayPrice.totalPrice))
+      ? Number(stayPrice.totalPrice)
+      : null;
+  const stayDays =
+    stayPrice?.days > 0 ? stayPrice.days : stayNights > 0 ? stayNights : 0;
 
   const meta = [
     guestsLabel(apartment.seats),
@@ -98,10 +152,25 @@ const ApartmentCard = React.memo(function ApartmentCard({
     setModalOpen(true);
   };
 
+  const scrollToIndex = useCallback((nextIndex) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const width = el.clientWidth || 1;
+    const clamped = Math.max(0, Math.min(photos.length - 1, nextIndex));
+    el.scrollTo({ left: clamped * width, behavior: "smooth" });
+    setPhotoIndex(clamped);
+  }, [photos.length]);
+
+  const handleScrollerScroll = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const width = el.clientWidth || 1;
+    const next = Math.round(el.scrollLeft / width);
+    setPhotoIndex((prev) => (prev === next ? prev : next));
+  }, []);
+
   const photo = (
     <Box
-      component={suiteHref ? Link : "div"}
-      href={suiteHref || undefined}
       sx={{
         gridArea: "photo",
         position: "relative",
@@ -109,41 +178,71 @@ const ApartmentCard = React.memo(function ApartmentCard({
         height: { xs: 280, sm: 340, md: "100%" },
         minHeight: { md: 380 },
         overflow: "hidden",
-        cursor: suiteHref ? "pointer" : "default",
         bgcolor: "#1A1612",
-        textDecoration: "none",
-        color: "inherit",
-        display: "block",
       }}
     >
-      {isHttpPhoto ? (
-        <Image
-          src={apartment.photoUrl}
-          alt={apartment.model || "Suite"}
-          fill
-          priority={isFirst}
-          sizes="(max-width: 900px) 100vw, 55vw"
-          style={{
-            objectFit: "cover",
-            transition: "transform 0.7s ease",
-          }}
-          className="suite-photo"
-        />
-      ) : (
-        <CldImage
-          src={apartment?.photoUrl || CLOUDINARY_PLACEHOLDER_PUBLIC_ID}
-          alt={apartment.model || "Suite"}
-          fill
-          crop="fill"
-          priority={isFirst}
-          sizes="(max-width: 900px) 100vw, 55vw"
-          style={{
-            objectFit: "cover",
-            transition: "transform 0.7s ease",
-          }}
-          className="suite-photo"
-        />
-      )}
+      <Box
+        ref={scrollerRef}
+        onScroll={handleScrollerScroll}
+        sx={{
+          display: "flex",
+          height: "100%",
+          width: "100%",
+          overflowX: multiPhoto ? "auto" : "hidden",
+          overflowY: "hidden",
+          scrollSnapType: multiPhoto ? "x mandatory" : "none",
+          scrollBehavior: "smooth",
+          WebkitOverflowScrolling: "touch",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          "&::-webkit-scrollbar": { display: "none" },
+        }}
+      >
+        {photos.map((src, i) => (
+          <Box
+            key={`${src}-${i}`}
+            component={!multiPhoto && suiteHref ? Link : "div"}
+            href={!multiPhoto && suiteHref ? suiteHref : undefined}
+            sx={{
+              position: "relative",
+              flex: "0 0 100%",
+              width: "100%",
+              height: "100%",
+              scrollSnapAlign: "start",
+              scrollSnapStop: "always",
+              display: "block",
+              textDecoration: "none",
+              color: "inherit",
+              cursor: !multiPhoto && suiteHref ? "pointer" : "default",
+            }}
+          >
+            {isHttpUrl(src) ? (
+              <Image
+                src={src}
+                alt={`${apartment.model || "Suite"} photo ${i + 1}`}
+                fill
+                priority={isFirst && i === 0}
+                sizes="(max-width: 900px) 100vw, 55vw"
+                style={{ objectFit: "cover" }}
+                className="suite-photo"
+                draggable={false}
+              />
+            ) : (
+              <CldImage
+                src={src || CLOUDINARY_PLACEHOLDER_PUBLIC_ID}
+                alt={`${apartment.model || "Suite"} photo ${i + 1}`}
+                fill
+                crop="fill"
+                priority={isFirst && i === 0}
+                sizes="(max-width: 900px) 100vw, 55vw"
+                style={{ objectFit: "cover" }}
+                className="suite-photo"
+              />
+            )}
+          </Box>
+        ))}
+      </Box>
+
       <Box
         sx={{
           position: "absolute",
@@ -153,6 +252,119 @@ const ApartmentCard = React.memo(function ApartmentCard({
           pointerEvents: "none",
         }}
       />
+
+      {multiPhoto ? (
+        <>
+          <IconButton
+            aria-label="Previous photo"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              scrollToIndex(photoIndex <= 0 ? photos.length - 1 : photoIndex - 1);
+            }}
+            sx={{
+              position: "absolute",
+              left: 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 2,
+              bgcolor: "rgba(14,12,10,0.42)",
+              color: "#F5F0E6",
+              width: 36,
+              height: 36,
+              "&:hover": { bgcolor: "rgba(14,12,10,0.68)" },
+            }}
+          >
+            <ChevronLeftIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            aria-label="Next photo"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              scrollToIndex(
+                photoIndex >= photos.length - 1 ? 0 : photoIndex + 1
+              );
+            }}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 2,
+              bgcolor: "rgba(14,12,10,0.42)",
+              color: "#F5F0E6",
+              width: 36,
+              height: 36,
+              "&:hover": { bgcolor: "rgba(14,12,10,0.68)" },
+            }}
+          >
+            <ChevronRightIcon fontSize="small" />
+          </IconButton>
+
+          <Stack
+            direction="row"
+            spacing={0.75}
+            sx={{
+              position: "absolute",
+              left: "50%",
+              bottom: 12,
+              transform: "translateX(-50%)",
+              zIndex: 2,
+              px: 1,
+              py: 0.5,
+              borderRadius: 999,
+              bgcolor: "rgba(14,12,10,0.35)",
+            }}
+          >
+            {photos.map((_, i) => (
+              <Box
+                key={`dot-${i}`}
+                component="button"
+                type="button"
+                aria-label={`Go to photo ${i + 1}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  scrollToIndex(i);
+                }}
+                sx={{
+                  width: i === photoIndex ? 16 : 7,
+                  height: 7,
+                  p: 0,
+                  border: 0,
+                  borderRadius: 999,
+                  cursor: "pointer",
+                  bgcolor:
+                    i === photoIndex
+                      ? "primary.main"
+                      : "rgba(245,240,230,0.55)",
+                  transition: "width 0.2s ease, background-color 0.2s ease",
+                }}
+              />
+            ))}
+          </Stack>
+
+          <Typography
+            sx={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              zIndex: 2,
+              px: 1,
+              py: 0.35,
+              borderRadius: 1,
+              bgcolor: "rgba(14,12,10,0.45)",
+              color: "rgba(245,240,230,0.95)",
+              fontSize: "0.72rem",
+              letterSpacing: "0.06em",
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            {photoIndex + 1} / {photos.length}
+          </Typography>
+        </>
+      ) : null}
     </Box>
   );
 
@@ -282,7 +494,53 @@ const ApartmentCard = React.memo(function ApartmentCard({
         spacing={2}
         sx={{ mt: "auto" }}
       >
-        {priceFrom != null && (
+        {stayPriceLoading ? (
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <CircularProgress
+              size={20}
+              thickness={4}
+              sx={{
+                color: index % 2 === 0 ? "primary.dark" : "primary.main",
+              }}
+            />
+            <Typography
+              sx={{
+                fontFamily: "var(--font-body)",
+                fontSize: "0.85rem",
+                opacity: 0.7,
+              }}
+            >
+              Calculating price…
+            </Typography>
+          </Stack>
+        ) : stayTotal != null ? (
+          <Typography
+            sx={{
+              fontFamily: "var(--font-display)",
+              fontStyle: "italic",
+              fontSize: "1.55rem",
+              fontWeight: 500,
+              color: index % 2 === 0 ? "secondary.main" : "#E8D5A3",
+            }}
+          >
+            €{Math.round(stayTotal)}
+            <Box
+              component="span"
+              sx={{
+                fontFamily: "var(--font-body)",
+                fontStyle: "normal",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+                ml: 0.75,
+                opacity: 0.7,
+              }}
+            >
+              {stayDays > 0
+                ? `for ${stayDays} night${stayDays === 1 ? "" : "s"}`
+                : "for stay"}
+            </Box>
+          </Typography>
+        ) : priceFrom != null ? (
           <Typography
             sx={{
               fontFamily: "var(--font-display)",
@@ -307,7 +565,7 @@ const ApartmentCard = React.memo(function ApartmentCard({
               / night
             </Box>
           </Typography>
-        )}
+        ) : null}
         <Stack direction="row" spacing={1.25} sx={{ flexWrap: "wrap" }}>
           <Button
             variant="contained"

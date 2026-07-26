@@ -102,22 +102,18 @@ export function orderGuard(handler) {
           : `ua:${userAgent || "na"}`;
     const payloadHashValue = payloadHash(body);
 
-    // Admin bypass: only if header is set AND user has valid admin session.
-    // WHY: header alone is spoofable; session proves authenticity.
-    const isAdminHeader = request.headers.get("x-admin-request") === "1";
-    if (isAdminHeader) {
-      const session = await getServerSession(authOptions);
-      if (session?.user?.isAdmin) {
-        const newHeaders = new Headers(request.headers);
-        newHeaders.set("content-type", JSON_CONTENT_TYPE);
-        const newRequest = new Request(request.url, {
-          method: request.method,
-          headers: newHeaders,
-          body: JSON.stringify(body),
-        });
-        return handler(newRequest);
-      }
-      // Header set but no valid admin session — treat as regular client request, continue with guard checks.
+    // Admin bypass: authenticated admin session skips ban / rate-limit / abuse checks.
+    // Session cookie proves authenticity (header alone would be spoofable).
+    const session = await getServerSession(authOptions);
+    if (session?.user?.isAdmin) {
+      const newHeaders = new Headers(request.headers);
+      newHeaders.set("content-type", JSON_CONTENT_TYPE);
+      const newRequest = new Request(request.url, {
+        method: request.method,
+        headers: newHeaders,
+        body: JSON.stringify(body),
+      });
+      return handler(newRequest);
     }
 
     // 1) Ban check

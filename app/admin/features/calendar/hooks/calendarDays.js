@@ -28,6 +28,37 @@ export const MEAN_GREGORIAN_MONTH_DAYS = 365.2425 / 12;
  * @param {'15d'|'1m'|'2m'|null|undefined} [params.calendarDayRange] — если задан, переопределяет выбор ветки (15d / один месяц / два месяца)
  * @returns {Array} массив дней с dayjs, date, weekday, isSunday
  */
+function toDayEntry(date) {
+  return {
+    dayjs: date,
+    date: date.date(),
+    weekday: date.format("dd"),
+    isSunday: date.day() === 0,
+  };
+}
+
+/**
+ * If "today" falls inside the window, start the grid from today
+ * (hide past columns). Pad forward so the window stays usable.
+ */
+function startWindowFromToday(days, minDays = 21) {
+  if (!Array.isArray(days) || days.length === 0) return days;
+  const today = dayjs().tz(BUSINESS_TZ).startOf("day");
+  const todayIdx = days.findIndex((d) => d.dayjs?.isSame?.(today, "day"));
+  if (todayIdx <= 0) return days;
+
+  const clipped = days.slice(todayIdx);
+  if (clipped.length >= minDays) return clipped;
+
+  const padded = [...clipped];
+  let last = padded[padded.length - 1].dayjs;
+  while (padded.length < minDays) {
+    last = last.add(1, "day");
+    padded.push(toDayEntry(last));
+  }
+  return padded;
+}
+
 export function buildCalendarDays({
   month,
   year,
@@ -38,6 +69,8 @@ export function buildCalendarDays({
   const use15d =
     calendarDayRange === "15d" ||
     (calendarDayRange == null && viewMode === "range15");
+
+  let days;
 
   if (use15d) {
     const start =
@@ -52,44 +85,25 @@ export function buildCalendarDays({
 
     const totalDays = end.diff(start, "day");
 
-    return Array.from({ length: totalDays + 1 }, (_, index) => {
-      const date = start.add(index, "day");
-      return {
-        dayjs: date,
-        date: date.date(),
-        weekday: date.format("dd"),
-        isSunday: date.day() === 0,
-      };
-    });
-  }
-
-  if (calendarDayRange === "2m") {
+    days = Array.from({ length: totalDays + 1 }, (_, index) =>
+      toDayEntry(start.add(index, "day"))
+    );
+  } else if (calendarDayRange === "2m") {
     const start = dayjs().year(year).month(month).date(1).startOf("day");
     const end = start.add(1, "month").endOf("month").startOf("day");
     const totalDays = end.diff(start, "day");
-    return Array.from({ length: totalDays + 1 }, (_, index) => {
-      const date = start.add(index, "day");
-      return {
-        dayjs: date,
-        date: date.date(),
-        weekday: date.format("dd"),
-        isSunday: date.day() === 0,
-      };
-    });
+    days = Array.from({ length: totalDays + 1 }, (_, index) =>
+      toDayEntry(start.add(index, "day"))
+    );
+  } else {
+    // 1m или full без calendarDayRange: один календарный месяц
+    const dim = dayjs().year(year).month(month).daysInMonth();
+    days = Array.from({ length: dim }, (_, index) =>
+      toDayEntry(dayjs().year(year).month(month).date(1).add(index, "day"))
+    );
   }
 
-  // 1m или full без calendarDayRange: один календарный месяц
-  const dim = dayjs().year(year).month(month).daysInMonth();
-
-  return Array.from({ length: dim }, (_, index) => {
-    const date = dayjs().year(year).month(month).date(1).add(index, "day");
-    return {
-      dayjs: date,
-      date: date.date(),
-      weekday: date.format("dd"),
-      isSunday: date.day() === 0,
-    };
-  });
+  return startWindowFromToday(days);
 }
 
 /**
@@ -228,12 +242,17 @@ function sumCellWidthsBeforeIndex(cells, index) {
 }
 
 /**
- * Горизонтально центрирует колонку «сегодня» во viewport скролла.
+ * Scrolls so today's column is visible.
  * @param {Object} params
  * @param {HTMLElement} params.container — MUI TableContainer root (scroll element)
- * @param {number} params.todayIndex — индекс сегодня в массиве days
+ * @param {number} params.todayIndex — index of today in days
+ * @param {"start"|"center"} [params.align="start"] — left-align or center today
  */
-export function scrollCalendarToToday({ container, todayIndex }) {
+export function scrollCalendarToToday({
+  container,
+  todayIndex,
+  align = "start",
+}) {
   if (!container || typeof todayIndex !== "number" || todayIndex < 0) return;
 
   try {
@@ -256,12 +275,14 @@ export function scrollCalendarToToday({ container, todayIndex }) {
     const cellWidth = todayCell?.offsetWidth ?? 0;
     if (!Number.isFinite(cellWidth) || cellWidth <= 0) return;
 
-    const columnCenter = columnLeft + cellWidth / 2;
     const maxScroll = Math.max(
       0,
       (container.scrollWidth || 0) - containerWidth
     );
-    let targetScrollLeft = columnCenter - containerWidth / 2;
+    let targetScrollLeft =
+      align === "center"
+        ? columnLeft + cellWidth / 2 - containerWidth / 2
+        : columnLeft;
     targetScrollLeft = Math.max(0, Math.min(targetScrollLeft, maxScroll));
 
     if (typeof container.scrollTo === "function") {
@@ -317,31 +338,35 @@ export function useCalendarDays({
 }
 
 /**
- * Хук для автоматического скролла к текущему дню на мобильных устройствах
+ * Auto-scroll to today's column when the calendar window includes today.
  * @param {Object} params
- * @param {Array} params.days - массив дней календаря
- * @param {number} params.todayIndex - индекс текущего дня
- * @param {{ current: HTMLElement | null }} params.containerRef - ref на MUI TableContainer
+ * @param {Array} params.days
+ * @param {number} params.todayIndex
+ * @param {{ current: HTMLElement | null }} params.containerRef
+ * @param {boolean} [params.enabled=true]
+ * @param {"start"|"center"} [params.align="start"]
  */
 export function useMobileCalendarScroll({
   days,
   todayIndex,
   containerRef,
   enabled = true,
+  align = "start",
 }) {
   useEffect(() => {
-    if (!enabled || !isPhoneViewport()) return;
+    if (!enabled) return;
 
     const runScroll = () => {
       const container = containerRef?.current;
       if (!container) return;
-      scrollCalendarToToday({ container, todayIndex });
+      scrollCalendarToToday({ container, todayIndex, align });
     };
 
     /** After timeout + rAF so thead cell widths are settled (fonts, hydration). */
+    let nestedTimer;
     const scheduleScroll = () =>
       setTimeout(() => {
-        requestAnimationFrame(runScroll);
+        nestedTimer = requestAnimationFrame(runScroll);
       }, 50);
 
     const t = scheduleScroll();
@@ -352,8 +377,9 @@ export function useMobileCalendarScroll({
 
     return () => {
       clearTimeout(t);
+      if (nestedTimer != null) cancelAnimationFrame(nestedTimer);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onResize);
     };
-  }, [todayIndex, days, containerRef, enabled]);
+  }, [todayIndex, days, containerRef, enabled, align]);
 }

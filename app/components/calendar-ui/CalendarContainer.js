@@ -70,6 +70,10 @@ function BigCalendarLayout({
   firstColumnWidth,
   extraRootSx = {},
   extraTableContainerSx = {},
+  onTablePointerDown,
+  onTablePointerMove,
+  onTablePointerUp,
+  isPanning = false,
 }) {
   return (
     <Box
@@ -101,9 +105,15 @@ function BigCalendarLayout({
       {/* TableContainer */}
       <TableContainer
         ref={containerRef}
+        onMouseDown={onTablePointerDown}
+        onMouseMove={onTablePointerMove}
+        onMouseUp={onTablePointerUp}
+        onMouseLeave={onTablePointerUp}
         sx={{
           ...calendarStyles.tableContainer,
           border: borderStyle,
+          cursor: isPanning ? "grabbing" : "grab",
+          userSelect: isPanning ? "none" : "auto",
           ...extraTableContainerSx,
         }}
       >
@@ -510,13 +520,57 @@ export default function CalendarContainer({
   const showInlineLegend =
     Boolean(showLegend) && legendPlacement === "inline";
 
-  // Автоматический скролл к текущему дню на мобильных устройствах
+  // Автоскролл к сегодня (все экраны), когда колонка есть в окне
   useMobileCalendarScroll({
     days,
     todayIndex,
     containerRef,
     enabled: autoScrollToToday,
+    align: "start",
   });
+
+  const panRef = useRef({
+    active: false,
+    startX: 0,
+    startScrollLeft: 0,
+    moved: false,
+  });
+  const [isPanning, setIsPanning] = useState(false);
+
+  const handleTablePointerDown = useCallback((e) => {
+    if (e.button !== 0) return;
+    // Don't steal drag from order move / interactive controls
+    if (e.target?.closest?.("button, a, input, select, textarea, [role='button']")) {
+      return;
+    }
+    if (e.target?.closest?.("[data-order-block], .calendar-order-block")) {
+      return;
+    }
+    const container = containerRef.current;
+    if (!container) return;
+    panRef.current = {
+      active: true,
+      startX: e.clientX,
+      startScrollLeft: container.scrollLeft,
+      moved: false,
+    };
+    setIsPanning(true);
+  }, []);
+
+  const handleTablePointerMove = useCallback((e) => {
+    if (!panRef.current.active) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const dx = e.clientX - panRef.current.startX;
+    if (Math.abs(dx) > 3) panRef.current.moved = true;
+    container.scrollLeft = panRef.current.startScrollLeft - dx;
+  }, []);
+
+  const handleTablePointerUp = useCallback(() => {
+    if (!panRef.current.active) return;
+    panRef.current.active = false;
+    setIsPanning(false);
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -562,28 +616,24 @@ export default function CalendarContainer({
   );
 
   const handlePrevMonth = useCallback(() => {
-    if (viewMode === "full") {
-      setRangeDirection("backward");
-      setViewMode("range15");
-    } else {
-      setViewMode("full");
-      const base = dayjs().year(year).month(month).subtract(1, "month");
-      setMonth(base.month());
-      setYear(base.year());
-    }
-  }, [viewMode, year, month, setViewMode]);
+    const base = dayjs().year(year).month(month).subtract(1, "month");
+    setMonth(base.month());
+    setYear(base.year());
+  }, [year, month]);
 
   const handleNextMonth = useCallback(() => {
-    if (viewMode === "full") {
-      setRangeDirection("forward");
-      setViewMode("range15");
-    } else {
-      setViewMode("full");
-      const base = dayjs().year(year).month(month).add(1, "month");
-      setMonth(base.month());
-      setYear(base.year());
-    }
-  }, [viewMode, year, month, setViewMode]);
+    const base = dayjs().year(year).month(month).add(1, "month");
+    setMonth(base.month());
+    setYear(base.year());
+  }, [year, month]);
+
+  const handleGoToToday = useCallback(() => {
+    const now = dayjs();
+    setMonth(now.month());
+    setYear(now.year());
+    setRangeDirection("forward");
+    // Window rebuilds from today; useMobileCalendarScroll recenters after paint.
+  }, []);
 
   // =======================
   // 🚚 Move mode handlers (from hook)
@@ -1018,6 +1068,7 @@ export default function CalendarContainer({
       onMonthChange: handleSelectMonth,
       onYearChange: handleSelectYear,
       onDayClick: handleDayClick,
+      onGoToToday: handleGoToToday,
     }),
     [
       handlePrevMonth,
@@ -1025,6 +1076,7 @@ export default function CalendarContainer({
       handleSelectMonth,
       handleSelectYear,
       handleDayClick,
+      handleGoToToday,
     ]
   );
 
@@ -1209,6 +1261,10 @@ export default function CalendarContainer({
         firstColumnWidth={firstColumnWidth}
         extraRootSx={rootSx}
         extraTableContainerSx={tableContainerSx}
+        onTablePointerDown={handleTablePointerDown}
+        onTablePointerMove={handleTablePointerMove}
+        onTablePointerUp={handleTablePointerUp}
+        isPanning={isPanning}
       >
         <CalendarGrid data={gridData} actions={gridActions} />
       </BigCalendarLayout>
