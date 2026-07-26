@@ -89,9 +89,8 @@ function Footer() {
   const currentYear = new Date().getFullYear();
   const { t } = useTranslation();
 
-  const name = SINGLE_PROPERTY_MODE
-    ? "Le Monde Suites"
-    : company?.name || "Le Monde Suites";
+  // Prefer company document (DB) so the same codebase can serve another property.
+  const name = company?.name || "Le Monde Suites";
   const rawSlogan = company?.slogan || "";
   const slogan = SINGLE_PROPERTY_MODE
     ? rawSlogan && !/car rental|aggregator/i.test(rawSlogan)
