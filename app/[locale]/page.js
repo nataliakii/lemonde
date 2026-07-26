@@ -83,8 +83,9 @@ export default async function LocalizedHomePage({ params }) {
       : brand.assets.galleryImages.length > 0
         ? brand.assets.galleryImages
         : DEFAULT_PROPERTY_GALLERY;
-  const heroImage =
-    brand.assets.heroImages[0] || apartmentPhotoMix[0] || "";
+  // Keep the branded gradient hero unless company.assets.heroImages is set explicitly.
+  // Do not pull apartment photos into the hero.
+  const heroImage = brand.assets.heroImages[0] || "";
 
   return (
     <>
