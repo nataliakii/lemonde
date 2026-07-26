@@ -380,6 +380,8 @@
     "filterByCar": "Filter by apartment",
     "filterByStatus": "Status",
     "filterByOrigin": "Origin",
+    "filterByStub": "Stub",
+    "notStub": "Not stub",
     "dateFrom": "From",
     "dateTo": "To",
     "startDate": "Start Date",

@@ -76,6 +76,7 @@ export function filterOrdersForTable(orders, criteria = {}, helpers = {}) {
     ownerId = null,
     statusFilter = "all",
     originFilter = "all",
+    stubFilter = "all",
     dateFrom = "",
     dateTo = "",
     searchQuery = "",
@@ -104,6 +105,9 @@ export function filterOrdersForTable(orders, criteria = {}, helpers = {}) {
 
     if (originFilter === "client" && !order.my_order) return false;
     if (originFilter === "admin" && order.my_order) return false;
+
+    if (stubFilter === "stub" && !order.offline) return false;
+    if (stubFilter === "real" && order.offline) return false;
 
     if (dateFrom || dateTo) {
       const orderStart = new Date(order.rentalStartDate);

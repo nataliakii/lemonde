@@ -256,6 +256,8 @@
     "filterByCar": "Filtruj według apartamentu",
     "filterByStatus": "Status",
     "filterByOrigin": "Pochodzenie",
+    "filterByStub": "Rezerwacja blokująca",
+    "notStub": "Bez blokady",
     "dateFrom": "Z",
     "dateTo": "Do",
     "startDate": "Data rozpoczęcia",

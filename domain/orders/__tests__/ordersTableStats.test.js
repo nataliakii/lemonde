@@ -83,6 +83,30 @@ describe("ordersTableStats", () => {
     expect(pending[0]._id).toBe("2");
   });
 
+  test("filterOrdersForTable by stub / offline", () => {
+    const orders = [
+      {
+        _id: "stub1",
+        offline: true,
+        rentalStartDate: "2026-07-01",
+        rentalEndDate: "2026-07-05",
+      },
+      {
+        _id: "real1",
+        offline: false,
+        rentalStartDate: "2026-07-01",
+        rentalEndDate: "2026-07-05",
+      },
+    ];
+    expect(filterOrdersForTable(orders, { stubFilter: "stub" })).toEqual([
+      orders[0],
+    ]);
+    expect(filterOrdersForTable(orders, { stubFilter: "real" })).toEqual([
+      orders[1],
+    ]);
+    expect(filterOrdersForTable(orders, { stubFilter: "all" })).toHaveLength(2);
+  });
+
   test("summarizeFilteredOrders includes commission", () => {
     const orders = [
       { totalPrice: 100, OverridePrice: null },

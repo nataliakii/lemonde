@@ -370,6 +370,8 @@
     "filterByCar": "Фильтр по апартаменту",
     "filterByStatus": "Статус",
     "filterByOrigin": "Источник",
+    "filterByStub": "Заглушка",
+    "notStub": "Не заглушка",
     "dateFrom": "С",
     "dateTo": "До",
     "startDate": "Дата начала",

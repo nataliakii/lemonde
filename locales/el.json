@@ -382,6 +382,8 @@
     "filterByCar": "Φίλτρο διαμερίσματος",
     "filterByStatus": "Κατάσταση",
     "filterByOrigin": "Προέλευση",
+    "filterByStub": "Δέσμευση",
+    "notStub": "Όχι δέσμευση",
     "dateFrom": "Από",
     "dateTo": "Έως",
     "startDate": "Ημερομηνία έναρξης",

@@ -265,6 +265,8 @@ export default function OrdersTableSection() {
   const [dateTo, setDateTo] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [originFilter, setOriginFilter] = useState("all");
+  /** Suites: all | stub (offline) | real (not offline). */
+  const [stubFilter, setStubFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   /** Если true — не показываем заказы, у которых возврат уже в прошлом. */
   const [hidePastOrders, setHidePastOrders] = useState(false);
@@ -352,6 +354,10 @@ export default function OrdersTableSection() {
       if (originFilter === "client" && !order.my_order) return false;
       if (originFilter === "admin" && order.my_order) return false;
 
+      // 3b. Stub / offline filter (suites)
+      if (stubFilter === "stub" && !order.offline) return false;
+      if (stubFilter === "real" && order.offline) return false;
+
       // 4. Date range filter (overlap: orderPickup <= filterEnd AND orderReturn >= filterStart)
       // If only dateFrom is set, show orders that end on or after dateFrom
       // If only dateTo is set, show orders that start on or before dateTo
@@ -422,6 +428,7 @@ export default function OrdersTableSection() {
     selectedOwnerId,
     statusFilter,
     originFilter,
+    stubFilter,
     dateFrom,
     dateTo,
     searchQuery,
@@ -452,6 +459,7 @@ export default function OrdersTableSection() {
     setDateTo("");
     setStatusFilter("all");
     setOriginFilter("all");
+    setStubFilter("all");
     setSearchQuery("");
     setHidePastOrders(false);
     setPage(0);
@@ -1032,6 +1040,23 @@ export default function OrdersTableSection() {
                 <MenuItem value="admin">{t("table.adminOrder")}</MenuItem>
               </Select>
             </FormControl>
+
+            {SINGLE_PROPERTY_MODE ? (
+              <FormControl size="small" sx={{ minWidth: 140 }}>
+                <InputLabel>{t("table.filterByStub")}</InputLabel>
+                <Select
+                  value={stubFilter}
+                  onChange={(e) =>
+                    handleFilterChange(setStubFilter)(e.target.value)
+                  }
+                  label={t("table.filterByStub")}
+                >
+                  <MenuItem value="all">{t("table.all")}</MenuItem>
+                  <MenuItem value="stub">{t("suites.stub")}</MenuItem>
+                  <MenuItem value="real">{t("table.notStub")}</MenuItem>
+                </Select>
+              </FormControl>
+            ) : null}
 
             <FormControlLabel
               control={

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { TableCell, Box, Popover, Typography, useTheme } from "@mui/material";
+import { TableCell, Box, Paper, Popper, Typography, useTheme } from "@mui/material";
 import dayjs from "dayjs";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import utc from "dayjs/plugin/utc";
@@ -227,6 +227,21 @@ export default function CarTableRow({
     };
   }, []);
 
+  const clearHoverPreview = useCallback(() => {
+    if (hoverShowTimeoutRef.current) {
+      clearTimeout(hoverShowTimeoutRef.current);
+      hoverShowTimeoutRef.current = null;
+    }
+    if (hoverHideTimeoutRef.current) {
+      clearTimeout(hoverHideTimeoutRef.current);
+      hoverHideTimeoutRef.current = null;
+    }
+    setHoveredOrderId(null);
+    setHoverPreviewOrder(null);
+    setHoverAnchorEl(null);
+    setHoverConflictHint(false);
+  }, []);
+
   useEffect(() => {
     return () => {
       if (hoverShowTimeoutRef.current) {
@@ -237,6 +252,22 @@ export default function CarTableRow({
       }
     };
   }, []);
+
+  // Drag / touch: never leave a hover card stuck open.
+  useEffect(() => {
+    if (isDraggingOrder || disableHoverPreview) {
+      clearHoverPreview();
+    }
+  }, [isDraggingOrder, disableHoverPreview, clearHoverPreview]);
+
+  // Safety net: if the pointer leaves the calendar root, close preview.
+  useEffect(() => {
+    const root = calendarRef?.current;
+    if (!root) return undefined;
+    const onLeave = () => clearHoverPreview();
+    root.addEventListener("mouseleave", onLeave);
+    return () => root.removeEventListener("mouseleave", onLeave);
+  }, [calendarRef, clearHoverPreview]);
 
   // ============================================
   // Memoization — тяжёлые вычисления
@@ -1271,7 +1302,7 @@ export default function CarTableRow({
             {...orderInteractionProps}
             onMouseDown={() => handleLongPressStart(dateStr)}
             onMouseUp={handleOverlapMouseUp}
-            onMouseLeave={handleLongPressEnd}
+            onMouseLeave={handleCellMouseLeave}
             onContextMenu={(e) => e.preventDefault()}
             title={
               moveMode
@@ -1441,7 +1472,7 @@ export default function CarTableRow({
             {...orderInteractionProps}
             onMouseDown={() => handleLongPressStart(dateStr)}
             onMouseUp={handleMouseUp}
-            onMouseLeave={handleLongPressEnd}
+            onMouseLeave={handleCellMouseLeave}
             onContextMenu={(e) => e.preventDefault()}
             title={
               moveMode
@@ -2134,72 +2165,43 @@ export default function CarTableRow({
         );
       })}
 
-      <Popover
-        open={Boolean(
-          hoveredOrderId && hoverPreviewOrder && hoverAnchorEl
-        )}
+      <Popper
+        open={Boolean(hoveredOrderId && hoverPreviewOrder && hoverAnchorEl)}
         anchorEl={hoverAnchorEl}
-        onClose={() => {
-          if (hoverHideTimeoutRef.current) {
-            clearTimeout(hoverHideTimeoutRef.current);
-            hoverHideTimeoutRef.current = null;
-          }
-          if (hoverShowTimeoutRef.current) {
-            clearTimeout(hoverShowTimeoutRef.current);
-            hoverShowTimeoutRef.current = null;
-          }
-          setHoveredOrderId(null);
-          setHoverPreviewOrder(null);
-          setHoverAnchorEl(null);
-          setHoverConflictHint(false);
+        placement="top"
+        modifiers={[
+          { name: "flip", enabled: true },
+          {
+            name: "preventOverflow",
+            enabled: true,
+            options: { padding: 8, altAxis: true },
+          },
+          { name: "offset", options: { offset: [0, 8] } },
+        ]}
+        sx={{
+          zIndex: (theme) => theme.zIndex.tooltip,
+          pointerEvents: "none",
         }}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        transformOrigin={{ vertical: "bottom", horizontal: "center" }}
-        marginThreshold={8}
-        disableAutoFocus
-        disableEnforceFocus
-        disableRestoreFocus
-        disableScrollLock
-        hideBackdrop
-        TransitionProps={{ timeout: { enter: 160, exit: 90 } }}
-        slotProps={{
-          root: {
-            sx: {
-              pointerEvents: "none",
-            },
-          },
-          popper: {
-            sx: {
-              pointerEvents: "none",
-            },
-            modifiers: [
-              { name: "flip", enabled: true },
-              {
-                name: "preventOverflow",
-                enabled: true,
-                options: { padding: 8, altAxis: true },
-              },
-            ],
-          },
-          paper: {
-            sx: {
+      >
+        {hoverPreviewOrder ? (
+          <Paper
+            elevation={6}
+            sx={{
               p: 0,
               overflow: "hidden",
               maxWidth: 240,
               borderRadius: "8px",
               boxShadow: "0 6px 16px rgba(0,0,0,0.2)",
               pointerEvents: "none",
-            },
-          },
-        }}
-      >
-        {hoverPreviewOrder ? (
-          <OrderHoverPreview
-            order={hoverPreviewOrder}
-            conflictHint={hoverConflictHint}
-          />
+            }}
+          >
+            <OrderHoverPreview
+              order={hoverPreviewOrder}
+              conflictHint={hoverConflictHint}
+            />
+          </Paper>
         ) : null}
-      </Popover>
+      </Popper>
     </>
   );
 }
