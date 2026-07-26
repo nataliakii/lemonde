@@ -1,13 +1,18 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Box, Button, Typography, useMediaQuery } from "@mui/material";
+import {
+  Box,
+  Button,
+  Popover,
+  TextField,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { DateRangePicker } from "@mui/x-date-pickers-pro/DateRangePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { useMainContext } from "@app/Context";
+import StayRangeCalendar from "@app/components/StayRangeCalendar";
 
 function isPastDay(date, today) {
   return Boolean(date && date.isValid() && date.isBefore(today, "day"));
@@ -19,18 +24,18 @@ const fieldSx = {
   borderRadius: 1,
   "& .MuiOutlinedInput-root": {
     color: "#F5F0E6",
+    cursor: "pointer",
     "& fieldset": { borderColor: "rgba(201,162,39,0.35)" },
     "&:hover fieldset": { borderColor: "rgba(201,162,39,0.55)" },
     "&.Mui-focused fieldset": { borderColor: "rgba(201,162,39,0.85)" },
   },
   "& .MuiInputLabel-root": { color: "rgba(232,213,163,0.75)" },
-  "& .MuiSvgIcon-root": { color: "rgba(201,162,39,0.85)" },
+  "& .MuiInputBase-input": { cursor: "pointer" },
 };
 
 /**
  * Booking-style stay search: Check-in + Check-out open one shared range calendar.
- * First click = check-in, second = check-out; then filters free suites
- * and triggers async price calculation in the grid.
+ * Community MUI only (no Pro license watermark).
  */
 export default function StayDateSearch() {
   const { stayCheckIn, stayCheckOut, setStayDates, clearStayDates } =
@@ -47,6 +52,7 @@ export default function StayDateSearch() {
     return [nextIn, nextOut];
   });
   const [error, setError] = useState("");
+  const [anchorEl, setAnchorEl] = useState(null);
 
   useEffect(() => {
     const nextIn = stayCheckIn ? dayjs(stayCheckIn) : null;
@@ -103,6 +109,7 @@ export default function StayDateSearch() {
     }
     if (nextIn && nextOut) {
       applyDates(nextIn, nextOut);
+      setAnchorEl(null);
     }
   };
 
@@ -121,151 +128,163 @@ export default function StayDateSearch() {
       ? dayjs(stayCheckOut).diff(dayjs(stayCheckIn), "day")
       : 0;
 
+  const checkInLabel = range[0]?.isValid?.()
+    ? range[0].format("DD MMM YYYY")
+    : "";
+  const checkOutLabel = range[1]?.isValid?.()
+    ? range[1].format("DD MMM YYYY")
+    : "";
+
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box
-        component="section"
+    <Box
+      component="section"
+      sx={{
+        position: "relative",
+        px: { xs: 2, md: 4 },
+        py: { xs: 2.5, md: 3 },
+        mb: { xs: 2, md: 3 },
+        background: `
+          linear-gradient(135deg, rgba(26,22,18,0.97) 0%, rgba(42,34,24,0.95) 55%, rgba(26,22,18,0.98) 100%)
+        `,
+        borderBottom: "1px solid rgba(201,162,39,0.28)",
+        boxShadow: "0 12px 40px rgba(26,22,18,0.12)",
+      }}
+    >
+      <Typography
         sx={{
-          position: "relative",
-          px: { xs: 2, md: 4 },
-          py: { xs: 2.5, md: 3 },
-          mb: { xs: 2, md: 3 },
-          background: `
-            linear-gradient(135deg, rgba(26,22,18,0.97) 0%, rgba(42,34,24,0.95) 55%, rgba(26,22,18,0.98) 100%)
-          `,
-          borderBottom: "1px solid rgba(201,162,39,0.28)",
-          boxShadow: "0 12px 40px rgba(26,22,18,0.12)",
+          fontFamily: "var(--font-display)",
+          fontStyle: "italic",
+          fontWeight: 500,
+          fontSize: { xs: "1.35rem", md: "1.6rem" },
+          color: "rgba(232,213,163,0.95)",
+          mb: 0.5,
         }}
       >
-        <Typography
-          sx={{
-            fontFamily: "var(--font-display)",
-            fontStyle: "italic",
-            fontWeight: 500,
-            fontSize: { xs: "1.35rem", md: "1.6rem" },
-            color: "rgba(232,213,163,0.95)",
-            mb: 0.5,
-          }}
-        >
-          Find your stay
-        </Typography>
-        <Typography
-          sx={{
-            color: "rgba(245,240,230,0.65)",
-            fontSize: "0.92rem",
-            mb: 2,
-            maxWidth: 520,
-          }}
-        >
-          Pick check-in and check-out in one calendar to see free suites and
-          prices. Check-in 15:00 · Check-out 11:00
-        </Typography>
+        Find your stay
+      </Typography>
+      <Typography
+        sx={{
+          color: "rgba(245,240,230,0.65)",
+          fontSize: "0.92rem",
+          mb: 2,
+          maxWidth: 520,
+        }}
+      >
+        Pick check-in and check-out in one calendar to see free suites and
+        prices. Check-in 15:00 · Check-out 11:00
+      </Typography>
 
-        <Box
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 1.5,
+          alignItems: "flex-start",
+        }}
+      >
+        <TextField
+          size="small"
+          label="Check-in"
+          value={checkInLabel}
+          onClick={(e) => setAnchorEl(e.currentTarget)}
+          inputProps={{ readOnly: true }}
+          sx={fieldSx}
+        />
+        <TextField
+          size="small"
+          label="Check-out"
+          value={checkOutLabel}
+          onClick={(e) => setAnchorEl(e.currentTarget)}
+          inputProps={{ readOnly: true }}
+          sx={fieldSx}
+        />
+        <Button
+          variant="contained"
+          onClick={handleSearch}
           sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 1.5,
-            alignItems: "flex-start",
+            minWidth: 120,
+            height: 40,
+            px: 2.5,
+            fontWeight: 600,
+            letterSpacing: "0.04em",
+            bgcolor: "primary.main",
+            color: "secondary.main",
+            boxShadow: "none",
+            "&:hover": {
+              bgcolor: "primary.light",
+              boxShadow: "0 4px 16px rgba(201,162,39,0.35)",
+            },
           }}
         >
-          <DateRangePicker
-            value={range}
-            onChange={handleRangeChange}
-            minDate={today}
-            disablePast
-            calendars={isMobile ? 1 : 2}
-            format="DD MMM YYYY"
-            localeText={{
-              start: "Check-in",
-              end: "Check-out",
-            }}
-            shouldDisableDate={(date) => isPastDay(date, today)}
-            slotProps={{
-              textField: {
-                size: "small",
-                inputProps: { readOnly: true },
-                sx: fieldSx,
-              },
-              popper: {
-                sx: {
-                  "& .MuiPaper-root": {
-                    border: "1px solid rgba(201,162,39,0.25)",
-                    boxShadow: "0 16px 48px rgba(26,22,18,0.28)",
-                  },
-                  "& .MuiDateRangePickerDay-rangeIntervalDayHighlight": {
-                    backgroundColor: "rgba(201,162,39,0.18)",
-                  },
-                  "& .MuiDateRangePickerDay-rangeIntervalDayHighlightStart, & .MuiDateRangePickerDay-rangeIntervalDayHighlightEnd, & .Mui-selected":
-                    {
-                      backgroundColor: "#C9A227 !important",
-                      color: "#1A1612 !important",
-                    },
-                },
-              },
-            }}
-          />
+          Search
+        </Button>
+        {(stayCheckIn || stayCheckOut || range[0] || range[1]) && (
           <Button
-            variant="contained"
-            onClick={handleSearch}
+            variant="text"
+            onClick={handleClear}
             sx={{
-              minWidth: 120,
               height: 40,
-              px: 2.5,
-              fontWeight: 600,
-              letterSpacing: "0.04em",
-              bgcolor: "primary.main",
-              color: "secondary.main",
-              boxShadow: "none",
-              "&:hover": {
-                bgcolor: "primary.light",
-                boxShadow: "0 4px 16px rgba(201,162,39,0.35)",
-              },
+              color: "rgba(232,213,163,0.8)",
+              textTransform: "none",
+              "&:hover": { color: "#E8D5A3", bgcolor: "transparent" },
             }}
           >
-            Search
+            Clear dates
           </Button>
-          {(stayCheckIn || stayCheckOut || range[0] || range[1]) && (
-            <Button
-              variant="text"
-              onClick={handleClear}
-              sx={{
-                height: 40,
-                color: "rgba(232,213,163,0.8)",
-                textTransform: "none",
-                "&:hover": { color: "#E8D5A3", bgcolor: "transparent" },
-              }}
-            >
-              Clear dates
-            </Button>
-          )}
-        </Box>
-
-        {error ? (
-          <Typography sx={{ color: "#E8A090", mt: 1.5, fontSize: "0.875rem" }}>
-            {error}
-          </Typography>
-        ) : null}
-
-        {stayCheckIn && stayCheckOut ? (
-          <Typography
-            sx={{
-              mt: 1.75,
-              color: "rgba(232,213,163,0.9)",
-              fontSize: "0.9rem",
-              letterSpacing: "0.02em",
-            }}
-          >
-            Available suites for{" "}
-            <Box component="span" sx={{ color: "#E8D5A3", fontWeight: 600 }}>
-              {dayjs(stayCheckIn).format("D MMM")} –{" "}
-              {dayjs(stayCheckOut).format("D MMM YYYY")}
-            </Box>
-            {` · ${nightCount} night${nightCount === 1 ? "" : "s"}`}
-            {" · prices calculated for these dates"}
-          </Typography>
-        ) : null}
+        )}
       </Box>
-    </LocalizationProvider>
+
+      <Popover
+        open={Boolean(anchorEl)}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        slotProps={{
+          paper: {
+            sx: {
+              mt: 1,
+              border: "1px solid rgba(201,162,39,0.25)",
+              boxShadow: "0 16px 48px rgba(26,22,18,0.28)",
+              overflow: "auto",
+              maxWidth: "calc(100vw - 24px)",
+            },
+          },
+        }}
+      >
+        <StayRangeCalendar
+          value={range}
+          onChange={handleRangeChange}
+          minDate={today}
+          calendars={isMobile ? 1 : 2}
+          shouldDisableDate={(date) => isPastDay(date, today)}
+        />
+      </Popover>
+
+      {error ? (
+        <Typography sx={{ color: "#E8A090", mt: 1.5, fontSize: "0.875rem" }}>
+          {error}
+        </Typography>
+      ) : null}
+
+      {stayCheckIn && stayCheckOut ? (
+        <Typography
+          sx={{
+            mt: 1.75,
+            color: "rgba(232,213,163,0.9)",
+            fontSize: "0.9rem",
+            letterSpacing: "0.02em",
+          }}
+        >
+          Available suites for{" "}
+          <Box component="span" sx={{ color: "#E8D5A3", fontWeight: 600 }}>
+            {dayjs(stayCheckIn).format("D MMM")} –{" "}
+            {dayjs(stayCheckOut).format("D MMM YYYY")}
+          </Box>
+          {` · ${nightCount} night${nightCount === 1 ? "" : "s"}`}
+          {" · prices calculated for these dates"}
+        </Typography>
+      ) : null}
+    </Box>
   );
 }

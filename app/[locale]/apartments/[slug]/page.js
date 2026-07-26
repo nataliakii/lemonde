@@ -1,7 +1,6 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import Feed from "@app/components/Feed";
 import SuitePageView from "@app/components/SuitePageView";
-import StayDateSearch from "@app/components/StayDateSearch";
 import {
   getApartmentPath,
   getSupportedLocales,
@@ -21,7 +20,6 @@ import {
   getActiveOrders,
 } from "@/domain/services";
 import { buildApartmentMetadata } from "@/services/seo/metadataBuilder";
-import { Box } from "@mui/material";
 
 const MONGO_ID_REGEX = /^[0-9a-f]{24}$/i;
 
@@ -122,9 +120,6 @@ export default async function ApartmentDetailPage({ params }) {
       locale={locale}
       isMain={false}
     >
-      <Box id="stay-date-search">
-        <StayDateSearch />
-      </Box>
       <SuitePageView
         apartmentSlug={resolvedCar.slug}
         locale={locale}

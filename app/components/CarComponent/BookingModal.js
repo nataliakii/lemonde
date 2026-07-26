@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
   Dialog,
@@ -16,6 +16,9 @@ import {
   IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import {
   ConfirmButton,
   CancelButton,
@@ -37,6 +40,8 @@ import { useMainContext } from "../../Context";
 import { useSnackbar } from "notistack";
 import { calculateTotalPrice } from "@utils/action";
 import { getSecondDriverPriceLabelValue } from "@utils/secondDriverPricing";
+import { getOccupiedNightKeys } from "@utils/suiteBlockedNights";
+import { isApartmentAvailableForStay } from "@utils/stayAvailability";
 // 🎯 Athens timezone utilities — ЕДИНСТВЕННЫЙ источник правды для времени
 import {
   ATHENS_TZ,
@@ -94,7 +99,9 @@ const BookingModal = ({
   open,
   onClose,
   car,
+  orders = [],
   presetDates = null,
+  onDatesChange = null,
   fetchAndUpdateOrders,
   isLoading,
   selectedTimes,
@@ -110,6 +117,11 @@ const BookingModal = ({
   const { company, companyLoading, companyError, lang } = useMainContext();
   // carId (_id) is always unique in MongoDB. Fallback: carNumber, regNumber.
   const carApiIdentifier = car?._id?.toString?.() || car?.carNumber || car?.regNumber || "";
+  const today = useMemo(() => dayjs().startOf("day"), []);
+  const occupiedNights = useMemo(
+    () => (SIMPLIFIED_CLIENT_BOOKING ? getOccupiedNightKeys(orders) : null),
+    [orders]
+  );
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -126,6 +138,46 @@ const BookingModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
   const [submittedOrder, setSubmittedOrder] = useState(null);
+  const [stayStartDate, setStayStartDate] = useState(() =>
+    presetDates?.startDate ? dayjs(presetDates.startDate) : null
+  );
+  const [stayEndDate, setStayEndDate] = useState(() =>
+    presetDates?.endDate ? dayjs(presetDates.endDate) : null
+  );
+
+  const presetStartKey = presetDates?.startDate
+    ? dayjs(presetDates.startDate).format("YYYY-MM-DD")
+    : null;
+  const presetEndKey = presetDates?.endDate
+    ? dayjs(presetDates.endDate).format("YYYY-MM-DD")
+    : null;
+
+  // Editable stay dates (suite mode) — synced from parent presets when modal opens / dates change
+  useEffect(() => {
+    if (!open) return;
+    if (presetStartKey) {
+      setStayStartDate((prev) =>
+        prev?.format?.("YYYY-MM-DD") === presetStartKey
+          ? prev
+          : dayjs(presetStartKey)
+      );
+    }
+    if (presetEndKey) {
+      setStayEndDate((prev) =>
+        prev?.format?.("YYYY-MM-DD") === presetEndKey
+          ? prev
+          : dayjs(presetEndKey)
+      );
+    }
+  }, [open, presetStartKey, presetEndKey]);
+
+  const bookingDates = useMemo(
+    () => ({
+      startDate: stayStartDate,
+      endDate: stayEndDate,
+    }),
+    [stayStartDate, stayEndDate]
+  );
 
   const [startTime, setStartTime] = useState(() =>
     setTimeToDatejs(presetDates?.startDate, null, true)
@@ -152,20 +204,117 @@ const BookingModal = ({
   const [flightNumber, setFlightNumber] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
+  const notifyDatesChange = useCallback(
+    (start, end) => {
+      if (typeof onDatesChange === "function" && start && end) {
+        onDatesChange({ startDate: start, endDate: end });
+      }
+    },
+    [onDatesChange]
+  );
+
+  const isCheckInDisabled = useCallback(
+    (date) => {
+      if (!date?.isValid?.()) return true;
+      if (date.isBefore(today, "day")) return true;
+      if (occupiedNights?.has(date.format("YYYY-MM-DD"))) return true;
+      return false;
+    },
+    [occupiedNights, today]
+  );
+
+  const isCheckOutDisabled = useCallback(
+    (date) => {
+      if (!date?.isValid?.()) return true;
+      if (date.isBefore(today, "day")) return true;
+      if (!stayStartDate?.isValid?.()) return date.isBefore(today, "day");
+      if (!date.isAfter(stayStartDate, "day")) return true;
+      if (!occupiedNights) return false;
+      let cursor = stayStartDate.startOf("day");
+      while (cursor.isBefore(date, "day")) {
+        if (occupiedNights.has(cursor.format("YYYY-MM-DD"))) return true;
+        cursor = cursor.add(1, "day");
+      }
+      return false;
+    },
+    [occupiedNights, stayStartDate, today]
+  );
+
+  const rangeHasBlockedNight = useCallback(
+    (start, end) => {
+      if (!occupiedNights || !start?.isValid?.() || !end?.isValid?.()) return false;
+      let cursor = start.startOf("day");
+      while (cursor.isBefore(end, "day")) {
+        if (occupiedNights.has(cursor.format("YYYY-MM-DD"))) return true;
+        cursor = cursor.add(1, "day");
+      }
+      return false;
+    },
+    [occupiedNights]
+  );
+
+  const handleStayStartChange = (value) => {
+    if (!value?.isValid?.()) return;
+    const nextStart = value.startOf("day");
+    if (isCheckInDisabled(nextStart)) {
+      enqueueSnackbar(
+        t("order.dateUnavailable") || "This date is not available.",
+        { variant: "warning" }
+      );
+      return;
+    }
+    let nextEnd = stayEndDate;
+    if (
+      !nextEnd ||
+      !nextEnd.isAfter(nextStart, "day") ||
+      rangeHasBlockedNight(nextStart, nextEnd)
+    ) {
+      nextEnd = nextStart.add(1, "day");
+      while (
+        rangeHasBlockedNight(nextStart, nextEnd) &&
+        nextEnd.diff(nextStart, "day") < 60
+      ) {
+        nextEnd = nextEnd.add(1, "day");
+      }
+    }
+    setStayStartDate(nextStart);
+    setStayEndDate(nextEnd);
+    setStartTime(setTimeToDatejs(nextStart, company?.defaultStart || "15:00", true));
+    setEndTime(setTimeToDatejs(nextEnd, company?.defaultEnd || "11:00"));
+    notifyDatesChange(nextStart, nextEnd);
+    setErrors((prev) => ({ ...prev, dates: undefined }));
+  };
+
+  const handleStayEndChange = (value) => {
+    if (!value?.isValid?.()) return;
+    const nextEnd = value.startOf("day");
+    if (isCheckOutDisabled(nextEnd)) {
+      enqueueSnackbar(
+        t("order.dateUnavailable") || "This date is not available.",
+        { variant: "warning" }
+      );
+      return;
+    }
+    setStayEndDate(nextEnd);
+    setEndTime(setTimeToDatejs(nextEnd, company?.defaultEnd || "11:00"));
+    if (stayStartDate) notifyDatesChange(stayStartDate, nextEnd);
+    setErrors((prev) => ({ ...prev, dates: undefined }));
+  };
+
   // Получение стоимости с сервера при изменении дат
   const fetchTotalPrice = useCallback(
     async (signal) => {
       if (
         !open ||
         !carApiIdentifier ||
-        !presetDates?.startDate ||
-        !presetDates?.endDate
+        !bookingDates?.startDate ||
+        !bookingDates?.endDate
       ) {
         setDaysAndTotal(createEmptyBookingPriceSummary());
         return;
       }
-      const normalizedStartDate = dayjs(presetDates.startDate).tz(TIME_ZONE);
-      const normalizedEndDate = dayjs(presetDates.endDate).tz(TIME_ZONE);
+      const normalizedStartDate = dayjs(bookingDates.startDate).tz(TIME_ZONE);
+      const normalizedEndDate = dayjs(bookingDates.endDate).tz(TIME_ZONE);
       if (!normalizedStartDate.isValid() || !normalizedEndDate.isValid()) {
         setDaysAndTotal(createEmptyBookingPriceSummary());
         return;
@@ -173,16 +322,16 @@ const BookingModal = ({
       const normalizedPlaceIn = normalizeDeliveryPricingLocation(placeIn);
       const normalizedPlaceOut = normalizeDeliveryPricingLocation(placeOut);
       const timeInAthens =
-        startTime && presetDates?.startDate
+        startTime && bookingDates?.startDate
           ? createAthensDateTime(
-              dayjs(presetDates.startDate).tz(TIME_ZONE).format("YYYY-MM-DD"),
+              dayjs(bookingDates.startDate).tz(TIME_ZONE).format("YYYY-MM-DD"),
               formatTimeHHMM(dayjs(startTime))
             )
           : null;
       const timeOutAthens =
-        endTime && presetDates?.endDate
+        endTime && bookingDates?.endDate
           ? createAthensDateTime(
-              dayjs(presetDates.endDate).tz(TIME_ZONE).format("YYYY-MM-DD"),
+              dayjs(bookingDates.endDate).tz(TIME_ZONE).format("YYYY-MM-DD"),
               formatTimeHHMM(dayjs(endTime))
             )
           : null;
@@ -221,8 +370,8 @@ const BookingModal = ({
     [
       open,
       carApiIdentifier,
-      presetDates?.startDate,
-      presetDates?.endDate,
+      bookingDates?.startDate,
+      bookingDates?.endDate,
       insurance,
       childSeats,
       secondDriver,
@@ -253,10 +402,10 @@ const BookingModal = ({
   useEffect(() => {
     const carIdentifier = car?._id || car?.regNumber || car?.carNumber;
     // Базовые объекты (могут быть dayjs или Date)
-    const rawStart = presetDates?.startDate
-      ? dayjs(presetDates.startDate)
+    const rawStart = bookingDates?.startDate
+      ? dayjs(bookingDates.startDate)
       : null;
-    const rawEnd = presetDates?.endDate ? dayjs(presetDates.endDate) : null;
+    const rawEnd = bookingDates?.endDate ? dayjs(bookingDates.endDate) : null;
     // Локальные (Europe/Athens) календарные даты, скорректированные из UTC
     // FIX: убран повторный вызов utc(); интерпретируем сохранённые даты как локальные Athens
     const presetStartStr = rawStart
@@ -347,8 +496,8 @@ const BookingModal = ({
       }
     }
   }, [
-    presetDates?.startDate,
-    presetDates?.endDate,
+    bookingDates?.startDate,
+    bookingDates?.endDate,
     startTime,
     endTime,
     car?._id,
@@ -358,7 +507,7 @@ const BookingModal = ({
 
   // Определение граничных заказов и установка дефолтных/смещённых времен
   useEffect(() => {
-    if (!presetDates?.startDate || !presetDates?.endDate || !company) return;
+    if (!bookingDates?.startDate || !bookingDates?.endDate || !company) return;
 
     const diffStart = Number(company.hoursDiffForStart) || 0; // обычно >0
     const diffEnd = Number(company.hoursDiffForEnd) || 0; // может быть отрицательным
@@ -388,8 +537,8 @@ const BookingModal = ({
     }
 
     // Установка времен
-    setStartTime(setTimeToDatejs(presetDates.startDate, startDefault, true));
-    setEndTime(setTimeToDatejs(presetDates.endDate, endDefault));
+    setStartTime(setTimeToDatejs(bookingDates.startDate, startDefault, true));
+    setEndTime(setTimeToDatejs(bookingDates.endDate, endDefault));
     setTimeLimits({ minStart, maxEnd });
 
     // Валидация пересечения только если даты начала и окончания ОДИНАКОВЫЕ (same day)
@@ -397,7 +546,7 @@ const BookingModal = ({
     if (
       minStart &&
       maxEnd &&
-      dayjs(presetDates.startDate).isSame(dayjs(presetDates.endDate), "day")
+      dayjs(bookingDates.startDate).isSame(dayjs(bookingDates.endDate), "day")
     ) {
       const startVal = dayjs(startDefault, "HH:mm");
       const endVal = dayjs(endDefault, "HH:mm");
@@ -410,7 +559,7 @@ const BookingModal = ({
         );
       } else setTimeErrors(null);
     } else setTimeErrors(null);
-  }, [presetDates, selectedTimes, company, t]);
+  }, [bookingDates, selectedTimes, company, t]);
 
   // Клампинг ручного ввода времени старта
   const handleStartTimeChange = (value) => {
@@ -419,12 +568,12 @@ const BookingModal = ({
       const min = dayjs(timeLimits.minStart, "HH:mm");
       if (chosen.isBefore(min)) {
         setStartTime(
-          setTimeToDatejs(presetDates.startDate, timeLimits.minStart, true)
+          setTimeToDatejs(bookingDates.startDate, timeLimits.minStart, true)
         );
         return;
       }
     }
-    setStartTime(setTimeToDatejs(presetDates.startDate, value, true));
+    setStartTime(setTimeToDatejs(bookingDates.startDate, value, true));
   };
 
   // Клампинг ручного ввода времени окончания
@@ -433,11 +582,11 @@ const BookingModal = ({
     if (timeLimits.maxEnd) {
       const max = dayjs(timeLimits.maxEnd, "HH:mm");
       if (chosen.isAfter(max)) {
-        setEndTime(setTimeToDatejs(presetDates.endDate, timeLimits.maxEnd));
+        setEndTime(setTimeToDatejs(bookingDates.endDate, timeLimits.maxEnd));
         return;
       }
     }
-    setEndTime(setTimeToDatejs(presetDates.endDate, value));
+    setEndTime(setTimeToDatejs(bookingDates.endDate, value));
   };
 
   // Проверка формата email происходит только на фронте, в функции validateEmail:
@@ -456,8 +605,8 @@ const BookingModal = ({
       name &&
       email &&
       phone &&
-      presetDates?.startDate &&
-      presetDates?.endDate &&
+      bookingDates?.startDate &&
+      bookingDates?.endDate &&
       bookButtonRef.current
     ) {
       const timer = setTimeout(() => {
@@ -474,8 +623,8 @@ const BookingModal = ({
     name,
     email,
     phone,
-    presetDates?.startDate,
-    presetDates?.endDate,
+    bookingDates?.startDate,
+    bookingDates?.endDate,
   ]);
 
   useEffect(() => {
@@ -529,8 +678,21 @@ const BookingModal = ({
     if (phone?.trim() && !isValidInternationalPhone(phone))
       newErrors.phone = t("order.phoneInvalid");
     if (!termsAccepted) newErrors.terms = requiredMsg;
-    if (!presetDates?.startDate || !presetDates?.endDate)
+    if (!bookingDates?.startDate || !bookingDates?.endDate)
       newErrors.dates = t("order.requiredDates") || "Pick-up and return dates";
+    if (
+      SIMPLIFIED_CLIENT_BOOKING &&
+      bookingDates?.startDate &&
+      bookingDates?.endDate &&
+      !isApartmentAvailableForStay(
+        orders,
+        dayjs(bookingDates.startDate).format("YYYY-MM-DD"),
+        dayjs(bookingDates.endDate).format("YYYY-MM-DD")
+      )
+    ) {
+      newErrors.dates =
+        t("order.dateUnavailable") || "These dates are not available.";
+    }
     if (timeErrors) newErrors.time = timeErrors;
     let canonIn = "";
     let canonOut = "";
@@ -577,11 +739,11 @@ const BookingModal = ({
 
     try {
       // 🎯 Используем athensTime utilities для timezone-корректного создания времени
-      const startDateStr = presetDates?.startDate
-        ? dayjs(presetDates.startDate).tz(TIME_ZONE).format("YYYY-MM-DD")
+      const startDateStr = bookingDates?.startDate
+        ? dayjs(bookingDates.startDate).tz(TIME_ZONE).format("YYYY-MM-DD")
         : null;
-      const endDateStr = presetDates?.endDate
-        ? dayjs(presetDates.endDate).tz(TIME_ZONE).format("YYYY-MM-DD")
+      const endDateStr = bookingDates?.endDate
+        ? dayjs(bookingDates.endDate).tz(TIME_ZONE).format("YYYY-MM-DD")
         : null;
 
       // Извлекаем HH:mm и создаём заново в Athens БЕЗ конвертации из таймзоны браузера
@@ -829,11 +991,11 @@ const BookingModal = ({
             >
               {t("basic.from")}
               <Box component="span" sx={{ fontWeight: 600, color: "primary.main", mx: 0.5 }}>
-                {dayjs(presetDates?.startDate).format("DD.MM.YYYY")}
+                {dayjs(bookingDates?.startDate).format("DD.MM.YYYY")}
               </Box>
               {t("order.till")}
               <Box component="span" sx={{ fontWeight: 600, color: "primary.main", mx: 0.5 }}>
-                {dayjs(presetDates?.endDate).format("DD.MM.YYYY")}
+                {dayjs(bookingDates?.endDate).format("DD.MM.YYYY")}
               </Box>
             </Typography>
             */}
@@ -932,7 +1094,7 @@ const BookingModal = ({
                 </IconButton>
                 <SuccessMessage
                   submittedOrder={submittedOrder}
-                  presetDates={presetDates}
+                  presetDates={bookingDates}
                   onClose={onClose}
                   message={message}
                 />
@@ -944,7 +1106,7 @@ const BookingModal = ({
                   component="form"
                   sx={{ "& .MuiTextField-root": { my: { xs: 0.5, sm: 1 } } }}
                 >
-                  {/* Дата над временем, нередактируемые поля с видом выпадающих */}
+                  {/* Дата над временем — в suite mode даты редактируются */}
                   <Box sx={{ display: "flex", gap: 2, mb: { xs: 1, sm: 1 } }}>
                     {/* Колонка получения */}
                     <Box
@@ -955,18 +1117,35 @@ const BookingModal = ({
                         gap: 1,
                       }}
                     >
-                      <BookingDateField
-                        label={
-                          SIMPLIFIED_CLIENT_BOOKING
-                            ? t("order.checkInDate") || "Check-in date"
-                            : t("order.pickupDate") || "Дата получения"
-                        }
-                        value={
-                          presetDates?.startDate
-                            ? dayjs(presetDates.startDate).format("DD.MM.YYYY")
-                            : ""
-                        }
-                      />
+                      {SIMPLIFIED_CLIENT_BOOKING ? (
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                          <DatePicker
+                            label={t("order.checkInDate") || "Check-in date"}
+                            value={stayStartDate}
+                            onChange={handleStayStartChange}
+                            minDate={today}
+                            shouldDisableDate={isCheckInDisabled}
+                            format="DD.MM.YYYY"
+                            slotProps={{
+                              textField: {
+                                size: "small",
+                                fullWidth: true,
+                                error: Boolean(errors.dates),
+                                helperText: errors.dates || "",
+                              },
+                            }}
+                          />
+                        </LocalizationProvider>
+                      ) : (
+                        <BookingDateField
+                          label={t("order.pickupDate") || "Дата получения"}
+                          value={
+                            bookingDates?.startDate
+                              ? dayjs(bookingDates.startDate).format("DD.MM.YYYY")
+                              : ""
+                          }
+                        />
+                      )}
                       <BookingTimeField
                         label={
                           SIMPLIFIED_CLIENT_BOOKING
@@ -1004,18 +1183,38 @@ const BookingModal = ({
                         gap: 1,
                       }}
                     >
-                      <BookingDateField
-                        label={
-                          SIMPLIFIED_CLIENT_BOOKING
-                            ? t("order.checkOutDate") || "Check-out date"
-                            : t("order.returnDate") || "Дата возврата"
-                        }
-                        value={
-                          presetDates?.endDate
-                            ? dayjs(presetDates.endDate).format("DD.MM.YYYY")
-                            : ""
-                        }
-                      />
+                      {SIMPLIFIED_CLIENT_BOOKING ? (
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                          <DatePicker
+                            label={t("order.checkOutDate") || "Check-out date"}
+                            value={stayEndDate}
+                            onChange={handleStayEndChange}
+                            minDate={
+                              stayStartDate
+                                ? stayStartDate.add(1, "day")
+                                : today.add(1, "day")
+                            }
+                            shouldDisableDate={isCheckOutDisabled}
+                            format="DD.MM.YYYY"
+                            slotProps={{
+                              textField: {
+                                size: "small",
+                                fullWidth: true,
+                                error: Boolean(errors.dates),
+                              },
+                            }}
+                          />
+                        </LocalizationProvider>
+                      ) : (
+                        <BookingDateField
+                          label={t("order.returnDate") || "Дата возврата"}
+                          value={
+                            bookingDates?.endDate
+                              ? dayjs(bookingDates.endDate).format("DD.MM.YYYY")
+                              : ""
+                          }
+                        />
+                      )}
                       <BookingTimeField
                         label={
                           SIMPLIFIED_CLIENT_BOOKING
@@ -1478,8 +1677,8 @@ const BookingModal = ({
                       }
                     }}
                     rentalStartDate={
-                      presetDates?.startDate
-                        ? dayjs(presetDates.startDate).tz(TIME_ZONE).format("YYYY-MM-DD")
+                      bookingDates?.startDate
+                        ? dayjs(bookingDates.startDate).tz(TIME_ZONE).format("YYYY-MM-DD")
                         : ""
                     }
                     disabled={isSubmitting}

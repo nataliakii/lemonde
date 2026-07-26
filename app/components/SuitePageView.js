@@ -1,29 +1,47 @@
 "use client";
 
-import React, { lazy, Suspense, useMemo, useState } from "react";
+import React, {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Box,
-  Button,
   Typography,
   Stack,
   IconButton,
   Container,
+  CircularProgress,
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Image from "next/image";
 import Link from "next/link";
 import { CldImage } from "next-cloudinary";
+import StayRangeCalendar from "@app/components/StayRangeCalendar";
 import { CLOUDINARY_PLACEHOLDER_PUBLIC_ID } from "@config/cloudinary";
 import { useMainContext } from "@app/Context";
-import { getApartmentPriceFrom } from "@utils/stayAvailability";
+import {
+  getApartmentPriceFrom,
+  isApartmentAvailableForStay,
+} from "@utils/stayAvailability";
+import { getOccupiedNightKeys } from "@utils/suiteBlockedNights";
 import { getApartmentPath } from "@domain/locationSeo/locationSeoService";
+import { calculateTotalPrice } from "@utils/action";
+import { buildBookingPriceSummary } from "@/domain/orders/bookingPriceSummary";
 import { useSnackbar } from "notistack";
 import dayjs from "dayjs";
 
 const BookingModal = lazy(() =>
   import("@app/components/CarComponent/BookingModal")
 );
+
+function isPastDay(date, today) {
+  return Boolean(date && date.isValid() && date.isBefore(today, "day"));
+}
 
 function isHttp(url) {
   return typeof url === "string" && /^https?:\/\//i.test(url);
@@ -56,13 +74,21 @@ export default function SuitePageView({
     cars,
     stayCheckIn,
     stayCheckOut,
+    setStayDates,
     ordersByCarId,
     fetchAndUpdateActiveOrders,
     isLoading,
   } = useMainContext();
   const { enqueueSnackbar } = useSnackbar();
+  const today = useMemo(() => dayjs().startOf("day"), []);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
+  const [range, setRange] = useState(() => [
+    stayCheckIn ? dayjs(stayCheckIn) : null,
+    stayCheckOut ? dayjs(stayCheckOut) : null,
+  ]);
+  const [stayPrice, setStayPrice] = useState(null);
+  const [priceLoading, setPriceLoading] = useState(false);
 
   const apartment = useMemo(
     () =>
@@ -111,6 +137,157 @@ export default function SuitePageView({
     [ordersByCarId, apartment?._id]
   );
 
+  useEffect(() => {
+    const nextIn = stayCheckIn ? dayjs(stayCheckIn) : null;
+    const nextOut = stayCheckOut ? dayjs(stayCheckOut) : null;
+    setRange([nextIn, nextOut]);
+  }, [stayCheckIn, stayCheckOut]);
+
+  const checkInStr = range[0]?.isValid?.()
+    ? range[0].format("YYYY-MM-DD")
+    : null;
+  const checkOutStr = range[1]?.isValid?.()
+    ? range[1].format("YYYY-MM-DD")
+    : null;
+  const hasDates = Boolean(checkInStr && checkOutStr);
+
+  const occupiedNights = useMemo(
+    () => getOccupiedNightKeys(orders),
+    [orders]
+  );
+
+  const isAvailable = useMemo(() => {
+    if (!hasDates || !apartment) return null;
+    return isApartmentAvailableForStay(orders, checkInStr, checkOutStr);
+  }, [hasDates, apartment, orders, checkInStr, checkOutStr]);
+
+  const nightCount = hasDates
+    ? dayjs(checkOutStr).diff(dayjs(checkInStr), "day")
+    : 0;
+
+  const isDateBlocked = useCallback(
+    (date) => {
+      if (isPastDay(date, today)) return true;
+      const start = range[0];
+      const end = range[1];
+      // Choosing check-out: day itself may be the next guest's check-in night
+      if (start?.isValid?.() && !end?.isValid?.()) {
+        if (!date.isAfter(start, "day")) return true;
+        let cursor = start.startOf("day");
+        while (cursor.isBefore(date, "day")) {
+          if (occupiedNights.has(cursor.format("YYYY-MM-DD"))) return true;
+          cursor = cursor.add(1, "day");
+        }
+        return false;
+      }
+      return occupiedNights.has(date.format("YYYY-MM-DD"));
+    },
+    [occupiedNights, range, today]
+  );
+
+  useEffect(() => {
+    if (!apartment?._id || !hasDates || isAvailable === false) {
+      setStayPrice(null);
+      setPriceLoading(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    let cancelled = false;
+    setPriceLoading(true);
+    setStayPrice(null);
+
+    const carId =
+      apartment?._id?.toString?.() ||
+      apartment?.carNumber ||
+      apartment?.regNumber ||
+      "";
+
+    (async () => {
+      const result = await calculateTotalPrice(
+        carId,
+        checkInStr,
+        checkOutStr,
+        "TPL",
+        0,
+        { signal: controller.signal }
+      );
+      if (cancelled || controller.signal.aborted) return;
+      if (result?.ok) {
+        setStayPrice(buildBookingPriceSummary(result));
+      } else {
+        setStayPrice(null);
+      }
+      setPriceLoading(false);
+    })().catch(() => {
+      if (!cancelled && !controller.signal.aborted) {
+        setStayPrice(null);
+        setPriceLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [
+    apartment?._id,
+    apartment?.carNumber,
+    apartment?.regNumber,
+    hasDates,
+    isAvailable,
+    checkInStr,
+    checkOutStr,
+  ]);
+
+  const applyRange = useCallback(
+    (nextIn, nextOut) => {
+      if (!nextIn || !nextOut || !nextOut.isAfter(nextIn, "day")) return false;
+      if (isPastDay(nextIn, today) || isPastDay(nextOut, today)) return false;
+      const inStr = nextIn.format("YYYY-MM-DD");
+      const outStr = nextOut.format("YYYY-MM-DD");
+      if (!isApartmentAvailableForStay(orders, inStr, outStr)) {
+        enqueueSnackbar("This suite is not available for these dates.", {
+          variant: "warning",
+        });
+        return false;
+      }
+      setStayDates({ checkIn: inStr, checkOut: outStr });
+      return true;
+    },
+    [enqueueSnackbar, orders, setStayDates, today]
+  );
+
+  const handleRangeChange = (nextRange) => {
+    const nextIn = nextRange?.[0] || null;
+    const nextOut = nextRange?.[1] || null;
+
+    if (!nextIn || !nextOut) {
+      setRange([nextIn, nextOut]);
+      return;
+    }
+
+    const ok = applyRange(nextIn, nextOut);
+    if (ok) {
+      setRange([nextIn, nextOut]);
+      setModalOpen(true);
+    } else {
+      // Keep check-in, clear invalid check-out so the guest can try again
+      setRange([nextIn, null]);
+    }
+  };
+
+  const handleModalDatesChange = useCallback(
+    ({ startDate, endDate }) => {
+      if (!startDate || !endDate) return;
+      const inStr = dayjs(startDate).format("YYYY-MM-DD");
+      const outStr = dayjs(endDate).format("YYYY-MM-DD");
+      setRange([dayjs(inStr), dayjs(outStr)]);
+      setStayDates({ checkIn: inStr, checkOut: outStr });
+    },
+    [setStayDates]
+  );
+
   const go = (dir) => {
     setPhotoIndex((i) => {
       const next = i + dir;
@@ -118,19 +295,6 @@ export default function SuitePageView({
       if (next >= photos.length) return 0;
       return next;
     });
-  };
-
-  const handleRequest = () => {
-    if (!stayCheckIn || !stayCheckOut) {
-      enqueueSnackbar("Choose check-in and check-out dates above first.", {
-        variant: "info",
-      });
-      document
-        .getElementById("stay-date-search")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
-    setModalOpen(true);
   };
 
   if (!apartment) {
@@ -333,7 +497,7 @@ export default function SuitePageView({
           </Typography>
         )}
 
-        {priceFrom != null && (
+        {priceFrom != null && !hasDates && (
           <Typography
             sx={{
               fontFamily: "var(--font-display)",
@@ -402,25 +566,157 @@ export default function SuitePageView({
           </Stack>
         )}
 
-        <Button
-          variant="contained"
-          onClick={handleRequest}
+        <Box
+          id="suite-booking"
           sx={{
-            px: 3.25,
-            py: 1.2,
-            fontWeight: 600,
-            letterSpacing: "0.05em",
-            boxShadow: "none",
-            bgcolor: "secondary.main",
-            color: "#F5F0E6",
-            "&:hover": {
-              bgcolor: "#2A2218",
-              boxShadow: "0 8px 24px rgba(26,22,18,0.28)",
-            },
+            mt: 1,
+            mb: 2,
+            p: { xs: 2, md: 2.5 },
+            maxWidth: { xs: "100%", md: 720 },
+            border: "1px solid rgba(201,162,39,0.35)",
+            background:
+              "linear-gradient(160deg, rgba(255,252,250,0.98) 0%, rgba(243,240,234,0.96) 100%)",
+            boxShadow: "0 10px 32px rgba(26,22,18,0.06)",
           }}
         >
-          Request stay
-        </Button>
+          <Typography
+            sx={{
+              fontFamily: "var(--font-display)",
+              fontStyle: "italic",
+              fontSize: "1.35rem",
+              color: "secondary.main",
+              mb: 0.5,
+            }}
+          >
+            Book this suite
+          </Typography>
+          <Typography
+            sx={{
+              color: "text.secondary",
+              fontSize: "0.9rem",
+              mb: 1.25,
+            }}
+          >
+            Select check-in, then check-out — booked nights are disabled. The
+            request form opens as soon as your stay is available. Check-in
+            15:00 · Check-out 11:00
+          </Typography>
+
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{ mb: 1.5, flexWrap: "wrap", gap: 1 }}
+          >
+            <Typography sx={{ fontSize: "0.78rem", color: "text.secondary" }}>
+              <Box
+                component="span"
+                sx={{
+                  display: "inline-block",
+                  width: 10,
+                  height: 10,
+                  mr: 0.75,
+                  bgcolor: "primary.main",
+                  verticalAlign: "middle",
+                }}
+              />
+              Selected stay
+            </Typography>
+            <Typography sx={{ fontSize: "0.78rem", color: "text.secondary" }}>
+              <Box
+                component="span"
+                sx={{
+                  display: "inline-block",
+                  width: 10,
+                  height: 10,
+                  mr: 0.75,
+                  bgcolor: "rgba(26,22,18,0.18)",
+                  verticalAlign: "middle",
+                }}
+              />
+              Unavailable
+            </Typography>
+          </Stack>
+
+          <StayRangeCalendar
+            value={range}
+            onChange={handleRangeChange}
+            minDate={today}
+            shouldDisableDate={isDateBlocked}
+          />
+
+          {hasDates ? (
+            <Box sx={{ mt: 2 }}>
+              {isAvailable === false ? (
+                <Typography sx={{ color: "#B5473A", fontSize: "0.92rem" }}>
+                  Not available for{" "}
+                  {dayjs(checkInStr).format("D MMM")} –{" "}
+                  {dayjs(checkOutStr).format("D MMM YYYY")}
+                  {nightCount > 0
+                    ? ` · ${nightCount} night${nightCount === 1 ? "" : "s"}`
+                    : ""}
+                  . Try other dates.
+                </Typography>
+              ) : (
+                <Stack spacing={0.75}>
+                  <Typography
+                    sx={{
+                      color: "secondary.main",
+                      fontSize: "0.92rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Available for{" "}
+                    {dayjs(checkInStr).format("D MMM")} –{" "}
+                    {dayjs(checkOutStr).format("D MMM YYYY")}
+                    {nightCount > 0
+                      ? ` · ${nightCount} night${nightCount === 1 ? "" : "s"}`
+                      : ""}
+                  </Typography>
+                  {priceLoading ? (
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <CircularProgress size={18} sx={{ color: "primary.main" }} />
+                      <Typography sx={{ color: "text.secondary", fontSize: "0.9rem" }}>
+                        Calculating price…
+                      </Typography>
+                    </Stack>
+                  ) : stayPrice?.totalPrice != null ? (
+                    <Typography
+                      sx={{
+                        fontFamily: "var(--font-display)",
+                        fontStyle: "italic",
+                        fontSize: "1.55rem",
+                        color: "secondary.main",
+                      }}
+                    >
+                      €{Math.round(Number(stayPrice.totalPrice))}
+                      <Box
+                        component="span"
+                        sx={{
+                          fontFamily: "var(--font-body)",
+                          fontStyle: "normal",
+                          fontSize: "0.85rem",
+                          ml: 0.75,
+                          opacity: 0.7,
+                        }}
+                      >
+                        for {stayPrice.days || nightCount} night
+                        {(stayPrice.days || nightCount) === 1 ? "" : "s"}
+                      </Box>
+                    </Typography>
+                  ) : priceFrom != null ? (
+                    <Typography sx={{ color: "text.secondary", fontSize: "0.9rem" }}>
+                      from €{priceFrom} / night
+                    </Typography>
+                  ) : null}
+                </Stack>
+              )}
+            </Box>
+          ) : (
+            <Typography sx={{ mt: 1.5, color: "text.secondary", fontSize: "0.9rem" }}>
+              Tap a free night for check-in, then another for check-out.
+            </Typography>
+          )}
+        </Box>
       </Container>
 
       {relatedSuites.length > 0 && (
@@ -517,7 +813,7 @@ export default function SuitePageView({
         </Container>
       )}
 
-      {modalOpen && stayCheckIn && stayCheckOut && (
+      {modalOpen && hasDates && isAvailable !== false && (
         <Suspense fallback={null}>
           <BookingModal
             fetchAndUpdateOrders={fetchAndUpdateActiveOrders}
@@ -525,9 +821,10 @@ export default function SuitePageView({
             car={apartment}
             orders={orders}
             presetDates={{
-              startDate: dayjs(stayCheckIn),
-              endDate: dayjs(stayCheckOut),
+              startDate: dayjs(checkInStr),
+              endDate: dayjs(checkOutStr),
             }}
+            onDatesChange={handleModalDatesChange}
             isLoading={isLoading}
             selectedTimes={{ start: null, end: null }}
             onClose={() => setModalOpen(false)}
