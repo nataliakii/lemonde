@@ -155,7 +155,7 @@ export async function GET(request: NextRequest) {
       ],
     };
     // Mongoose Query has union overloads that confuse TS; assert to run the chain
-    const cars = await (Car as import("mongoose").Model<Record<string, unknown>>)
+    const cars = await (Apartment as import("mongoose").Model<Record<string, unknown>>)
       .find(filter)
       .select(
         "_id model transmission slug photoUrl pricingTiers fueltype seats class registration color numberOfDoors airConditioning enginePower engine"

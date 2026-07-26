@@ -1969,6 +1969,7 @@ export default function CarTableRow({
       onOrderDragEnd,
       disableHoverPreview,
       conflictByDay,
+      t,
     ]
   );
 

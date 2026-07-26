@@ -345,6 +345,7 @@ export function useCalendarMoveMode({
       isDateShiftCompatible,
       openDateShiftConfirm,
       showSingleSnackbar,
+      t,
     ]
   );
 
@@ -573,6 +574,7 @@ export function useCalendarMoveMode({
     fetchAndUpdateOrders,
     showSingleSnackbar,
     exitMoveMode,
+    t,
   ]);
 
   const handleCloseConfirmModal = useCallback(() => {
