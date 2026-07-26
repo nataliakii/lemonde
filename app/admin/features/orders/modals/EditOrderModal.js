@@ -75,7 +75,10 @@ import {
 } from "@/domain/orders/locationOptions";
 import { ORDER_STATUS } from "@/domain/orders/orderStatus";
 import { DriftBadge } from "@/app/components/ui/badges";
-import { isOrderEditDirty } from "@/app/admin/features/orders/utils/orderEditDirty";
+import {
+  snapshotFromEditedOrder,
+  isOrderEditDirtyAgainstBaseline,
+} from "@/app/admin/features/orders/utils/orderEditDirty";
 import { isThessalonikiCityBookingLocation } from "@/domain/orders/halkidikiBookingLocations";
 import { buildBookingPriceSummaryFromBreakdown } from "@/domain/orders/bookingPriceSummary";
 import { buildDeliveryHelperText } from "@/domain/orders/bookingDeliveryPresentation";
@@ -895,6 +898,7 @@ const EditOrderModal = ({
   }, [handleSave, hasBlockingConflict, setUpdateMessage, t]);
 
   const editDirtyRef = useRef({});
+  const dirtyBaselineRef = useRef(null);
   const handleOrderUpdateRef = useRef(handleOrderUpdate);
   const hasBlockingConflictRef = useRef(hasBlockingConflict);
   handleOrderUpdateRef.current = handleOrderUpdate;
@@ -907,17 +911,45 @@ const EditOrderModal = ({
     viewOnly: permissions.viewOnly,
   };
 
+  // Capture form baseline after open hydration so Save-and-exit does not
+  // treat open-time normalizations as user edits (and batch-save siblings).
+  useEffect(() => {
+    if (!open || !order?._id) {
+      dirtyBaselineRef.current = null;
+      return undefined;
+    }
+    dirtyBaselineRef.current = null;
+    const timer = setTimeout(() => {
+      const snap = editDirtyRef.current;
+      if (!snap.editedOrder) return;
+      dirtyBaselineRef.current = snapshotFromEditedOrder(
+        snap.editedOrder,
+        snap.startTime,
+        snap.endTime
+      );
+    }, 350);
+    return () => {
+      clearTimeout(timer);
+      dirtyBaselineRef.current = null;
+    };
+  }, [open, order?._id]);
+
   useEffect(() => {
     if (!registerEditOrderCloseGuard || !open || !order?._id) return undefined;
     return registerEditOrderCloseGuard(String(order._id), {
-      isDirty: () =>
-        isOrderEditDirty(
-          editDirtyRef.current.order,
-          editDirtyRef.current.editedOrder,
-          editDirtyRef.current.startTime,
-          editDirtyRef.current.endTime,
-          editDirtyRef.current.viewOnly
-        ),
+      isDirty: () => {
+        const snap = editDirtyRef.current;
+        const baseline = dirtyBaselineRef.current;
+        // Still hydrating — not dirty yet (avoids multi-save of untouched cards).
+        if (!baseline) return false;
+        return isOrderEditDirtyAgainstBaseline(
+          baseline,
+          snap.editedOrder,
+          snap.startTime,
+          snap.endTime,
+          snap.viewOnly
+        );
+      },
       save: async () => {
         setAttemptedSave(true);
         if (hasBlockingConflictRef.current) {

@@ -18,11 +18,21 @@ export default function OrderUnsavedCloseDialog({
   onDiscard,
   onSaveAndExit,
   saving = false,
+  dirtyCount = 1,
 }) {
   const { t } = useTranslation();
   const cancelLabel = t("basic.cancel");
   const cancelButtonLabel =
     cancelLabel.charAt(0).toUpperCase() + cancelLabel.slice(1);
+  const count = Number(dirtyCount) > 0 ? Number(dirtyCount) : 1;
+  const saveLabel =
+    count > 1
+      ? t("order.leaveWithSavingCount", { count })
+      : t("order.leaveWithSaving");
+  const message =
+    count > 1
+      ? t("order.unsavedChangesMessageCount", { count })
+      : t("order.unsavedChangesMessage");
 
   return (
     <Dialog
@@ -39,7 +49,7 @@ export default function OrderUnsavedCloseDialog({
       }}
     >
       <DialogContent sx={{ px: 3, pt: 3, pb: 2 }}>
-        {t("order.unsavedChangesMessage")}
+        {message}
       </DialogContent>
       <DialogActions
         sx={{
@@ -86,7 +96,7 @@ export default function OrderUnsavedCloseDialog({
           onClick={onSaveAndExit}
           disabled={saving}
         >
-          {saving ? t("order.processing") : t("order.leaveWithSaving")}
+          {saving ? t("order.processing") : saveLabel}
         </Button>
       </DialogActions>
     </Dialog>

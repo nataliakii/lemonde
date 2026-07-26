@@ -24,6 +24,9 @@ import {
   canAccessOwnedDoc,
   normalizeOwnerId,
 } from "@/domain/owners/ownerScope";
+import { buildOrdersForApartmentFilter } from "@/domain/orders/apartmentOrderLookup";
+import { isApartmentAvailableForStay } from "@utils/stayAvailability";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -91,6 +94,20 @@ export async function createOfflineOrderStub(row, ctx) {
     const timeOut = dayjs.isDayjs(timeOutRaw)
       ? timeOutRaw.toDate()
       : timeOutRaw;
+
+    if (SINGLE_PROPERTY_MODE) {
+      const existingOrders = await Order.find(
+        buildOrdersForApartmentFilter(car)
+      ).lean();
+      const checkInYmd = startDate.format("YYYY-MM-DD");
+      const checkOutYmd = endDate.format("YYYY-MM-DD");
+      if (!isApartmentAvailableForStay(existingOrders, checkInYmd, checkOutYmd)) {
+        return {
+          ok: false,
+          error: "Suite not available for these dates (already booked)",
+        };
+      }
+    }
 
     const placeIn = String(row?.placeIn || "Nea Kallikratia").trim();
     const placeOut = String(row?.placeOut || placeIn).trim();

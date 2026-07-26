@@ -7,6 +7,9 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { BUSINESS_TZ } from "@utils/businessTime";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
+import { buildOrdersForApartmentFilter } from "@/domain/orders/apartmentOrderLookup";
+import { isApartmentAvailableForStay } from "@utils/stayAvailability";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -165,23 +168,44 @@ export const PUT = async (request) => {
       );
     }
 
-    // Check conflicts on target car
-    // Get all orders for the target car, excluding current order
-    const targetCarOrders = await Order.find({
-      car: newCarId,
-      _id: { $ne: orderId },
-    });
+    // Check conflicts on target apartment (incl. orders with stale car ObjectIds)
+    const targetApartment = await Apartment.findById(newCarId);
+    const targetCarOrders = await Order.find(
+      buildOrdersForApartmentFilter(
+        targetApartment || { _id: newCarId },
+        { excludeOrderId: orderId }
+      )
+    );
 
     // Use business timezone for conflict check
     const orderStart = dayjs(order.timeIn).tz(BUSINESS_TZ);
     const orderEnd = dayjs(order.timeOut).tz(BUSINESS_TZ);
 
+    if (SINGLE_PROPERTY_MODE) {
+      const checkInYmd = dayjs(order.rentalStartDate)
+        .tz(BUSINESS_TZ)
+        .format("YYYY-MM-DD");
+      const checkOutYmd = dayjs(order.rentalEndDate)
+        .tz(BUSINESS_TZ)
+        .format("YYYY-MM-DD");
+      if (
+        !isApartmentAvailableForStay(targetCarOrders, checkInYmd, checkOutYmd)
+      ) {
+        return new Response(
+          JSON.stringify({
+            message:
+              "This suite is not available for the selected dates (already booked).",
+            messageKey: "order.suiteDatesUnavailable",
+          }),
+          { status: 409, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Check for conflicts
-    const { status: conflictStatus, data: conflictData } = checkConflictsFixed(
-      targetCarOrders,
-      orderStart,
-      orderEnd
-    );
+    const { status: conflictStatus, data: conflictData } = SINGLE_PROPERTY_MODE
+      ? {}
+      : checkConflictsFixed(targetCarOrders, orderStart, orderEnd);
 
     if (process.env.NODE_ENV === "development") {
       console.log("[moveCar] Conflict check:", { conflictStatus, conflictData });

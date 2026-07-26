@@ -57,6 +57,11 @@ export function snapshotFromServerOrder(order) {
     Telegram: Boolean(order.Telegram),
     flightNumber: String(order.flightNumber ?? ""),
     drivingLicenceUrls: JSON.stringify(order.drivingLicenceUrls ?? []),
+    offline: Boolean(order.offline),
+    guestsCount: Number(order.guestsCount) || 0,
+    childrenCount: Number(order.childrenCount) || 0,
+    needsTransfer: Boolean(order.needsTransfer),
+    needsBabyBed: Boolean(order.needsBabyBed),
   };
 }
 
@@ -107,9 +112,18 @@ export function snapshotFromEditedOrder(editedOrder, startTime, endTime) {
     Telegram: Boolean(editedOrder.Telegram),
     flightNumber: String(editedOrder.flightNumber ?? ""),
     drivingLicenceUrls: JSON.stringify(editedOrder.drivingLicenceUrls ?? []),
+    offline: Boolean(editedOrder.offline),
+    guestsCount: Number(editedOrder.guestsCount) || 0,
+    childrenCount: Number(editedOrder.childrenCount) || 0,
+    needsTransfer: Boolean(editedOrder.needsTransfer),
+    needsBabyBed: Boolean(editedOrder.needsBabyBed),
   };
 }
 
+/**
+ * Compare form vs server. Prefer {@link isOrderEditDirtyAgainstBaseline} after
+ * modal hydration — open-time normalizations can false-positive vs server.
+ */
 export function isOrderEditDirty(
   order,
   editedOrder,
@@ -123,6 +137,21 @@ export function isOrderEditDirty(
   const b = snapshotFromEditedOrder(editedOrder, startTime, endTime);
   if (!a || !b) return false;
   return JSON.stringify(a) !== JSON.stringify(b);
+}
+
+/** Dirty vs post-hydration baseline (ignores open-time form normalization). */
+export function isOrderEditDirtyAgainstBaseline(
+  baselineSnapshot,
+  editedOrder,
+  startTime,
+  endTime,
+  viewOnly
+) {
+  if (viewOnly) return false;
+  if (!baselineSnapshot || !editedOrder) return false;
+  const current = snapshotFromEditedOrder(editedOrder, startTime, endTime);
+  if (!current) return false;
+  return JSON.stringify(baselineSnapshot) !== JSON.stringify(current);
 }
 
 /**

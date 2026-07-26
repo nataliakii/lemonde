@@ -344,6 +344,7 @@ export default function CalendarContainer({
   const editCloseGuardsRef = useRef(new Map());
   const [unsavedEditDialogOpen, setUnsavedEditDialogOpen] = useState(false);
   const [unsavedEditSaving, setUnsavedEditSaving] = useState(false);
+  const [unsavedEditDirtyCount, setUnsavedEditDirtyCount] = useState(0);
 
   const registerEditOrderCloseGuard = useCallback((orderId, guard) => {
     const id = String(orderId);
@@ -357,15 +358,24 @@ export default function CalendarContainer({
     setOpen(false);
   }, []);
 
+  const getDirtyEditGuards = useCallback(() => {
+    const selectedIds = new Set(
+      (selectedOrders || []).map((o) => String(o?._id)).filter(Boolean)
+    );
+    return [...editCloseGuardsRef.current.entries()]
+      .filter(([id, g]) => selectedIds.has(id) && g.isDirty())
+      .map(([, g]) => g);
+  }, [selectedOrders]);
+
   const tryCloseEditModal = useCallback(() => {
-    const guards = [...editCloseGuardsRef.current.values()];
-    const dirty = guards.some((g) => g.isDirty());
-    if (!dirty) {
+    const dirty = getDirtyEditGuards();
+    if (dirty.length === 0) {
       performEditModalClose();
       return;
     }
+    setUnsavedEditDirtyCount(dirty.length);
     setUnsavedEditDialogOpen(true);
-  }, [performEditModalClose]);
+  }, [getDirtyEditGuards, performEditModalClose]);
 
   const handleEditModalBackdropClose = useCallback(
     (_event, reason) => {
@@ -386,8 +396,8 @@ export default function CalendarContainer({
   }, []);
 
   const handleUnsavedEditSave = useCallback(async () => {
-    const guards = [...editCloseGuardsRef.current.values()];
-    const dirtyGuards = guards.filter((g) => g.isDirty());
+    // Only currently selected + actually edited orders (never stale guards).
+    const dirtyGuards = getDirtyEditGuards();
     setUnsavedEditSaving(true);
     try {
       let allSaved = true;
@@ -414,12 +424,14 @@ export default function CalendarContainer({
     } finally {
       setUnsavedEditSaving(false);
     }
-  }, [performEditModalClose, showSingleSnackbar, t]);
+  }, [getDirtyEditGuards, performEditModalClose, showSingleSnackbar, t]);
 
   useEffect(() => {
     if (!open) {
       setUnsavedEditDialogOpen(false);
       setUnsavedEditSaving(false);
+      setUnsavedEditDirtyCount(0);
+      editCloseGuardsRef.current.clear();
     }
   }, [open]);
 
@@ -890,12 +902,25 @@ export default function CalendarContainer({
             setRangeSelectDraft(null);
             return;
           }
-          if (open) tryCloseEditModal();
+          // Unsaved dialog open → cancel dialog only (keep edit modals).
+          if (unsavedEditDialogOpen) {
+            setUnsavedEditDialogOpen(false);
+            return;
+          }
+          if (open) {
+            const dirty = getDirtyEditGuards();
+            if (dirty.length > 0) {
+              setUnsavedEditDirtyCount(dirty.length);
+              setUnsavedEditDialogOpen(true);
+              return;
+            }
+            performEditModalClose();
+            setSelectedOrders([]);
+            return;
+          }
           setHeaderOrdersModal((prev) => ({ ...prev, open: false }));
           setIsAddOrderOpen(false);
           setIsEditCarOpen(false);
-          setUnsavedEditDialogOpen(false);
-          setSelectedOrders([]);
           if (confirmModal?.open) handleCloseConfirmModal();
           else if (moveMode) exitMoveMode();
           return;
@@ -916,7 +941,9 @@ export default function CalendarContainer({
       getOrdersForCell,
       handleAddOrderClick,
       open,
-      tryCloseEditModal,
+      unsavedEditDialogOpen,
+      getDirtyEditGuards,
+      performEditModalClose,
       confirmModal?.open,
       handleCloseConfirmModal,
       moveMode,
@@ -1177,6 +1204,7 @@ export default function CalendarContainer({
       cars,
       unsavedEditDialogOpen,
       unsavedEditSaving,
+      unsavedEditDirtyCount,
       isAddOrderOpen,
       selectedCarForAdd,
       selectedDateForAdd,
@@ -1197,6 +1225,7 @@ export default function CalendarContainer({
       cars,
       unsavedEditDialogOpen,
       unsavedEditSaving,
+      unsavedEditDirtyCount,
       isAddOrderOpen,
       selectedCarForAdd,
       selectedDateForAdd,

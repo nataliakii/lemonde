@@ -69,6 +69,7 @@ export default function SuitePageView({
   apartmentSlug,
   locale = "en",
   relatedSuites = [],
+  initialApartment = null,
 }) {
   const {
     cars,
@@ -90,15 +91,21 @@ export default function SuitePageView({
   const [stayPrice, setStayPrice] = useState(null);
   const [priceLoading, setPriceLoading] = useState(false);
 
-  const apartment = useMemo(
-    () =>
-      (cars || []).find(
-        (c) =>
-          c?.slug &&
-          String(c.slug).toLowerCase() === String(apartmentSlug).toLowerCase()
-      ) || null,
-    [cars, apartmentSlug]
-  );
+  // Keep calendar inventory in sync (SSR orders can be missing after client nav).
+  useEffect(() => {
+    if (typeof fetchAndUpdateActiveOrders === "function") {
+      fetchAndUpdateActiveOrders();
+    }
+  }, [fetchAndUpdateActiveOrders]);
+
+  const apartment = useMemo(() => {
+    const fromCars = (cars || []).find(
+      (c) =>
+        c?.slug &&
+        String(c.slug).toLowerCase() === String(apartmentSlug).toLowerCase()
+    );
+    return fromCars || initialApartment || null;
+  }, [cars, apartmentSlug, initialApartment]);
 
   const photos = useMemo(() => {
     if (!apartment) return [];
@@ -168,9 +175,11 @@ export default function SuitePageView({
   const isDateBlocked = useCallback(
     (date) => {
       if (isPastDay(date, today)) return true;
+      const ymd = date.format("YYYY-MM-DD");
       const start = range[0];
       const end = range[1];
-      // Choosing check-out: day itself may be the next guest's check-in night
+
+      // Choosing check-out: every night in [checkIn, checkOut) must be free.
       if (start?.isValid?.() && !end?.isValid?.()) {
         if (!date.isAfter(start, "day")) return true;
         let cursor = start.startOf("day");
@@ -178,9 +187,16 @@ export default function SuitePageView({
           if (occupiedNights.has(cursor.format("YYYY-MM-DD"))) return true;
           cursor = cursor.add(1, "day");
         }
+        // Check-out morning itself may be another guest's check-in — allowed.
         return false;
       }
-      return occupiedNights.has(date.format("YYYY-MM-DD"));
+
+      // Complete selection: keep endpoints usable; only occupy real stay nights.
+      if (start?.isValid?.() && end?.isValid?.()) {
+        if (date.isSame(end, "day")) return false;
+      }
+
+      return occupiedNights.has(ymd);
     },
     [occupiedNights, range, today]
   );

@@ -19,6 +19,8 @@ import {
   setTimeToDatejs,
   checkConflicts,
 } from "@utils/analyzeDates";
+import { getConflictingStayNights } from "@utils/stayAvailability";
+import { buildOrdersForApartmentFilter } from "@/domain/orders/apartmentOrderLookup";
 import { notifyOrderAction } from "@/domain/orders/orderNotificationDispatcher";
 import {
   getBusinessRentalDaysByMinutes,
@@ -487,51 +489,78 @@ async function postOrderAddHandler(request) {
       );
     }
 
-    // Check for existing orders for this car
-    const existingOrders = await Order.find({
-      car: existingCar._id,
-    });
+    // Include orders still pointing at old apartment ObjectIds (match carNumber/regNumber),
+    // but do not pull bookings that already belong to another live apartment.
+    const knownApartmentIds = (
+      await Apartment.find({}).select("_id").lean()
+    ).map((a) => a._id);
+    const existingOrders = await Order.find(
+      buildOrdersForApartmentFilter(existingCar, { knownApartmentIds })
+    );
 
     let nonConfirmedDates = [];
     let conflicOrdersId = [];
 
-    const { status, data } = checkConflicts(
-      existingOrders,
-      startDate.toDate(),
-      endDate.toDate(),
-      timeIn,
-      timeOut
-    );
+    if (SINGLE_PROPERTY_MODE) {
+      // Every night in [checkIn, checkOut) must be free — not only check-in day.
+      const checkInYmd = startDate.format("YYYY-MM-DD");
+      const checkOutYmd = endDate.format("YYYY-MM-DD");
+      const conflictingNights = getConflictingStayNights(
+        existingOrders,
+        checkInYmd,
+        checkOutYmd
+      );
+      if (conflictingNights.length > 0) {
+        return new Response(
+          JSON.stringify({
+            message:
+              "This suite is not available for the selected dates (already booked).",
+            messageKey: "order.suiteDatesUnavailable",
+            conflictDates: conflictingNights,
+          }),
+          {
+            status: 409,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+    } else {
+      const { status, data } = checkConflicts(
+        existingOrders,
+        startDate.toDate(),
+        endDate.toDate(),
+        timeIn,
+        timeOut
+      );
 
-    // Debug logs removed - checkConflicts returns undefined status/data when no conflicts
-    if (status) {
-      switch (status) {
-        case 409:
-          return new Response(
-            JSON.stringify({
-              message: data?.conflictMessage,
-              conflictDates: data?.conflictDates,
-            }),
-            {
-              status: 409,
-              headers: { "Content-Type": "application/json" },
-            }
-          );
-        //// TODO CREATE ORDERS FOR CASE 200
-        case 200:
-          return new Response(
-            JSON.stringify({
-              message: data.conflictMessage,
-              conflictDates: data.conflictDates,
-            }),
-            {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            }
-          );
-        case 202:
-          conflicOrdersId = data.conflictOrdersIds;
-          nonConfirmedDates = data.conflictDates;
+      if (status) {
+        switch (status) {
+          case 409:
+            return new Response(
+              JSON.stringify({
+                message: data?.conflictMessage,
+                conflictDates: data?.conflictDates,
+              }),
+              {
+                status: 409,
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+          case 200:
+            return new Response(
+              JSON.stringify({
+                message: data.conflictMessage,
+                conflictDates: data.conflictDates,
+              }),
+              {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+          case 202:
+            conflicOrdersId = data.conflictOrdersIds;
+            nonConfirmedDates = data.conflictDates;
+        }
       }
     }
 

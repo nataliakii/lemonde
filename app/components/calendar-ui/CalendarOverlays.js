@@ -41,6 +41,7 @@ export default function CalendarOverlays({
     cars,
     unsavedEditDialogOpen,
     unsavedEditSaving,
+    unsavedEditDirtyCount,
     isAddOrderOpen,
     selectedCarForAdd,
     selectedDateForAdd,
@@ -185,6 +186,7 @@ export default function CalendarOverlays({
         onDiscard={handleUnsavedEditDiscard}
         onSaveAndExit={handleUnsavedEditSave}
         saving={unsavedEditSaving}
+        dirtyCount={unsavedEditDirtyCount}
       />
 
       {/* AddOrderModal для создания нового заказа */}

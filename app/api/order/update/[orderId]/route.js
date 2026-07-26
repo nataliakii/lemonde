@@ -20,6 +20,9 @@ import { normalizeDrivingLicenceUrls } from "@/domain/orders/normalizeDrivingLic
 import { buildDeliveryBreakdownSlice } from "@/domain/delivery/buildDeliveryBreakdownSlice";
 import { toBusinessStartOfDay, toStoredBusinessDate } from "@/domain/time/businessDate";
 import { ORDER_STATUS, isOrderPaidAndClosed } from "@/domain/orders/orderStatus";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
+import { buildOrdersForApartmentFilter } from "@/domain/orders/apartmentOrderLookup";
+import { isApartmentAvailableForStay } from "@utils/stayAvailability";
 import DiscountSetting from "@models/DiscountSetting";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -508,10 +511,14 @@ export const PATCH = async (request, { params }) => {
       const isConfirming = payload.confirmed === true && !order.confirmed;
 
       if (isConfirming) {
-        // Get all orders for this car
-        const allOrdersForCar = await Order.find({
-          car: order.car,
-        });
+        // Get all orders for this apartment (incl. stale car ObjectIds)
+        const aptForConfirm =
+          (await Apartment.findById(order.car).lean()) || {
+            _id: order.car,
+          };
+        const allOrdersForCar = await Order.find(
+          buildOrdersForApartmentFilter(aptForConfirm)
+        );
 
         const company = await Company.findById(COMPANY_ID);
         const bufferHours = company?.bufferTime != null ? Number(company.bufferTime) : undefined;
@@ -690,11 +697,14 @@ export const PATCH = async (request, { params }) => {
         );
       }
 
-      // Fetch all orders for the car, excluding the current order
-      const allOrders = await Order.find({
-        car: order.car,
-        _id: { $ne: orderId },
-      });
+      // Fetch all orders for the apartment, excluding the current order
+      const aptForDates =
+        (await Apartment.findById(order.car).lean()) || { _id: order.car };
+      const allOrders = await Order.find(
+        buildOrdersForApartmentFilter(aptForDates, {
+          excludeOrderId: orderId,
+        })
+      );
 
       // Restored from pre-refactor conflict logic: Debug logging for conflict checks
       if (process.env.NODE_ENV !== "production") {
@@ -709,9 +719,29 @@ export const PATCH = async (request, { params }) => {
         );
       }
 
+      if (SINGLE_PROPERTY_MODE) {
+        const checkInYmd = start.format("YYYY-MM-DD");
+        const checkOutYmd = end.format("YYYY-MM-DD");
+        if (!isApartmentAvailableForStay(allOrders, checkInYmd, checkOutYmd)) {
+          return new Response(
+            JSON.stringify({
+              message:
+                "This suite is not available for the selected dates (already booked).",
+              messageKey: "order.suiteDatesUnavailable",
+            }),
+            {
+              status: 409,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+      }
+
       // Restored from pre-refactor conflict logic: Check for conflicts
       const { status: conflictStatus, data: conflictData } =
-        checkConflictsFixed(allOrders, start, end);
+        SINGLE_PROPERTY_MODE
+          ? {}
+          : checkConflictsFixed(allOrders, start, end);
 
       // Restored from pre-refactor conflict logic: Debug logging
       if (process.env.NODE_ENV !== "production") {

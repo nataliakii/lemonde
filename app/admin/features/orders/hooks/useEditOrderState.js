@@ -243,6 +243,14 @@ export function useEditOrderState({
         order.deliveryInOverride !== undefined ? order.deliveryInOverride : null,
       deliveryOutOverride:
         order.deliveryOutOverride !== undefined ? order.deliveryOutOverride : null,
+      // Clear non-Thessaloniki detail on init so the placeIn/placeOut effect
+      // does not mark the form dirty immediately after open.
+      placeInDetail: isThessalonikiCityBookingLocation(order.placeIn)
+        ? String(order.placeInDetail ?? "")
+        : "",
+      placeOutDetail: isThessalonikiCityBookingLocation(order.placeOut)
+        ? String(order.placeOutDetail ?? "")
+        : "",
     };
 
     setEditedOrder(adjustedOrder);

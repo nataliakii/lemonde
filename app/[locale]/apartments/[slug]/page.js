@@ -124,6 +124,7 @@ export default async function ApartmentDetailPage({ params }) {
         apartmentSlug={resolvedCar.slug}
         locale={locale}
         relatedSuites={relatedSuites}
+        initialApartment={resolvedCar}
       />
     </Feed>
   );

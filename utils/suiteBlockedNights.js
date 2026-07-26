@@ -1,24 +1,24 @@
 import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
-import { BUSINESS_TZ } from "@utils/businessTime";
+import { toBusinessStartOfDay } from "@/domain/time/businessDate";
 import { isOrderDateBlocking } from "@/domain/orders/isOrderDateBlocking";
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
 /**
- * Suite inventory hold: any live booking on the calendar blocks nights,
- * including pending website requests and unconfirmed admin drafts.
- * (Car-rental isOrderDateBlocking stays stricter: confirmed/offline only.)
+ * Suite inventory hold for public search / suite calendar:
+ * - confirmed bookings
+ * - offline stubs
+ * - pending website requests (my_order)
+ * - admin/internal holds (my_order === false) with dates
  */
 export function isSuiteInventoryBlocking(order) {
   if (!order) return false;
   if (order.offline === true) return true;
   if (order.confirmed === true) return true;
   if (order.my_order === true) return true;
-  // Admin-created draft also holds the suite for public search / suite calendar
-  return Boolean(order.rentalStartDate && order.rentalEndDate);
+  // Admin-created row (not a website request) still holds the suite
+  if (order.my_order === false) {
+    return Boolean(order.rentalStartDate && order.rentalEndDate);
+  }
+  return false;
 }
 
 /**
@@ -40,15 +40,20 @@ export function getOccupiedNightKeys(orders, options = {}) {
     if (!blocks) continue;
     if (!order?.rentalStartDate || !order?.rentalEndDate) continue;
 
-    let cursor = dayjs.utc(order.rentalStartDate).tz(BUSINESS_TZ).startOf("day");
-    const end = dayjs.utc(order.rentalEndDate).tz(BUSINESS_TZ).startOf("day");
-    if (!cursor.isValid() || !end.isValid() || !end.isAfter(cursor, "day")) {
+    const start = toBusinessStartOfDay(order.rentalStartDate);
+    const end = toBusinessStartOfDay(order.rentalEndDate);
+    if (!start?.isValid?.() || !end?.isValid?.() || !end.isAfter(start, "day")) {
       continue;
     }
 
-    while (cursor.isBefore(end, "day")) {
+    // Iterate via YMD strings so calendar cells and availability use the same keys.
+    let cursor = dayjs(`${start.format("YYYY-MM-DD")}T12:00:00`);
+    const endNoon = dayjs(`${end.format("YYYY-MM-DD")}T12:00:00`);
+    let guard = 0;
+    while (cursor.isBefore(endNoon, "day") && guard < 400) {
       keys.add(cursor.format("YYYY-MM-DD"));
       cursor = cursor.add(1, "day");
+      guard += 1;
     }
   }
   return keys;

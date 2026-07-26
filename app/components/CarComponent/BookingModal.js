@@ -263,6 +263,8 @@ const BookingModal = ({
       );
       return;
     }
+
+    // Keep previous check-out only if the whole stay (every night) stays free.
     let nextEnd = stayEndDate;
     if (
       !nextEnd ||
@@ -270,13 +272,17 @@ const BookingModal = ({
       rangeHasBlockedNight(nextStart, nextEnd)
     ) {
       nextEnd = nextStart.add(1, "day");
-      while (
-        rangeHasBlockedNight(nextStart, nextEnd) &&
-        nextEnd.diff(nextStart, "day") < 60
-      ) {
-        nextEnd = nextEnd.add(1, "day");
+      // Prefer a 1-night stay; if that night is held, do not invent a long
+      // range that still contains blocked nights in the middle.
+      if (rangeHasBlockedNight(nextStart, nextEnd)) {
+        enqueueSnackbar(
+          t("order.dateUnavailable") || "These dates are not available.",
+          { variant: "warning" }
+        );
+        return;
       }
     }
+
     setStayStartDate(nextStart);
     setStayEndDate(nextEnd);
     setStartTime(setTimeToDatejs(nextStart, company?.defaultStart || "15:00", true));

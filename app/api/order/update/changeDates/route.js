@@ -8,6 +8,9 @@ import { getTimeBucket } from "@/domain/time/athensTime";
 import { ROLE } from "@/domain/orders/admin-rbac";
 import { getBusinessRentalDaysByMinutes } from "@/domain/orders/numberOfDays";
 import { toBusinessStartOfDay, toStoredBusinessDate } from "@/domain/time/businessDate";
+import { SINGLE_PROPERTY_MODE } from "@/config/domain";
+import { buildOrdersForApartmentFilter } from "@/domain/orders/apartmentOrderLookup";
+import { isApartmentAvailableForStay } from "@utils/stayAvailability";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -254,11 +257,16 @@ export const PUT = async (req) => {
       );
     }
 
-    // Fetch all orders for the car, excluding the current order
-    const allOrders = await Order.find({
-      car: order.car,
-      _id: { $ne: _id },
-    });
+    // Fetch all orders for the apartment (incl. stale car ObjectIds via carNumber)
+    const apartmentForFilter =
+      carDoc && carDoc._id
+        ? carDoc
+        : { _id: order.car?._id ?? order.car };
+    const allOrders = await Order.find(
+      buildOrdersForApartmentFilter(apartmentForFilter, {
+        excludeOrderId: _id,
+      })
+    );
 
     console.log(
       "Existing orders for car:",
@@ -270,8 +278,28 @@ export const PUT = async (req) => {
       }))
     );
 
+    if (SINGLE_PROPERTY_MODE) {
+      const checkInYmd = start.format("YYYY-MM-DD");
+      const checkOutYmd = end.format("YYYY-MM-DD");
+      if (!isApartmentAvailableForStay(allOrders, checkInYmd, checkOutYmd)) {
+        return new Response(
+          JSON.stringify({
+            message:
+              "This suite is not available for the selected dates (already booked).",
+            messageKey: "order.suiteDatesUnavailable",
+          }),
+          {
+            status: 409,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
     // ИСПОЛЬЗУЕМ ИСПРАВЛЕННУЮ функцию проверки конфликтов
-    const { status, data } = checkConflictsFixed(allOrders, start, end);
+    const { status, data } = SINGLE_PROPERTY_MODE
+      ? {}
+      : checkConflictsFixed(allOrders, start, end);
 
     console.log("Conflict check result:", { status, data });
 

@@ -14,6 +14,11 @@ export {
 
 export { isOrderDateBlocking } from "./isOrderDateBlocking";
 
+export {
+  buildOrdersForApartmentFilter,
+  orderBelongsToApartment,
+} from "./apartmentOrderLookup";
+
 export { buildPendingConfirmBlockMap } from "./buildPendingConfirmBlockMap";
 
 // ============================================
