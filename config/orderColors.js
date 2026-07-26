@@ -5,7 +5,8 @@
  *
  * Suites (Le Monde):
  * - Green  → confirmed
- * - Yellow → pending / unconfirmed
+ * - Gold   → admin approved (awaiting client email / final confirm)
+ * - Yellow → pending / needs admin review
  * - Hatch  → stubs (offline)
  *
  * Car rental still distinguishes client vs admin via keys; colors match suites.
@@ -19,6 +20,10 @@ const GREEN_LIGHT = palette.triadic.greenLight;
 const GREEN_DARK = palette.triadic.greenDark;
 const YELLOW = palette.triadic.yellow; // "#E0C56A"
 const YELLOW_LIGHT = palette.triadic.yellowLight;
+/** Admin-approved (reviewed) — brand gold, between pending yellow and confirmed green */
+const ADMIN_OK = "#C9A227";
+const ADMIN_OK_LIGHT = "#E0C56A";
+const ADMIN_OK_DARK = "#8B7014";
 const STUB = "#5C6BC0";
 const STUB_PENDING = "#78909C";
 
@@ -49,6 +54,18 @@ export const ORDER_COLORS = {
     bg: alpha(GREEN, 0.14),
     label: "Подтверждён",
     labelEn: "Confirmed",
+  },
+
+  // Одобрен админом, ещё не confirmed — золотой
+  ADMIN_APPROVED: {
+    key: "ADMIN_APPROVED",
+    main: ADMIN_OK,
+    light: ADMIN_OK_LIGHT,
+    dark: ADMIN_OK_DARK,
+    text: ADMIN_OK_DARK,
+    bg: alpha(ADMIN_OK, 0.22),
+    label: "Одобрен админом",
+    labelEn: "Admin OK",
   },
 
   // Ожидающий клиентский заказ — жёлтый
@@ -223,13 +240,14 @@ export const ORDER_UI_COLORS = {
 
 /**
  * Получить цвета для легенды календаря.
- * Suites: 3 понятных категории (confirmed / pending / stub).
+ * Suites: confirmed / admin OK / pending / stub.
  * Car rental: полный набор статусов.
  */
 export function getOrderColorsForLegend({ suites = false } = {}) {
   if (suites) {
     return [
       ORDER_COLORS.CONFIRMED_CLIENT,
+      ORDER_COLORS.ADMIN_APPROVED,
       ORDER_COLORS.PENDING_CLIENT,
       ORDER_COLORS.OFFLINE,
     ];
@@ -238,6 +256,7 @@ export function getOrderColorsForLegend({ suites = false } = {}) {
     ORDER_COLORS.PAID_AND_CLOSED,
     ORDER_COLORS.CONFIRMED_CLIENT,
     ORDER_COLORS.CONFIRMED_ADMIN,
+    ORDER_COLORS.ADMIN_APPROVED,
     ORDER_COLORS.OFFLINE,
     ORDER_COLORS.OFFLINE_PENDING,
     ORDER_COLORS.PENDING_CLIENT,
@@ -256,6 +275,13 @@ export function getSuitesLegendRows() {
       hatch: false,
       labelKey: "suites.legendConfirmed",
       tipKey: "suites.legendConfirmedTip",
+    },
+    {
+      key: "adminApproved",
+      color: ORDER_COLORS.ADMIN_APPROVED.main,
+      hatch: false,
+      labelKey: "suites.legendAdminApproved",
+      tipKey: "suites.legendAdminApprovedTip",
     },
     {
       key: "pending",

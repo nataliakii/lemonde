@@ -33,6 +33,8 @@ export const API_PATHS = {
   ORDER_UPDATE_CUSTOMER: "/api/order/update/customer",
   ORDER_UPDATE_SWITCH_CONFIRM: (orderId) =>
     `/api/order/update/switchConfirm/${orderId}`,
+  ORDER_UPDATE_SWITCH_ADMIN_APPROVED: (orderId) =>
+    `/api/order/update/switchAdminApproved/${orderId}`,
   ORDER_DELETE_ONE: (orderId) => `/api/order/deleteOne/${orderId}`,
   ORDER_CALC_TOTAL_PRICE: "/api/order/calcTotalPrice",
 

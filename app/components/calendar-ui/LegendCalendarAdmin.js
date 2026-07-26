@@ -31,6 +31,7 @@ const TOOLBAR_LEGEND_DETAIL_BY_KEY = {
   PAID_AND_CLOSED: "suites.legendPaidClosed",
   CONFIRMED_CLIENT: "suites.legendConfirmedTip",
   CONFIRMED_ADMIN: "suites.legendConfirmedTip",
+  ADMIN_APPROVED: "suites.legendAdminApprovedTip",
   OFFLINE: "suites.legendStubTip",
   OFFLINE_PENDING: "suites.legendStubTip",
   PENDING_CLIENT: "suites.legendPendingTip",

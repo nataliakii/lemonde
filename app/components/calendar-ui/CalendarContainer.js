@@ -632,7 +632,7 @@ export default function CalendarContainer({
     setMonth(now.month());
     setYear(now.year());
     setRangeDirection("forward");
-    // Window rebuilds from today; useMobileCalendarScroll recenters after paint.
+    // Month/year jump to current; useMobileCalendarScroll recenters on today's column.
   }, []);
 
   // =======================

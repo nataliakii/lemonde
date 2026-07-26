@@ -77,6 +77,7 @@ export default function CalendarGrid(props) {
       onMonthChange: actions?.onMonthChange,
       onYearChange: actions?.onYearChange,
       onDayClick: actions?.onDayClick,
+      onGoToToday: actions?.onGoToToday,
     }),
     [
       actions?.onPrevMonth,
@@ -84,6 +85,7 @@ export default function CalendarGrid(props) {
       actions?.onMonthChange,
       actions?.onYearChange,
       actions?.onDayClick,
+      actions?.onGoToToday,
     ]
   );
 

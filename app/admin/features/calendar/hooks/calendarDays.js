@@ -37,28 +37,6 @@ function toDayEntry(date) {
   };
 }
 
-/**
- * If "today" falls inside the window, start the grid from today
- * (hide past columns). Pad forward so the window stays usable.
- */
-function startWindowFromToday(days, minDays = 21) {
-  if (!Array.isArray(days) || days.length === 0) return days;
-  const today = dayjs().tz(BUSINESS_TZ).startOf("day");
-  const todayIdx = days.findIndex((d) => d.dayjs?.isSame?.(today, "day"));
-  if (todayIdx <= 0) return days;
-
-  const clipped = days.slice(todayIdx);
-  if (clipped.length >= minDays) return clipped;
-
-  const padded = [...clipped];
-  let last = padded[padded.length - 1].dayjs;
-  while (padded.length < minDays) {
-    last = last.add(1, "day");
-    padded.push(toDayEntry(last));
-  }
-  return padded;
-}
-
 export function buildCalendarDays({
   month,
   year,
@@ -70,8 +48,8 @@ export function buildCalendarDays({
     calendarDayRange === "15d" ||
     (calendarDayRange == null && viewMode === "range15");
 
-  let days;
-
+  // Full period windows (do not clip to "today") so 15d / 1m / 2m stay distinct.
+  // Scroll-to-today is handled separately in the calendar container.
   if (use15d) {
     const start =
       rangeDirection === "forward"
@@ -85,25 +63,25 @@ export function buildCalendarDays({
 
     const totalDays = end.diff(start, "day");
 
-    days = Array.from({ length: totalDays + 1 }, (_, index) =>
+    return Array.from({ length: totalDays + 1 }, (_, index) =>
       toDayEntry(start.add(index, "day"))
-    );
-  } else if (calendarDayRange === "2m") {
-    const start = dayjs().year(year).month(month).date(1).startOf("day");
-    const end = start.add(1, "month").endOf("month").startOf("day");
-    const totalDays = end.diff(start, "day");
-    days = Array.from({ length: totalDays + 1 }, (_, index) =>
-      toDayEntry(start.add(index, "day"))
-    );
-  } else {
-    // 1m или full без calendarDayRange: один календарный месяц
-    const dim = dayjs().year(year).month(month).daysInMonth();
-    days = Array.from({ length: dim }, (_, index) =>
-      toDayEntry(dayjs().year(year).month(month).date(1).add(index, "day"))
     );
   }
 
-  return startWindowFromToday(days);
+  if (calendarDayRange === "2m") {
+    const start = dayjs().year(year).month(month).date(1).startOf("day");
+    const end = start.add(1, "month").endOf("month").startOf("day");
+    const totalDays = end.diff(start, "day");
+    return Array.from({ length: totalDays + 1 }, (_, index) =>
+      toDayEntry(start.add(index, "day"))
+    );
+  }
+
+  // 1m или full без calendarDayRange: один календарный месяц
+  const dim = dayjs().year(year).month(month).daysInMonth();
+  return Array.from({ length: dim }, (_, index) =>
+    toDayEntry(dayjs().year(year).month(month).date(1).add(index, "day"))
+  );
 }
 
 /**
@@ -195,8 +173,8 @@ export function calendarDayDelta(fromDateStr, toDateStr) {
  * @returns {number} индекс текущего дня или -1
  */
 export function getTodayIndex(days) {
-  const today = dayjs();
-  return days.findIndex((d) => d.dayjs.isSame(today, "day"));
+  const today = dayjs().tz(BUSINESS_TZ).startOf("day");
+  return days.findIndex((d) => d.dayjs?.isSame?.(today, "day"));
 }
 
 /**

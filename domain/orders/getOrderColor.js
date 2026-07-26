@@ -1,15 +1,17 @@
 /**
  * getOrderColor
- * 
+ *
  * 🎯 ЕДИНСТВЕННЫЙ ИСТОЧНИК ПРАВДЫ для цветов заказов
- * 
+ *
  * Возвращает цветовую конфигурацию для заказа на основе:
  * - offline (офлайн-бронь вне сайта)
  * - confirmed (подтверждён или нет)
+ * - adminApproved (одобрен админом, ещё не confirmed)
  * - my_order (клиентский или админский)
- * 
+ *
  * Цвета:
  * - confirmed → зелёный
+ * - adminApproved → золотой
  * - pending → жёлтый
  * - offline stub → штриховка
  * - paid & closed → фиолетовый
@@ -17,14 +19,15 @@
 
 import { ORDER_COLORS } from "@/config/orderColors";
 import { isOrderPaidAndClosed } from "@/domain/orders/orderStatus";
+import {
+  isOrderAdminApproved,
+  orderRequiresAdminApproval,
+} from "@/domain/orders/adminApproval";
 
 /**
  * Определяет цветовую схему для заказа
- * 
+ *
  * @param {Object} order - заказ
- * @param {boolean} order.confirmed - подтверждён ли заказ
- * @param {boolean} order.my_order - клиентский ли заказ (true = клиент, false = админ)
- * @param {boolean} [order.offline] - офлайн-бронь
  * @returns {Object} - цветовая конфигурация { key, main, light, dark, text, bg, label, labelEn, hatch? }
  */
 export function getOrderColor(order) {
@@ -40,26 +43,31 @@ export function getOrderColor(order) {
   }
 
   if (offline === true) {
-    // Confirmed stub / offline booking
     if (confirmed) {
       return ORDER_COLORS.OFFLINE;
     }
-    // Unconfirmed stub — still hatched so it reads as a stub, not a normal pending
     return ORDER_COLORS.OFFLINE_PENDING;
   }
 
-  // Определяем цвет на основе confirmed + my_order
-  // 4 возможных комбинации:
   if (confirmed && my_order) {
     return ORDER_COLORS.CONFIRMED_CLIENT;
   }
   if (confirmed && !my_order) {
     return ORDER_COLORS.CONFIRMED_ADMIN;
   }
+
+  // Reviewed by admin, waiting for final confirm / client email
+  if (
+    !confirmed &&
+    orderRequiresAdminApproval(order) &&
+    isOrderAdminApproved(order)
+  ) {
+    return ORDER_COLORS.ADMIN_APPROVED;
+  }
+
   if (!confirmed && my_order) {
     return ORDER_COLORS.PENDING_CLIENT;
   }
-  // !confirmed && !my_order
   return ORDER_COLORS.PENDING_ADMIN;
 }
 

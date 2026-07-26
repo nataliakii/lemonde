@@ -9,6 +9,7 @@ import { ROLE } from "@models/user";
 import { renderCustomerOfficialConfirmationEmail } from "@/app/ui/email/renderEmail";
 import { pickCustomerEmailLocale } from "@locales/customerEmail";
 import { buildCustomerOfficialConfirmationPdf } from "@/app/ui/email/pdf/customerOfficialConfirmationPdf";
+import { canSendClientConfirmationEmail } from "@/domain/orders/adminApproval";
 
 const SUPPORTED_LOCALES = new Set(["en", "ru", "el", "de", "bg", "ro", "sr", "uk", "pl"]);
 const INTERNAL_PASSWORD_HEADER = "x-internal-password";
@@ -173,6 +174,16 @@ export async function POST(request) {
       return NextResponse.json(
         { message: "Order not found" },
         { status: 404 }
+      );
+    }
+
+    if (!canSendClientConfirmationEmail(order)) {
+      return NextResponse.json(
+        {
+          message:
+            "Admin approval is required before sending confirmation to the guest",
+        },
+        { status: 403 }
       );
     }
 

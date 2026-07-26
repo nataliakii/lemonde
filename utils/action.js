@@ -482,6 +482,39 @@ export const changeRentalDates = async (
  *   conflicts?: Array
  * }}
  */
+export const toggleAdminApprovedStatus = async (orderId) => {
+  try {
+    const response = await fetch(
+      getApiUrl(API_PATHS.ORDER_UPDATE_SWITCH_ADMIN_APPROVED(orderId)),
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+        credentials: "include",
+      }
+    );
+    const data = await response.json();
+    if (response.ok && data?.success) {
+      return {
+        success: true,
+        updatedOrder: data.data,
+        message: data.message,
+      };
+    }
+    return {
+      success: false,
+      message: data?.message || "Cannot update admin approval",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error?.message || "Cannot update admin approval",
+    };
+  }
+};
+
 export const toggleConfirmedStatus = async (orderId) => {
   try {
     const response = await fetch(

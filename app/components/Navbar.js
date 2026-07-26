@@ -155,9 +155,24 @@ export default function NavBar({
   // Сессия для админки (SessionProvider в app/providers → SessionProviderGate).
   const sessionValue = useSession();
   const session = sessionValue?.data ?? null;
+  const updateSession = sessionValue?.update;
   const adminRole =
     isAdmin && session?.user?.role !== undefined ? session.user.role : null; // ROLE.ADMIN = 1, ROLE.SUPERADMIN = 2
-  const isSuperAdmin = adminRole === ROLE.SUPERADMIN;
+  const realAdminRole =
+    isAdmin && session?.user?.realRole !== undefined
+      ? session.user.realRole
+      : adminRole;
+  const isRealSuperAdmin = realAdminRole === ROLE.SUPERADMIN;
+  const viewAsAdmin = Boolean(session?.user?.viewAsAdmin) && isRealSuperAdmin;
+  // Effective role for nav (owners etc.): preview mode looks like Admin
+  const isSuperAdmin = adminRole === ROLE.SUPERADMIN && !viewAsAdmin;
+
+  const handleToggleViewAsAdmin = useCallback(async () => {
+    if (!isRealSuperAdmin || typeof updateSession !== "function") return;
+    await updateSession({ viewAsAdmin: !viewAsAdmin });
+    // Reload so calendar/table refetch with Admin owner scope + permissions
+    window.location.reload();
+  }, [isRealSuperAdmin, updateSession, viewAsAdmin]);
 
   // Следим за выходом из полноэкранного режима
   useEffect(() => {
@@ -888,18 +903,16 @@ export default function NavBar({
                         {t("header.calendar")}
                       </Typography>
                     </Link>
-                    {isSuperAdmin && (
-                      <Link href="/admin/orders">
-                        <Typography
-                          sx={{
-                            ...adminNavLinkSx,
-                            ...(isAdminOrdersRoute ? adminNavActiveSx : null),
-                          }}
-                        >
-                          {t("header.table")}
-                        </Typography>
-                      </Link>
-                    )}
+                    <Link href="/admin/orders">
+                      <Typography
+                        sx={{
+                          ...adminNavLinkSx,
+                          ...(isAdminOrdersRoute ? adminNavActiveSx : null),
+                        }}
+                      >
+                        {t("header.table")}
+                      </Typography>
+                    </Link>
                     {!SINGLE_PROPERTY_MODE && (
                     <Link href="/admin/delivery-zones">
                       <Typography
@@ -912,6 +925,7 @@ export default function NavBar({
                       </Typography>
                     </Link>
                     )}
+                    {!SINGLE_PROPERTY_MODE && (
                     <Link href="/admin/website-visits">
                       <Typography
                         sx={{
@@ -922,6 +936,7 @@ export default function NavBar({
                         {t("header.websiteVisits")}
                       </Typography>
                     </Link>
+                    )}
                     {!SINGLE_PROPERTY_MODE && (
                     <Link href="/admin/transfers">
                       <Typography
@@ -1010,33 +1025,58 @@ export default function NavBar({
                   ADMIN
                 </Logo>
               )}
-              {/* Chip с ролью - только для админки, в правом верхнем углу логотипа */}
-              {isAdmin && adminRole === ROLE.SUPERADMIN && (
+              {/* Role chip — Superadmin can click to preview Admin UI */}
+              {isAdmin && isRealSuperAdmin && (
                 <Chip
-                  label={adminRole === ROLE.SUPERADMIN ? "Superadmin" : "Admin"}
+                  label={viewAsAdmin ? "Admin view" : "Superadmin"}
                   size="small"
+                  onClick={handleToggleViewAsAdmin}
+                  title={
+                    viewAsAdmin
+                      ? "Click to return to Superadmin"
+                      : "Click to view as Admin"
+                  }
                   sx={{
                     position: "absolute",
                     top: -5,
                     right: -5,
-                    backgroundColor:
-                      adminRole === ROLE.SUPERADMIN
-                        ? "rgba(255, 193, 7, 0.2)"
-                        : "rgba(33, 150, 243, 0.2)",
-                    color:
-                      adminRole === ROLE.SUPERADMIN
-                        ? "#ffc107"
-                        : "secondary.main",
+                    cursor: "pointer",
+                    backgroundColor: viewAsAdmin
+                      ? "rgba(33, 150, 243, 0.22)"
+                      : "rgba(255, 193, 7, 0.2)",
+                    color: viewAsAdmin ? "#90caf9" : "#ffc107",
                     border: `1px solid ${
-                      adminRole === ROLE.SUPERADMIN
-                        ? "triadic.yellowBright"
-                        : "secondary.main"
+                      viewAsAdmin ? "#64b5f6" : "rgba(255, 193, 7, 0.65)"
                     }`,
                     fontWeight: 600,
                     fontSize: "0.65rem",
                     height: 20,
                     zIndex: 1,
-                    // Скрываем на очень маленьких экранах
+                    display: { xs: "none", sm: "flex" },
+                    "&:hover": {
+                      backgroundColor: viewAsAdmin
+                        ? "rgba(33, 150, 243, 0.35)"
+                        : "rgba(255, 193, 7, 0.35)",
+                    },
+                  }}
+                />
+              )}
+              {isAdmin && !isRealSuperAdmin && adminRole === ROLE.ADMIN && (
+                <Chip
+                  label="Admin"
+                  size="small"
+                  sx={{
+                    position: "absolute",
+                    top: -5,
+                    right: -5,
+                    backgroundColor: "rgba(33, 150, 243, 0.2)",
+                    color: "secondary.main",
+                    border: "1px solid",
+                    borderColor: "secondary.main",
+                    fontWeight: 600,
+                    fontSize: "0.65rem",
+                    height: 20,
+                    zIndex: 1,
                     display: { xs: "none", sm: "flex" },
                   }}
                 />
@@ -1431,11 +1471,9 @@ export default function NavBar({
                 <ListItem button component={Link} href="/admin/orders-calendar">
                   <ListItemText primary={t("header.calendar")} />
                 </ListItem>
-                {isSuperAdmin && (
-                  <ListItem button component={Link} href="/admin/orders">
-                    <ListItemText primary={t("header.table")} />
-                  </ListItem>
-                )}
+                <ListItem button component={Link} href="/admin/orders">
+                  <ListItemText primary={t("header.table")} />
+                </ListItem>
                 {!SINGLE_PROPERTY_MODE && (
                 <ListItem
                   button
@@ -1446,6 +1484,7 @@ export default function NavBar({
                   <ListItemText primary={t("header.deliveryZones")} />
                 </ListItem>
                 )}
+                {!SINGLE_PROPERTY_MODE && (
                 <ListItem
                   button
                   component={Link}
@@ -1454,6 +1493,7 @@ export default function NavBar({
                 >
                   <ListItemText primary={t("header.websiteVisits")} />
                 </ListItem>
+                )}
                 {!SINGLE_PROPERTY_MODE && (
                 <ListItem
                   button
@@ -1498,6 +1538,30 @@ export default function NavBar({
                   </ListItem>
                 )}
               </>
+            )}
+
+            {/* Superadmin: preview Admin UI (mobile) */}
+            {isAdmin && isRealSuperAdmin && (
+              <ListItem
+                button
+                onClick={() => {
+                  setDrawerOpen(false);
+                  handleToggleViewAsAdmin();
+                }}
+              >
+                <ListItemText
+                  primary={
+                    viewAsAdmin
+                      ? "Back to Superadmin"
+                      : "View as Admin"
+                  }
+                  secondary={
+                    viewAsAdmin
+                      ? "Exit Admin preview"
+                      : "See Admin permissions and buttons"
+                  }
+                />
+              </ListItem>
             )}
 
             {/* Кнопка logout - только для админки в мобильном меню */}

@@ -59,9 +59,14 @@ import { getSecondDriverPriceLabelValue } from "@utils/secondDriverPricing";
 
 import {
   toggleConfirmedStatus,
+  toggleAdminApprovedStatus,
   getConfirmedOrders,
   updateOrder,
 } from "@utils/action";
+import {
+  canSendClientConfirmationEmail,
+  orderRequiresAdminApproval,
+} from "@/domain/orders/adminApproval";
 import { RenderSelectField } from "@/app/components/ui/inputs/Fields";
 import { useTranslation } from "react-i18next";
 import {
@@ -612,6 +617,44 @@ const EditOrderModal = ({
     setIsPriceBreakdownExpanded(false);
   }, [order?._id]);
 
+  const handleAdminApprovedToggle = async () => {
+    if (permissions.viewOnly || !editedOrder?._id) return;
+    if (!orderRequiresAdminApproval(editedOrder)) return;
+    setConfirmToggleUpdating(true);
+    setUpdateMessage(null);
+    try {
+      const result = await toggleAdminApprovedStatus(editedOrder._id);
+      if (!result.success) {
+        setUpdateMessage(result.message);
+        return;
+      }
+      let freshOrder = result.updatedOrder;
+      try {
+        const refetchRes = await fetch(`/api/order/refetch/${editedOrder._id}`);
+        if (refetchRes.ok) freshOrder = await refetchRes.json();
+      } catch {
+        // keep result.updatedOrder
+      }
+      if (freshOrder) {
+        setEditedOrder((prev) => ({
+          ...prev,
+          ...freshOrder,
+          adminApproved: Boolean(freshOrder.adminApproved),
+          adminApprovedAt: freshOrder.adminApprovedAt ?? null,
+          adminApprovedBy: freshOrder.adminApprovedBy ?? null,
+        }));
+      }
+      if (typeof fetchAndUpdateOrders === "function") {
+        await fetchAndUpdateOrders();
+      }
+      setUpdateMessage(result.message || t("order.adminApprovedUpdated"));
+    } catch (error) {
+      setUpdateMessage(error?.message || t("order.adminApprovedUpdateFailed"));
+    } finally {
+      setConfirmToggleUpdating(false);
+    }
+  };
+
   // Подтверждение: PATCH switchConfirm → confirmOrderFlow → notifyOrderAction.
   // Письмо клиенту при CONFIRM не шлётся для клиентского заказа (my_order === true);
   // для админского заказа — шлётся на английском (domain/orders/orderNotificationPolicy.js).
@@ -1098,10 +1141,13 @@ const EditOrderModal = ({
       hasChanges: priceChanged || datesChanged || timesChanged,
     };
   }, [confirmationEmailHistory, editedOrder]);
+  const needsAdminApproval = orderRequiresAdminApproval(editedOrder);
+  const isAdminApproved = Boolean(editedOrder?.adminApproved);
   const canSendConfirmationEmail =
     Boolean(editedOrder?._id) &&
     hasCustomerEmail &&
-    (!resendState.hasPrevious || resendState.hasChanges);
+    (!resendState.hasPrevious || resendState.hasChanges) &&
+    canSendClientConfirmationEmail(editedOrder);
   const isPickupAirport =
     String(editedOrder?.placeIn || "")
       .trim()
@@ -1114,6 +1160,8 @@ const EditOrderModal = ({
   );
   const sendConfirmationEmailDisabledReason = !hasCustomerEmail
     ? t("order.sendConfirmationEmailNoEmail")
+    : needsAdminApproval && !isAdminApproved
+    ? t("order.sendConfirmationNeedsAdminApproval")
     : resendState.hasPrevious && !resendState.hasChanges
     ? t("order.sendConfirmationEmailNoChanges")
     : "";
@@ -1827,6 +1875,32 @@ const EditOrderModal = ({
                     {t("order.paidAndClosed")}
                   </Alert>
                 )}
+                {needsAdminApproval &&
+                  !isAdminApproved &&
+                  !editedOrder?.confirmed && (
+                    <Alert severity="warning" sx={{ mb: 1 }}>
+                      {isCurrentUserSuperAdmin
+                        ? t("order.awaitingAdminApprovalSa")
+                        : t("order.awaitingAdminApproval")}
+                    </Alert>
+                  )}
+                {needsAdminApproval &&
+                  isAdminApproved &&
+                  !editedOrder?.confirmed &&
+                  isCurrentUserSuperAdmin && (
+                    <Alert
+                      severity="success"
+                      sx={{
+                        mb: 1,
+                        backgroundColor: ORDER_COLORS.ADMIN_APPROVED.bg,
+                        color: ORDER_COLORS.ADMIN_APPROVED.dark,
+                        border: "1px solid",
+                        borderColor: ORDER_COLORS.ADMIN_APPROVED.main,
+                      }}
+                    >
+                      {t("order.adminApprovedReadyForSa")}
+                    </Alert>
+                  )}
                 <Box
                   sx={{
                     display: "flex",
@@ -1834,6 +1908,43 @@ const EditOrderModal = ({
                     flexDirection: { xs: "column", sm: "row" },
                   }}
                 >
+                  {needsAdminApproval && (
+                    <ActionButton
+                      fullWidth
+                      onClick={handleAdminApprovedToggle}
+                      disabled={
+                        isPaidAndClosed ||
+                        confirmToggleUpdating ||
+                        permissions.viewOnly
+                      }
+                      color={isAdminApproved ? "warning" : "primary"}
+                      label={
+                        isAdminApproved
+                          ? t("order.adminApproved")
+                          : t("order.adminApprove")
+                      }
+                      title={
+                        isAdminApproved
+                          ? t("order.adminApprovedTip")
+                          : t("order.adminApproveTip")
+                      }
+                      sx={{
+                        flex: 1,
+                        ...formMetrics.compactActionButtonSx,
+                        ...(isAdminApproved
+                          ? {
+                              backgroundColor: ORDER_COLORS.ADMIN_APPROVED.main,
+                              color: "#1A1612",
+                              "&:hover": {
+                                backgroundColor:
+                                  ORDER_COLORS.ADMIN_APPROVED.dark,
+                                color: "#fff",
+                              },
+                            }
+                          : null),
+                      }}
+                    />
+                  )}
                   <ActionButton
                     fullWidth
                     onClick={handleConfirmationToggle}

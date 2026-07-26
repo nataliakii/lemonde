@@ -84,6 +84,25 @@ const OrderSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  /**
+   * Staff (admin) reviewed/approved the booking.
+   * Required before superadmin may send the official client confirmation email
+   * for website orders and orders created by a superadmin.
+   */
+  adminApproved: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
+  adminApprovedAt: {
+    type: Date,
+    default: null,
+  },
+  adminApprovedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
   /** Partner response from company notification email (not the same as confirmed). */
   companyEmailDecision: {
     type: String,
@@ -761,6 +780,25 @@ if (Order?.schema && !Order.schema.path("companyEmailDecision")) {
     },
     companyEmailDecisionAt: {
       type: Date,
+      default: null,
+    },
+  });
+}
+
+if (Order?.schema && !Order.schema.path("adminApproved")) {
+  Order.schema.add({
+    adminApproved: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    adminApprovedAt: {
+      type: Date,
+      default: null,
+    },
+    adminApprovedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       default: null,
     },
   });
