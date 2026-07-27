@@ -21,8 +21,9 @@ const defaultLocale = getDefaultLocale();
 const multilangKeywords = getPrimaryKeywords(8);
 const GA_MEASUREMENT_ID = "G-FY6325TNLP";
 
-function toAbsoluteAssetUrl(baseUrl, assetUrl, fallbackPath) {
-  const raw = String(assetUrl || "").trim() || fallbackPath;
+function toAbsoluteAssetUrl(baseUrl, assetUrl, fallbackPath = "") {
+  const raw = String(assetUrl || "").trim() || String(fallbackPath || "").trim();
+  if (!raw) return "";
   if (/^https?:\/\//i.test(raw)) return raw;
   const path = raw.startsWith("/") ? raw : `/${raw}`;
   return `${baseUrl}${path}`;
@@ -40,12 +41,17 @@ export async function generateMetadata() {
   const logoUrl = toAbsoluteAssetUrl(
     seoConfig.baseUrl,
     brand.assets.logoMark,
-    "/logo-mark.png"
+    ""
   );
   const faviconUrl = brand.assets.favicon || "/favicon.png";
   const ogUrl = brand.assets.ogImage
-    ? toAbsoluteAssetUrl(seoConfig.baseUrl, brand.assets.ogImage, "/logo-mark.png")
+    ? toAbsoluteAssetUrl(seoConfig.baseUrl, brand.assets.ogImage, "")
     : logoUrl;
+
+  const iconList = [{ url: faviconUrl, type: "image/png" }];
+  if (logoUrl) {
+    iconList.push({ url: logoUrl, type: "image/png", sizes: "192x192" });
+  }
 
   return {
     metadataBase: new URL(seoConfig.baseUrl),
@@ -65,20 +71,24 @@ export async function generateMetadata() {
       siteName: seoConfig.siteName,
       title: seoConfig.defaultTitle,
       description: seoConfig.defaultDescription,
-      images: [
-        {
-          url: ogUrl,
-          width: 1024,
-          height: 1024,
-          alt: seoConfig.siteName,
-        },
-      ],
+      ...(ogUrl
+        ? {
+            images: [
+              {
+                url: ogUrl,
+                width: 1024,
+                height: 1024,
+                alt: seoConfig.siteName,
+              },
+            ],
+          }
+        : {}),
     },
     twitter: {
       card: "summary_large_image",
       title: seoConfig.defaultTitle,
       description: seoConfig.defaultDescription,
-      images: [ogUrl],
+      ...(ogUrl ? { images: [ogUrl] } : {}),
     },
     robots: {
       index: true,
@@ -95,11 +105,10 @@ export async function generateMetadata() {
       google: "google637fd0fc04836d73.html",
     },
     icons: {
-      icon: [
-        { url: faviconUrl, type: "image/png" },
-        { url: logoUrl, type: "image/png", sizes: "192x192" },
-      ],
-      apple: [{ url: logoUrl, type: "image/png", sizes: "180x180" }],
+      icon: iconList,
+      ...(logoUrl
+        ? { apple: [{ url: logoUrl, type: "image/png", sizes: "180x180" }] }
+        : {}),
       shortcut: faviconUrl,
     },
   };
@@ -122,7 +131,7 @@ export default async function RootLayout({ children }) {
   const logoUrl = toAbsoluteAssetUrl(
     seoConfig.baseUrl,
     brand.assets.logoMark,
-    "/logo-mark.png"
+    ""
   );
 
   const organizationSchema = {
@@ -130,7 +139,7 @@ export default async function RootLayout({ children }) {
     "@type": "Organization",
     name: seoConfig.siteName,
     url: seoConfig.baseUrl,
-    logo: logoUrl,
+    ...(logoUrl ? { logo: logoUrl } : {}),
     sameAs: [
       seoConfig.social.facebook,
       seoConfig.social.instagram,

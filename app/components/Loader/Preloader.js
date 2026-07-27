@@ -17,15 +17,16 @@ const softPulse = keyframes`
 
 /**
  * Full-screen route/boot loader.
- * Colors + logo come from company.branding / company.assets (Mongo).
- * Optional `company` prop for SSR first paint before context hydrates.
+ * Logo + name + colors ONLY from company (Mongo) via props/context.
+ * No local /public logo fallback — empty assets.logoMark → text-only.
  */
 export default function Preloader({ loading, company: companyProp = null }) {
   const [visible, setVisible] = useState(true);
   const { company: companyFromContext } = useMainContext();
   const company = companyProp || companyFromContext;
   const brand = resolveBrandConfig(company);
-  const logoSrc = brand.assets.logoMark || "/logo-mark.png";
+  const logoSrc =
+    typeof brand.assets.logoMark === "string" ? brand.assets.logoMark.trim() : "";
   const pageBg = softPageBackground(brand.branding.primaryLight, 14);
   const ink = brand.branding.secondary || "#1B1E24";
   const shadow = hexToRgba(brand.branding.secondaryDark || ink, 0.18);
@@ -71,26 +72,29 @@ export default function Preloader({ loading, company: companyProp = null }) {
               gap: 2,
             }}
           >
-            <Box
-              sx={{
-                width: 112,
-                height: 112,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                animation: `${softPulse} 1.4s ease-in-out infinite`,
-                filter: `drop-shadow(0 4px 16px ${shadow})`,
-              }}
-            >
-              <Image
-                src={logoSrc}
-                alt={brand.name || "Logo"}
-                width={96}
-                height={96}
-                priority
-                style={{ objectFit: "contain" }}
-              />
-            </Box>
+            {logoSrc ? (
+              <Box
+                sx={{
+                  width: 112,
+                  height: 112,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  animation: `${softPulse} 1.4s ease-in-out infinite`,
+                  filter: `drop-shadow(0 4px 16px ${shadow})`,
+                }}
+              >
+                <Image
+                  src={logoSrc}
+                  alt={brand.name || "Logo"}
+                  width={96}
+                  height={96}
+                  priority
+                  unoptimized
+                  style={{ objectFit: "contain" }}
+                />
+              </Box>
+            ) : null}
             {brand.name ? (
               <Typography
                 component="p"

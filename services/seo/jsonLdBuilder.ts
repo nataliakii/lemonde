@@ -274,3 +274,171 @@ export function buildHubJsonLd(input: {
     name: seoConfig.siteName,
   };
 }
+
+function resolveMediaUrl(
+  src: string | null | undefined,
+  baseUrl: string
+): string | null {
+  const raw = String(src || "").trim();
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith("/")) return `${baseUrl}${raw}`;
+  const cloud =
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
+    process.env.CLOUDINARY_CLOUD_NAME ||
+    "dn513dy1y";
+  return `https://res.cloudinary.com/${cloud}/image/upload/${raw}`;
+}
+
+/**
+ * Per-suite JSON-LD (HotelRoom) for V Luxury / apartment detail pages.
+ */
+export function buildApartmentJsonLd(input: {
+  localeCandidate: string | undefined | null;
+  pagePath: string;
+  apartment: {
+    model?: string;
+    name?: string;
+    description?: string;
+    photoUrl?: string;
+    gallery?: string[];
+    seats?: number;
+    beds?: number;
+    bathrooms?: number;
+    sizeSqm?: number;
+    floor?: number;
+    amenities?: string[];
+    transferPrice?: number;
+    priceFrom?: number | null;
+  };
+  locationName?: string;
+  company?: object | null;
+}) {
+  const locale = normalizeLocale(input.localeCandidate);
+  const seoConfig = getSeoConfig(input.company || null);
+  const pageUrl = toAbsoluteUrl(input.pagePath);
+  const apt = input.apartment || {};
+  const name =
+    String(apt.model || apt.name || "Suite").trim() || "Suite";
+  const place = input.locationName || seoConfig.placeName || "Pefkohori";
+  const transfer = Math.max(0, Number(apt.transferPrice) || 0);
+  const priceFrom =
+    typeof apt.priceFrom === "number" && apt.priceFrom > 0
+      ? apt.priceFrom
+      : null;
+
+  const description =
+    String(apt.description || "").trim() ||
+    `${name} at ${seoConfig.siteName} in ${place}. Request your stay online.`;
+
+  const images = [
+    resolveMediaUrl(apt.photoUrl, seoConfig.baseUrl),
+    ...(Array.isArray(apt.gallery)
+      ? apt.gallery.map((g) => resolveMediaUrl(g, seoConfig.baseUrl))
+      : []),
+  ].filter(Boolean) as string[];
+  const uniqueImages = [...new Set(images)];
+
+  const amenityFeature = (Array.isArray(apt.amenities) ? apt.amenities : [])
+    .map((a) => String(a || "").trim())
+    .filter(Boolean)
+    .map((a) => ({
+      "@type": "LocationFeatureSpecification",
+      name: a,
+      value: true,
+    }));
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "HotelRoom",
+    name,
+    description,
+    url: pageUrl,
+    inLanguage: locale,
+    ...(uniqueImages.length === 1
+      ? { image: uniqueImages[0] }
+      : uniqueImages.length > 1
+        ? { image: uniqueImages }
+        : {}),
+    ...(apt.seats
+      ? {
+          occupancy: {
+            "@type": "QuantitativeValue",
+            maxValue: Number(apt.seats),
+            unitText: "guests",
+          },
+        }
+      : {}),
+    ...(apt.beds
+      ? {
+          bed: {
+            "@type": "BedDetails",
+            numberOfBeds: Number(apt.beds),
+          },
+        }
+      : {}),
+    ...(apt.sizeSqm
+      ? {
+          floorSize: {
+            "@type": "QuantitativeValue",
+            value: Number(apt.sizeSqm),
+            unitCode: "MTK",
+          },
+        }
+      : {}),
+    ...(typeof apt.floor === "number"
+      ? { floorLevel: String(apt.floor) }
+      : {}),
+    ...(amenityFeature.length ? { amenityFeature } : {}),
+    containedInPlace: {
+      "@type": "LodgingBusiness",
+      name: seoConfig.siteName,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress:
+          seoConfig.contact.address.split(",")[0] || seoConfig.contact.address,
+        addressLocality: place,
+        addressRegion: "Halkidiki",
+        addressCountry: "GR",
+      },
+      url: seoConfig.baseUrl,
+    },
+    offers: {
+      "@type": "Offer",
+      url: pageUrl,
+      priceCurrency: "EUR",
+      ...(priceFrom != null ? { price: String(priceFrom) } : {}),
+      availability: "https://schema.org/InStock",
+      category: "Nightly stay",
+      seller: {
+        "@type": "Organization",
+        name: seoConfig.siteName,
+      },
+      ...(transfer > 0
+        ? {
+            eligibleTransactionVolume: {
+              "@type": "PriceSpecification",
+              name: "Airport transfer",
+              price: String(transfer),
+              priceCurrency: "EUR",
+              description: `Optional airport transfer — €${transfer} flat.`,
+            },
+          }
+        : {}),
+    },
+    ...(transfer > 0
+      ? {
+          additionalProperty: [
+            {
+              "@type": "PropertyValue",
+              name: "Airport transfer",
+              value: transfer,
+              unitText: "EUR",
+              description: `Flat airport transfer fee — €${transfer}.`,
+            },
+          ],
+        }
+      : {}),
+  };
+}
+

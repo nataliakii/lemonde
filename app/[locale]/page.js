@@ -85,9 +85,9 @@ export default async function LocalizedHomePage({ params }) {
       : brand.assets.galleryImages.length > 0
         ? brand.assets.galleryImages
         : DEFAULT_PROPERTY_GALLERY;
-  // Keep the branded gradient hero unless company.assets.heroImages is set explicitly.
-  // Do not pull apartment photos into the hero.
-  const heroImage = brand.assets.heroImages[0] || "";
+  // Homepage hero carousel: ONLY company.assets.heroImages from Mongo/admin.
+  // Never use suite / apartment photos here.
+  const heroImages = brand.assets.heroImages;
 
   return (
     <>
@@ -104,7 +104,7 @@ export default async function LocalizedHomePage({ params }) {
           tagline={copy.tagline}
           ctaLabel={copy.cta}
           brandName={brand.name}
-          heroImage={heroImage}
+          heroImages={heroImages}
         />
         <PropertyGallery
           images={galleryImages}

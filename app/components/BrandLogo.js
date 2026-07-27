@@ -8,8 +8,8 @@ import { resolveBrandConfig } from "@/domain/branding/resolveBrandConfig";
 import { brandWordmarkSx } from "@/domain/branding/brandWordmarkSx";
 
 /**
- * Brand mark + wordmark from company.assets / company.name (DB),
- * with local fallbacks for empty /public logo.
+ * Brand mark + wordmark from company.assets / company.name (Mongo).
+ * No local /public logo fallback — empty assets.logoMark → wordmark only.
  */
 export default function BrandLogo({
   href = "/",
@@ -23,7 +23,11 @@ export default function BrandLogo({
   const { company } = useMainContext();
   const brand = resolveBrandConfig(company);
   const name = nameProp || brand.name;
-  const logoSrc = logoProp || brand.assets.logoMark || "/logo-mark.png";
+  const logoSrc = (
+    logoProp ||
+    brand.assets.logoMark ||
+    ""
+  ).trim();
 
   const content = (
     <Box
@@ -35,25 +39,28 @@ export default function BrandLogo({
         ...linkSx,
       }}
     >
-      <Box
-        sx={{
-          width: markSize,
-          height: markSize,
-          flexShrink: 0,
-          borderRadius: "50%",
-          overflow: "hidden",
-          position: "relative",
-        }}
-      >
-        <Image
-          src={logoSrc}
-          alt={name}
-          width={markSize}
-          height={markSize}
-          priority
-          style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
-        />
-      </Box>
+      {logoSrc ? (
+        <Box
+          sx={{
+            width: markSize,
+            height: markSize,
+            flexShrink: 0,
+            borderRadius: "50%",
+            overflow: "hidden",
+            position: "relative",
+          }}
+        >
+          <Image
+            src={logoSrc}
+            alt={name}
+            width={markSize}
+            height={markSize}
+            priority
+            unoptimized
+            style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </Box>
+      ) : null}
       {showWordmark && (
         <Box
           component="span"

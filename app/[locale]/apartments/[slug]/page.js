@@ -1,6 +1,7 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import Feed from "@app/components/Feed";
 import SuitePageView from "@app/components/SuitePageView";
+import JsonLdScript from "@app/components/seo/JsonLdScript";
 import {
   getApartmentPath,
   getSupportedLocales,
@@ -20,6 +21,12 @@ import {
   getActiveOrders,
 } from "@/domain/services";
 import { buildApartmentMetadata } from "@/services/seo/metadataBuilder";
+import {
+  buildApartmentJsonLd,
+  buildBreadcrumbJsonLd,
+} from "@/services/seo/jsonLdBuilder";
+import { getApartmentPriceFrom } from "@utils/stayAvailability";
+import { toAbsoluteUrl } from "@/services/seo/urlBuilder";
 
 const MONGO_ID_REGEX = /^[0-9a-f]{24}$/i;
 
@@ -69,6 +76,7 @@ export async function generateMetadata({ params }) {
     apartmentName: car.model || canonicalSlug,
     locationName,
     guests: car.seats ? String(car.seats) : "",
+    description: car.description || "",
   });
 }
 
@@ -118,20 +126,69 @@ export default async function ApartmentDetailPage({ params }) {
       photoUrl: c.photoUrl,
     }));
 
+  const fallbackLocation =
+    getLocationById(locale, LOCATION_IDS.PEFKOHORI) ||
+    getLocationById(locale, LOCATION_IDS.KASSANDRA) ||
+    getLocationById(locale, LOCATION_IDS.HALKIDIKI);
+  const locationName =
+    fallbackLocation?.shortName || "Pefkohori";
+  const apartmentPath = getApartmentPath(locale, resolvedCar.slug);
+  const priceFrom = getApartmentPriceFrom(resolvedCar);
+
+  const apartmentJsonLd = buildApartmentJsonLd({
+    localeCandidate: locale,
+    pagePath: apartmentPath,
+    apartment: {
+      model: resolvedCar.model,
+      description: resolvedCar.description,
+      photoUrl: resolvedCar.photoUrl,
+      gallery: resolvedCar.gallery,
+      seats: resolvedCar.seats,
+      beds: resolvedCar.beds,
+      bathrooms: resolvedCar.bathrooms,
+      sizeSqm: resolvedCar.sizeSqm,
+      floor: resolvedCar.floor,
+      amenities: resolvedCar.amenities,
+      transferPrice: resolvedCar.transferPrice,
+      priceFrom,
+    },
+    locationName,
+    company: companyData,
+  });
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Home", url: toAbsoluteUrl(`/${locale}`) },
+    { name: "Apartments", url: toAbsoluteUrl(`/${locale}/apartments`) },
+    {
+      name: resolvedCar.model || resolvedCar.slug,
+      url: toAbsoluteUrl(apartmentPath),
+    },
+  ]);
+
   return (
-    <Feed
-      cars={allCarsData}
-      orders={ordersData}
-      company={companyData}
-      locale={locale}
-      isMain={false}
-    >
-      <SuitePageView
-        apartmentSlug={resolvedCar.slug}
-        locale={locale}
-        relatedSuites={relatedSuites}
-        initialApartment={resolvedCar}
+    <>
+      <JsonLdScript
+        id={`apartment-jsonld-${resolvedCar.slug}-${locale}`}
+        data={apartmentJsonLd}
       />
-    </Feed>
+      <JsonLdScript
+        id={`apartment-breadcrumb-${resolvedCar.slug}-${locale}`}
+        data={breadcrumbJsonLd}
+      />
+      <Feed
+        cars={allCarsData}
+        orders={ordersData}
+        company={companyData}
+        locale={locale}
+        isMain={false}
+      >
+        <SuitePageView
+          apartmentSlug={resolvedCar.slug}
+          locale={locale}
+          relatedSuites={relatedSuites}
+          initialApartment={resolvedCar}
+        />
+      </Feed>
+    </>
   );
 }

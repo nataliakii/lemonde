@@ -49,7 +49,7 @@ export function getCarsNkCompanyDefaults() {
       ink: "#2C3138",
     },
     assets: {
-      logoMark: "/logo-mark.png",
+      logoMark: "",
       logoWordmark: "",
       favicon: "/favicon.ico",
       ogImage: "",

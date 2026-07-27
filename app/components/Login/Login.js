@@ -17,8 +17,9 @@ const LoginForm = ({ company: companyFromServer = null }) => {
   // Prefer SSR company so logo/name are correct on first paint (login has no Feed).
   const company = companyFromServer || companyFromContext;
   const brand = resolveBrandConfig(company);
-  const logoSrc = brand.assets.logoMark || "/logo-mark.png";
-  const brandName = brand.name || "V Luxury Suites";
+  const logoSrc =
+    typeof brand.assets.logoMark === "string" ? brand.assets.logoMark.trim() : "";
+  const brandName = brand.name || "";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,15 +57,18 @@ const LoginForm = ({ company: companyFromServer = null }) => {
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
       <div className={styles.brand}>
-        <Image
-          src={logoSrc}
-          alt={brandName}
-          width={56}
-          height={56}
-          className={styles.logo}
-          priority
-        />
-        <h1 className={styles.title}>{brandName}</h1>
+        {logoSrc ? (
+          <Image
+            src={logoSrc}
+            alt={brandName || "Logo"}
+            width={56}
+            height={56}
+            className={styles.logo}
+            priority
+            unoptimized
+          />
+        ) : null}
+        {brandName ? <h1 className={styles.title}>{brandName}</h1> : null}
         <p className={styles.subtitle}>Staff login</p>
       </div>
       <input

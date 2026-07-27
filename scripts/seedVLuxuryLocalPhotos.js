@@ -1,12 +1,12 @@
 /**
- * Attach public/images/vluxury/*.jpg to one V Luxury suite.
+ * Attach public/images/vluxury/{1..8}/*.jpg to VLS-01..08.
  *
- * Tries Cloudinary upload first; on 403/failure uses local public paths
- * so the site can show photos without a working upload API key.
+ * Tries Cloudinary upload first; on failure uses local public paths
+ * so Vercel can serve /images/vluxury/... from the repo.
  *
  * Usage:
  *   MONGODB_DB_NAME=vluxury npm run seed:vluxury-local-photos
- *   CAR_NUMBER=VLS-01 npm run seed:vluxury-local-photos
+ *   CAR_NUMBER=VLS-01 npm run seed:vluxury-local-photos   # one suite only
  */
 const fs = require("fs");
 const path = require("path");
@@ -23,8 +23,20 @@ const MONGODB_URI =
 const COMPANY_ID =
   process.env.COMPANY_ID || "686f0a1b2c3d4e5f67890123";
 
-const CAR_NUMBER = process.env.CAR_NUMBER || "VLS-01";
-const DIR = path.join(process.cwd(), "public", "images", "vluxury");
+const ONLY_CAR = String(process.env.CAR_NUMBER || "").trim();
+const ROOT = path.join(process.cwd(), "public", "images", "vluxury");
+
+/** Map folder number → carNumber (rooms renumbered 1–8). */
+const FOLDER_TO_CAR = {
+  1: "VLS-01",
+  2: "VLS-02",
+  3: "VLS-03",
+  4: "VLS-04",
+  5: "VLS-05",
+  6: "VLS-06",
+  7: "VLS-07",
+  8: "VLS-08",
+};
 
 async function tryCloudinaryUpload(filePath, publicIdBase) {
   try {
@@ -34,7 +46,9 @@ async function tryCloudinaryUpload(filePath, publicIdBase) {
       api_key: process.env.CLOUDINARY_API_KEY,
       api_secret: process.env.CLOUDINARY_API_SECRET,
     });
-    const root = String(process.env.CLOUDINARY_ROOT_FOLDER || "vluxury").trim();
+    const root = String(
+      process.env.CLOUDINARY_ROOT_FOLDER || "vluxurysuites"
+    ).trim();
     const folder = `${root}/apartments`;
     const opts = {
       folder,
@@ -46,10 +60,38 @@ async function tryCloudinaryUpload(filePath, publicIdBase) {
     if (preset) opts.upload_preset = preset;
 
     const result = await cloudinary.uploader.upload(filePath, opts);
-    return result.public_id;
-  } catch (e) {
+    return result.secure_url || result.public_id;
+  } catch {
     return null;
   }
+}
+
+function listImages(dir) {
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir)
+    .filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
+    .sort();
+}
+
+async function uploadOrLocal(files, folderNum) {
+  const refs = [];
+  let viaCloudinary = 0;
+  for (const file of files) {
+    const abs = path.join(ROOT, String(folderNum), file);
+    const base = path.basename(file, path.extname(file)).replace(/\s+/g, "-");
+    const publicId = await tryCloudinaryUpload(
+      abs,
+      `vls-${folderNum}-${base}`
+    );
+    if (publicId) {
+      refs.push(publicId);
+      viaCloudinary += 1;
+    } else {
+      refs.push(`/images/vluxury/${folderNum}/${file}`);
+    }
+  }
+  return { refs, viaCloudinary };
 }
 
 async function main() {
@@ -58,75 +100,84 @@ async function main() {
   if (dbName === "lemonde") {
     throw new Error("Refusing to run against MONGODB_DB_NAME=lemonde");
   }
-  if (!fs.existsSync(DIR)) {
-    throw new Error(`Missing folder: ${DIR}`);
+  if (!fs.existsSync(ROOT)) {
+    throw new Error(`Missing folder: ${ROOT}`);
   }
 
-  const files = fs
-    .readdirSync(DIR)
-    .filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
-    .sort();
-
-  if (!files.length) throw new Error(`No images in ${DIR}`);
-
-  console.log(`DB=${dbName} suite=${CAR_NUMBER} files=${files.length}`);
-
-  const refs = [];
-  let viaCloudinary = 0;
-  for (const file of files) {
-    const abs = path.join(DIR, file);
-    const base = path.basename(file, path.extname(file));
-    const publicId = await tryCloudinaryUpload(abs, `vls-${base}`);
-    if (publicId) {
-      refs.push(publicId);
-      viaCloudinary += 1;
-      console.log("  cloudinary", publicId);
-    } else {
-      const local = `/images/vluxury/${file}`;
-      refs.push(local);
-      console.log("  local", local);
-    }
+  const targets = Object.entries(FOLDER_TO_CAR).filter(([, car]) =>
+    ONLY_CAR ? car === ONLY_CAR : true
+  );
+  if (!targets.length) {
+    throw new Error(`No targets for CAR_NUMBER=${ONLY_CAR || "(all)"}`);
   }
 
-  if (viaCloudinary === 0) {
-    console.warn(
-      "Cloudinary upload failed for all files (likely API key has no Upload permission). Using local /images/vluxury paths."
-    );
-  } else {
-    console.log(`Uploaded ${viaCloudinary}/${files.length} to Cloudinary.`);
-  }
+  console.log(`DB=${dbName} suites=${targets.map(([, c]) => c).join(", ")}`);
 
   await mongoose.connect(MONGODB_URI, { dbName });
   const apartments = mongoose.connection.db.collection("apartments");
   const companies = mongoose.connection.db.collection("companies");
 
-  const photoUrl = refs[0];
-  const gallery = refs.slice(1);
+  const allPropertyRefs = [];
+  let totalCloud = 0;
+  let totalFiles = 0;
 
-  const result = await apartments.updateOne(
-    { carNumber: CAR_NUMBER },
-    { $set: { photoUrl, gallery } }
-  );
+  for (const [folderNum, carNumber] of targets) {
+    const dir = path.join(ROOT, String(folderNum));
+    const files = listImages(dir);
+    if (!files.length) {
+      console.warn(`Skip ${carNumber}: no images in ${dir}`);
+      continue;
+    }
+    totalFiles += files.length;
+    const { refs, viaCloudinary } = await uploadOrLocal(files, folderNum);
+    totalCloud += viaCloudinary;
 
-  if (result.matchedCount === 0) {
-    throw new Error(`Apartment ${CAR_NUMBER} not found in ${dbName}`);
+    const photoUrl = refs[0];
+    const gallery = refs.slice(1);
+    const result = await apartments.updateOne(
+      { carNumber },
+      { $set: { photoUrl, gallery, dateLastModified: new Date() } }
+    );
+    if (result.matchedCount === 0) {
+      console.warn(`Apartment ${carNumber} not found — skipped`);
+      continue;
+    }
+    console.log(
+      `${carNumber}: cover + ${gallery.length} gallery (${viaCloudinary}/${files.length} cloudinary)`
+    );
+    allPropertyRefs.push(...refs);
   }
 
-  console.log(
-    `Updated ${CAR_NUMBER}: photoUrl + ${gallery.length} gallery image(s)`
-  );
+  if (totalCloud === 0 && totalFiles > 0) {
+    console.warn(
+      "Cloudinary upload failed for all files — using local /images/vluxury paths."
+    );
+  }
 
-  // Company property gallery from this suite's photos (local paths OK)
+  // Unique mix for company gallery strip (keep order, dedupe).
+  // Do NOT write suite photos into assets.heroImages — homepage hero stays
+  // branded gradient unless hero is set deliberately in admin/DB.
+  const seen = new Set();
+  const galleryImages = [];
+  for (const ref of allPropertyRefs) {
+    if (seen.has(ref)) continue;
+    seen.add(ref);
+    galleryImages.push(ref);
+    if (galleryImages.length >= 36) break;
+  }
+
+  // Logo: never invent from /public — assets.logoMark is Mongo/admin only.
+  const companySet = {
+    "assets.galleryImages": galleryImages,
+  };
+
   await companies.updateOne(
     { _id: new mongoose.Types.ObjectId(COMPANY_ID) },
-    {
-      $set: {
-        "assets.galleryImages": refs,
-        "assets.ogImage": refs[0] || "",
-      },
-    }
+    { $set: companySet }
   );
-  console.log(`Synced company gallery (${refs.length} images).`);
+  console.log(
+    `Company gallery updated: ${galleryImages.length} images (logo/hero left untouched)`
+  );
 
   await mongoose.disconnect();
   console.log("Done.");

@@ -517,7 +517,7 @@ export default function SuitePageView({
               fontStyle: "italic",
               fontSize: "1.5rem",
               color: "secondary.main",
-              mb: 2.5,
+              mb: 1,
             }}
           >
             from €{priceFrom}
@@ -535,6 +535,19 @@ export default function SuitePageView({
             </Box>
           </Typography>
         )}
+
+        {Number(apartment?.transferPrice) > 0 ? (
+          <Typography
+            sx={{
+              color: "text.secondary",
+              fontSize: "0.92rem",
+              letterSpacing: "0.02em",
+              mb: 2.5,
+            }}
+          >
+            Airport transfer €{Number(apartment.transferPrice)}
+          </Typography>
+        ) : null}
 
         {apartment.description ? (
           <Typography

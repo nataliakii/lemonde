@@ -1,24 +1,56 @@
 "use client";
 
-import { Box, Button, Typography } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
+import { Box, Button, IconButton, Typography } from "@mui/material";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Link from "next/link";
 import Image from "next/image";
+import { CldImage } from "next-cloudinary";
 import { brandWordmarkSx } from "@/domain/branding/brandWordmarkSx";
+import { isDirectImageSrc } from "@/domain/media/imageSrc";
+
+const AUTO_MS = 5500;
 
 /**
  * Full-bleed landing hero.
- * Brand name / optional hero image come from company (DB) via props.
- * Gradients use theme.brandSurfaces from Mongo company.branding.
+ * Photos ONLY from company.assets.heroImages (Mongo / admin) — never suite photos.
+ * Empty heroImages → branded gradient screen.
  */
 export default function SuitesHero({
   locale = "en",
   tagline,
   ctaLabel,
   brandName = "V Luxury Suites",
-  heroImage = "",
+  heroImages = [],
 }) {
   const apartmentsHref = `/${locale}/apartments`;
-  const hasHeroImage = Boolean(heroImage);
+  const slides = Array.isArray(heroImages)
+    ? heroImages.map((s) => String(s || "").trim()).filter(Boolean)
+    : [];
+  const multi = slides.length > 1;
+  const [index, setIndex] = useState(0);
+
+  const go = useCallback(
+    (next) => {
+      if (!slides.length) return;
+      const n = slides.length;
+      setIndex(((next % n) + n) % n);
+    },
+    [slides.length]
+  );
+
+  useEffect(() => {
+    setIndex(0);
+  }, [slides.join("|")]);
+
+  useEffect(() => {
+    if (!multi) return undefined;
+    const id = setInterval(() => go(index + 1), AUTO_MS);
+    return () => clearInterval(id);
+  }, [multi, index, go]);
+
+  const hasHeroImage = slides.length > 0;
 
   return (
     <Box
@@ -42,19 +74,49 @@ export default function SuitesHero({
     >
       {hasHeroImage ? (
         <>
-          <Image
-            src={heroImage}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            style={{ objectFit: "cover" }}
-          />
+          {slides.map((src, i) => {
+            const active = i === index;
+            return (
+              <Box
+                key={`${src}-${i}`}
+                aria-hidden={!active}
+                sx={{
+                  position: "absolute",
+                  inset: 0,
+                  opacity: active ? 1 : 0,
+                  transition: "opacity 0.9s ease",
+                  pointerEvents: "none",
+                }}
+              >
+                {isDirectImageSrc(src) ? (
+                  <Image
+                    src={src}
+                    alt=""
+                    fill
+                    priority={i === 0}
+                    sizes="100vw"
+                    style={{ objectFit: "cover" }}
+                  />
+                ) : (
+                  <CldImage
+                    src={src}
+                    alt=""
+                    fill
+                    crop="fill"
+                    priority={i === 0}
+                    sizes="100vw"
+                    style={{ objectFit: "cover" }}
+                  />
+                )}
+              </Box>
+            );
+          })}
           <Box
             aria-hidden
             sx={(theme) => ({
               position: "absolute",
               inset: 0,
+              zIndex: 1,
               background:
                 theme.brandSurfaces?.heroImageOverlay ||
                 "linear-gradient(165deg, rgba(14,12,10,0.72) 0%, rgba(26,22,18,0.55) 50%, rgba(14,12,10,0.78) 100%)",
@@ -75,10 +137,85 @@ export default function SuitesHero({
         />
       )}
 
+      {multi ? (
+        <>
+          <IconButton
+            aria-label="Previous hero photo"
+            onClick={() => go(index - 1)}
+            sx={{
+              position: "absolute",
+              left: { xs: 8, md: 20 },
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 3,
+              bgcolor: "rgba(14,12,10,0.42)",
+              color: "#F5F0E6",
+              width: 40,
+              height: 40,
+              "&:hover": { bgcolor: "rgba(14,12,10,0.68)" },
+            }}
+          >
+            <ChevronLeftIcon />
+          </IconButton>
+          <IconButton
+            aria-label="Next hero photo"
+            onClick={() => go(index + 1)}
+            sx={{
+              position: "absolute",
+              right: { xs: 8, md: 20 },
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 3,
+              bgcolor: "rgba(14,12,10,0.42)",
+              color: "#F5F0E6",
+              width: 40,
+              height: 40,
+              "&:hover": { bgcolor: "rgba(14,12,10,0.68)" },
+            }}
+          >
+            <ChevronRightIcon />
+          </IconButton>
+          <Box
+            sx={{
+              position: "absolute",
+              bottom: { xs: 20, md: 28 },
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 3,
+              display: "flex",
+              gap: 1,
+            }}
+          >
+            {slides.map((_, i) => (
+              <Box
+                key={`dot-${i}`}
+                component="button"
+                type="button"
+                aria-label={`Go to hero photo ${i + 1}`}
+                onClick={() => setIndex(i)}
+                sx={{
+                  width: i === index ? 22 : 8,
+                  height: 8,
+                  borderRadius: 4,
+                  border: "none",
+                  cursor: "pointer",
+                  p: 0,
+                  bgcolor:
+                    i === index
+                      ? "rgba(245,240,230,0.95)"
+                      : "rgba(245,240,230,0.4)",
+                  transition: "width 0.25s ease, background-color 0.25s ease",
+                }}
+              />
+            ))}
+          </Box>
+        </>
+      ) : null}
+
       <Box
         sx={{
           position: "relative",
-          zIndex: 1,
+          zIndex: 2,
           textAlign: "center",
           px: { xs: 3, md: 6 },
           maxWidth: 820,

@@ -32,9 +32,13 @@ export const PATCH = async (request) => {
     await connectToDB();
     const updates = await request.json();
 
-    const company = await Company.findByIdAndUpdate(COMPANY_ID, updates, {
-      new: true,
-    });
+    // Always $set so dotted paths like "assets.heroImages" update one field
+    // without replacing the whole assets subdocument.
+    const company = await Company.findByIdAndUpdate(
+      COMPANY_ID,
+      { $set: updates },
+      { new: true }
+    );
 
     if (!company) {
       return new Response(

@@ -28,6 +28,7 @@ import { buildHreflangAlternates } from "./hreflangBuilder";
 import { getRobotsForPath } from "./indexingPolicy";
 import { toAbsoluteUrl } from "./urlBuilder";
 import { SINGLE_PROPERTY_MODE } from "@config/domain";
+import { resolveBrandConfig } from "@/domain/branding/resolveBrandConfig";
 
 const OG_LOCALE_MAP: Record<string, string> = {
   en: "en_US",
@@ -54,9 +55,11 @@ function isRobotsIndexable(robots: Metadata["robots"]): boolean {
 function toAbsoluteAssetUrl(
   baseUrl: string,
   assetUrl: string | null | undefined,
-  fallbackPath: string
+  fallbackPath = ""
 ): string {
-  const raw = String(assetUrl || "").trim() || fallbackPath;
+  const raw =
+    String(assetUrl || "").trim() || String(fallbackPath || "").trim();
+  if (!raw) return "";
   if (/^https?:\/\//i.test(raw)) return raw;
   const path = raw.startsWith("/") ? raw : `/${raw}`;
   return `${baseUrl}${path}`;
@@ -94,7 +97,7 @@ function buildBaseMetadata(input: {
     toAbsoluteAssetUrl(
       seoConfig.baseUrl,
       seoConfig.ogImage || seoConfig.heroImageUrl,
-      "/logo-mark.png"
+      ""
     );
 
   const alternates: Metadata["alternates"] = {
@@ -115,20 +118,24 @@ function buildBaseMetadata(input: {
       locale: getOpenGraphLocale(input.locale),
       type: "website",
       siteName: seoConfig.siteName,
-      images: [
-        {
-          url: ogImage,
-          width: 1200,
-          height: 630,
-          alt: seoConfig.siteName,
-        },
-      ],
+      ...(ogImage
+        ? {
+            images: [
+              {
+                url: ogImage,
+                width: 1200,
+                height: 630,
+                alt: seoConfig.siteName,
+              },
+            ],
+          }
+        : {}),
     },
     twitter: {
       card: "summary_large_image",
       title: input.title,
       description: input.description,
-      images: [ogImage],
+      ...(ogImage ? { images: [ogImage] } : {}),
     },
     robots,
   };
@@ -140,12 +147,13 @@ export async function buildHubMetadata(
   const locale = normalizeLocale(localeCandidate);
   const company = await loadCompanyForSeo();
   const seoConfig = getSeoConfig(company);
+  const brand = resolveBrandConfig(company);
   const hubSeo = getHubSeo(locale, company);
   const canonicalPath = getLocaleRootPath(locale);
   const ogImageUrl = toAbsoluteAssetUrl(
     seoConfig.baseUrl,
-    seoConfig.ogImage || seoConfig.heroImageUrl,
-    "/logo-mark.png"
+    seoConfig.ogImage || seoConfig.heroImageUrl || brand.assets.logoMark,
+    ""
   );
 
   return buildBaseMetadata({
@@ -245,21 +253,26 @@ export async function buildApartmentMetadata(input: {
   apartmentName: string;
   locationName?: string;
   guests?: string;
+  description?: string;
 }): Promise<Metadata> {
   const locale = normalizeLocale(input.localeCandidate);
   const company = await loadCompanyForSeo();
   const seoConfig = getSeoConfig(company);
+  const brand = resolveBrandConfig(company);
   const name = input.apartmentName || input.apartmentSlug;
   const locationName =
     input.locationName || seoConfig.placeName || "Pefkohori";
   const guestsPart = input.guests ? ` · up to ${input.guests} guests` : "";
   const title = `${name} | ${seoConfig.siteName}`;
-  const description = `${name} at ${seoConfig.siteName} in ${locationName}${guestsPart}. Browse photos and request your stay.`;
+  const customDescription = String(input.description || "").trim();
+  const description =
+    customDescription ||
+    `${name} at ${seoConfig.siteName} in ${locationName}${guestsPart}. Browse photos and request your stay.`;
   const canonicalPath = getApartmentPath(locale, input.apartmentSlug);
   const ogImageUrl = toAbsoluteAssetUrl(
     seoConfig.baseUrl,
-    seoConfig.ogImage || seoConfig.heroImageUrl,
-    "/logo-mark.png"
+    seoConfig.ogImage || seoConfig.heroImageUrl || brand.assets.logoMark,
+    ""
   );
 
   return buildBaseMetadata({

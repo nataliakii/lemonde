@@ -74,8 +74,9 @@ const units = [
     floor: 2,
     sort: 1,
     priceFrom: 175,
+    transferPrice: 160,
     description:
-      "Deluxe Double Room with Balcony and Sea View (20 m²). Air-conditioned double room with flat-screen TV, private bathroom, and a terrace with sea views. Pool with a view is a highlight. 1 extra-large double bed.",
+      "Wake to the Aegean. This sea-view double opens onto a private balcony above the infinity pool — cool marble bath, crisp linens, and that slow Kassandra light pouring in.",
     amenities: [
       ...BASE_AMENITIES,
       "sea view",
@@ -102,8 +103,9 @@ const units = [
     floor: 1,
     sort: 2,
     priceFrom: 160,
+    transferPrice: 160,
     description:
-      "Deluxe Double Room (20 m²). Air-conditioned double room with flat-screen TV, private bathroom, and a balcony with garden views. Pool with a view is the standout feature. 1 extra-large double bed.",
+      "Garden hush, pool glint. A refined double with balcony seating — airy, soundproofed, and made for long breakfasts before you slip down to the water.",
     amenities: [
       ...BASE_AMENITIES,
       "balcony",
@@ -129,8 +131,9 @@ const units = [
     floor: 2,
     sort: 3,
     priceFrom: 170,
+    transferPrice: 160,
     description:
-      "Deluxe King Room. Allergy-free, soundproofed unit with king bed, air conditioning, flat-screen TV with satellite channels, tea/coffee facilities, private bathroom, and balcony or patio. Sea or garden views depending on unit.",
+      "King-bed calm with a boutique edge — hypoallergenic comfort, satellite TV, tea on the balcony, and night air that still smells faintly of pine and sea.",
     amenities: [
       ...BASE_AMENITIES,
       "balcony",
@@ -154,8 +157,9 @@ const units = [
     floor: 1,
     sort: 4,
     priceFrom: 155,
+    transferPrice: 160,
     description:
-      "Superior Queen Room. Comfortable queen-bed room with air conditioning, soundproof windows, flat-screen TV, tea/coffee maker, private bathroom, and outdoor seating area.",
+      "A superior queen room that feels quietly expensive: soft light, outdoor seating, soundproof windows, and everything you need for an unhurried Pefkohori stay.",
     amenities: [
       ...BASE_AMENITIES,
       "balcony",
@@ -179,8 +183,9 @@ const units = [
     floor: 2,
     sort: 5,
     priceFrom: 195,
+    transferPrice: 160,
     description:
-      "Deluxe Quadruple Room. Spacious family-friendly room for up to 4 guests, air conditioning, soundproofing, flat-screen TV, tea/coffee facilities, private bathroom, and terrace/balcony access.",
+      "Space to sprawl. This deluxe quadruple is built for families and friends — room to breathe, a private terrace, and the same silver-calm finish as the rest of the house.",
     amenities: [
       ...BASE_AMENITIES,
       "balcony",
@@ -205,8 +210,9 @@ const units = [
     floor: 2,
     sort: 6,
     priceFrom: 210,
+    transferPrice: 160,
     description:
-      "Junior Suite with Sea View. Larger suite with sea views, air conditioning, soundproof windows, flat-screen TV, tea/coffee facilities, private bathroom, dressing area, and terrace.",
+      "The signature junior suite — sea on the horizon, a dressing area to unpack properly, and a wide terrace for golden-hour wine above Kassandra.",
     amenities: [
       ...BASE_AMENITIES,
       "sea view",
@@ -232,8 +238,9 @@ const units = [
     floor: 2,
     sort: 7,
     priceFrom: 175,
+    transferPrice: 160,
     description:
-      "Deluxe Double Room with Balcony and Sea View (20 m²). Second sea-view double unit: flat-screen TV, private bathroom, terrace with sea views, pool views, and 1 extra-large double bed.",
+      "Another sea-view double with balcony drama — pool below, Aegean beyond, and a room that stays cool and quiet even when the village wakes up.",
     amenities: [
       ...BASE_AMENITIES,
       "sea view",
@@ -260,8 +267,9 @@ const units = [
     floor: 1,
     sort: 8,
     priceFrom: 170,
+    transferPrice: 160,
     description:
-      "Deluxe King Room. Eighth unit — king bed, air conditioning, soundproofing, flat-screen TV, tea/coffee maker, private bathroom, and outdoor furniture on balcony/patio.",
+      "King comfort with a garden-facing patio — polished, soundproofed, and ready for late swims and early espresso under Halkidiki skies.",
     amenities: [
       ...BASE_AMENITIES,
       "balcony",
@@ -406,7 +414,9 @@ async function main() {
   }
 
   for (const unit of units) {
-    const { priceFrom, beds, ...rest } = unit;
+    // Never overwrite media / orders on re-seed — photos come from
+    // seed:vluxury-local-photos or admin uploads.
+    const { priceFrom, beds, photoUrl, gallery, ...rest } = unit;
     const doc = {
       ...rest,
       transmission: "automatic",
@@ -423,15 +433,21 @@ async function main() {
       pricingTiers: pricesFrom(priceFrom),
       testingCar: false,
       ownerId: new mongoose.Types.ObjectId(COMPANY_ID),
-      orders: [],
       beds,
-      dateAddCar: new Date(),
       dateLastModified: new Date(),
     };
 
     const result = await col.updateOne(
       { slug: unit.slug },
-      { $set: doc },
+      {
+        $set: doc,
+        $setOnInsert: {
+          photoUrl: typeof photoUrl === "string" ? photoUrl : "",
+          gallery: Array.isArray(gallery) ? gallery : [],
+          orders: [],
+          dateAddCar: new Date(),
+        },
+      },
       { upsert: true }
     );
     console.log(
@@ -443,6 +459,8 @@ async function main() {
 
   try {
     const companies = mongoose.connection.collection("companies");
+    // Never overwrite media from DB (logo/gallery/hero) — those come from
+    // seed:vluxury-local-photos / admin uploads. Only set assets on first insert.
     await companies.updateOne(
       { _id: new mongoose.Types.ObjectId(COMPANY_ID) },
       {
@@ -467,15 +485,6 @@ async function main() {
             accent: "#7A8B9A",
             ink: "#2C3138",
           },
-          assets: {
-            logoMark: "/logo-mark.png",
-            logoWordmark: "",
-            favicon: "/favicon.ico",
-            // Filled from suite photos after admin upload (npm run sync:property-gallery)
-            ogImage: "",
-            heroImages: [],
-            galleryImages: [],
-          },
           cloudinary: {
             rootFolder: process.env.CLOUDINARY_ROOT_FOLDER || "vluxurysuites",
             apartmentsFolder: "apartments",
@@ -497,10 +506,20 @@ async function main() {
             placeName: "Pefkohori",
           },
         },
+        $setOnInsert: {
+          assets: {
+            logoMark: "",
+            logoWordmark: "",
+            favicon: "/favicon.ico",
+            ogImage: "",
+            heroImages: [],
+            galleryImages: [],
+          },
+        },
       },
       { upsert: true }
     );
-    console.log("Company brand updated.");
+    console.log("Company brand updated (assets preserved if already set).");
   } catch (e) {
     console.warn("Company update skipped:", e.message);
   }

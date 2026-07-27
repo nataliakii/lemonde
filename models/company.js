@@ -77,10 +77,11 @@ const CompanySchema = new Schema({
   },
 
   /**
-   * Public media — local paths (/logo-mark.png) or absolute Cloudinary/CDN URLs.
+   * Public media — absolute Cloudinary/CDN URLs preferred (set in Mongo).
+   * Empty logoMark → UI shows wordmark only (no local /public fallback).
    */
   assets: {
-    logoMark: { type: String, default: "/logo-mark.png" },
+    logoMark: { type: String, default: "" },
     logoWordmark: { type: String, default: "" },
     favicon: { type: String, default: "/favicon.ico" },
     ogImage: { type: String, default: "" },

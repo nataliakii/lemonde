@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import React from "react";
 
 function Error({ error, reset }) {
@@ -21,13 +20,6 @@ function Error({ error, reset }) {
           {String(error.message)}
         </pre>
       ) : null}
-      <Image
-        src="/logo-mark.png"
-        alt="V Luxury Suites"
-        width={130}
-        height={130}
-        unoptimized
-      />
       {typeof reset === "function" ? (
         <button type="button" onClick={reset} style={{ marginTop: 16 }}>
           Try again

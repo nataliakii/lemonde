@@ -57,6 +57,27 @@ export function getCloudinaryApartmentUploadOptions(company = null) {
   return options;
 }
 
+/** Brand / hero media: {root}/brand */
+export function getCloudinaryBrandFolder(company = null) {
+  return `${getCloudinaryRootFolder(company)}/brand`;
+}
+
+/**
+ * Options for homepage hero / brand image uploads.
+ * @param {object|null} [company]
+ */
+export function getCloudinaryBrandUploadOptions(company = null) {
+  const options = {
+    folder: getCloudinaryBrandFolder(company),
+    resource_type: "image",
+  };
+  const preset = getCloudinaryUploadPreset();
+  if (preset) {
+    options.upload_preset = preset;
+  }
+  return options;
+}
+
 /** Alias for suites wording */
 export function getCloudinaryApartmentsFolder(company = null) {
   return getCloudinaryCarsFolder(company);

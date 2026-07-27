@@ -18,7 +18,7 @@ const DEFAULT_BRANDING = {
 };
 
 const DEFAULT_ASSETS = {
-  logoMark: "/logo-mark.png",
+  logoMark: "",
   logoWordmark: "",
   favicon: "/favicon.ico",
   ogImage: "",

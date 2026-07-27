@@ -70,7 +70,7 @@ const AddCarModal = ({
     beds: 2,
     sizeSqm: 45,
     floor: 1,
-    transferPrice: 0,
+    transferPrice: 160,
     description: "",
     amenities: ["wifi", "kitchen", "air conditioning"],
   });
@@ -363,7 +363,7 @@ const AddCarModal = ({
                     type="number"
                     name="transferPrice"
                     label={t("car.transferPrice")}
-                    defaultValue={carData.transferPrice ?? 0}
+                    defaultValue={carData.transferPrice ?? 160}
                     updatedCar={carData}
                     handleChange={handleChange}
                   />

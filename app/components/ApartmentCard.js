@@ -449,7 +449,7 @@ const ApartmentCard = React.memo(function ApartmentCard({
             lineHeight: 1.6,
             opacity: 0.82,
             maxWidth: 420,
-            mb: 2,
+            mb: 1.25,
             display: "-webkit-box",
             WebkitLineClamp: 3,
             WebkitBoxOrient: "vertical",
@@ -457,6 +457,19 @@ const ApartmentCard = React.memo(function ApartmentCard({
           }}
         >
           {apartment.description}
+        </Typography>
+      ) : null}
+
+      {Number(apartment?.transferPrice) > 0 ? (
+        <Typography
+          sx={{
+            fontSize: "0.82rem",
+            letterSpacing: "0.03em",
+            opacity: 0.72,
+            mb: 2,
+          }}
+        >
+          Airport transfer €{Number(apartment.transferPrice)}
         </Typography>
       ) : null}
 
