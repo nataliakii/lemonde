@@ -1131,10 +1131,15 @@ body.hide-navbar-on-landscape-sm
    (V Luxury silver by default; overridden per company)
    ============================================ */
 .brand-wordmark {
+  display: inline-block;
   font-family: var(--font-display);
   font-style: italic;
   font-weight: 500;
   letter-spacing: 0.02em;
+  /* Keep descenders (y/g/p) visible with italic + background-clip */
+  line-height: 1.2;
+  padding: 0.06em 0.04em 0.16em;
+  overflow: visible;
   background: linear-gradient(
     110deg,
     var(--color-primary-dark) 0%,

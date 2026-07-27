@@ -90,7 +90,7 @@ export default function SuitesHero({
           sx={(theme) => ({
             ...brandWordmarkSx(theme),
             fontSize: { xs: "clamp(2.8rem, 12vw, 5.5rem)", md: "5.5rem" },
-            lineHeight: 1.05,
+            lineHeight: 1.22,
             mb: 2,
           })}
         >

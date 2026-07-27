@@ -11,10 +11,15 @@ export function brandWordmarkSx(theme) {
   const light = theme.palette.primary.light;
   const dark = theme.palette.primary.dark;
   return {
+    display: "inline-block",
     fontFamily: "var(--font-display)",
     fontStyle: "italic",
     fontWeight: 500,
     letterSpacing: "0.02em",
+    // Italic descenders (y/g/p) clip with background-clip + tight line-box
+    lineHeight: 1.2,
+    padding: "0.06em 0.04em 0.16em",
+    overflow: "visible",
     background: `linear-gradient(
       110deg,
       ${dark} 0%,

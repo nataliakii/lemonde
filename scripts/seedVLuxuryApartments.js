@@ -1,5 +1,5 @@
 /**
- * Seed V Luxury Suites (Pefkohori, Kassandra) — 9 rooms from Booking.com listing.
+ * Seed V Luxury Suites (Pefkohori, Kassandra) — 8 rooms.
  *
  * IMPORTANT: use a separate Mongo DB so Le Monde is never touched:
  *   MONGODB_DB_NAME=vluxury COMPANY_ID=<id> node scripts/seedVLuxuryApartments.js
@@ -56,8 +56,9 @@ const BASE_AMENITIES = [
 ];
 
 /**
- * 9 physical units. Types / copy from Booking.com
+ * 8 physical units. Types / copy from Booking.com
  * (V Luxury Suites Pefkohori). Photos: upload later via admin.
+ * Note: rooms renumbered 1–8 in sequence (old #6 removed; former 7–9 → 6–8).
  */
 const units = [
   {
@@ -194,32 +195,7 @@ const units = [
   {
     carNumber: "VLS-06",
     model: "V Luxury Suites, 6",
-    slug: "comfort-quadruple-room-6",
-    class: "one bedroom",
-    seats: 4,
-    numberOfDoors: 1,
-    bathrooms: 1,
-    beds: 2,
-    sizeSqm: 32,
-    floor: 1,
-    sort: 6,
-    priceFrom: 185,
-    description:
-      "Comfort Quadruple Room. Practical room for up to 4 guests with air conditioning, flat-screen TV, coffee/tea maker, private bathroom, and patio or balcony. Ideal for families.",
-    amenities: [
-      ...BASE_AMENITIES,
-      "balcony",
-      "patio",
-      "family room",
-    ],
-    airConditioning: true,
-    photoUrl: "",
-    gallery: [],
-  },
-  {
-    carNumber: "VLS-07",
-    model: "V Luxury Suites, 7",
-    slug: "junior-suite-sea-view-7",
+    slug: "junior-suite-sea-view-6",
     class: "suite",
     seats: 3,
     numberOfDoors: 1,
@@ -227,7 +203,7 @@ const units = [
     beds: 2,
     sizeSqm: 40,
     floor: 2,
-    sort: 7,
+    sort: 6,
     priceFrom: 210,
     description:
       "Junior Suite with Sea View. Larger suite with sea views, air conditioning, soundproof windows, flat-screen TV, tea/coffee facilities, private bathroom, dressing area, and terrace.",
@@ -244,9 +220,9 @@ const units = [
     gallery: [],
   },
   {
-    carNumber: "VLS-08",
-    model: "V Luxury Suites, 8",
-    slug: "deluxe-double-balcony-sea-view-8",
+    carNumber: "VLS-07",
+    model: "V Luxury Suites, 7",
+    slug: "deluxe-double-balcony-sea-view-7",
     class: "studio",
     seats: 2,
     numberOfDoors: 0,
@@ -254,7 +230,7 @@ const units = [
     beds: 1,
     sizeSqm: 20,
     floor: 2,
-    sort: 8,
+    sort: 7,
     priceFrom: 175,
     description:
       "Deluxe Double Room with Balcony and Sea View (20 m²). Second sea-view double unit: flat-screen TV, private bathroom, terrace with sea views, pool views, and 1 extra-large double bed.",
@@ -272,9 +248,9 @@ const units = [
     gallery: [],
   },
   {
-    carNumber: "VLS-09",
-    model: "V Luxury Suites, 9",
-    slug: "deluxe-king-room-9",
+    carNumber: "VLS-08",
+    model: "V Luxury Suites, 8",
+    slug: "deluxe-king-room-8",
     class: "studio",
     seats: 2,
     numberOfDoors: 0,
@@ -282,10 +258,10 @@ const units = [
     beds: 1,
     sizeSqm: 22,
     floor: 1,
-    sort: 9,
+    sort: 8,
     priceFrom: 170,
     description:
-      "Deluxe King Room. Ninth unit — king bed, air conditioning, soundproofing, flat-screen TV, tea/coffee maker, private bathroom, and outdoor furniture on balcony/patio.",
+      "Deluxe King Room. Eighth unit — king bed, air conditioning, soundproofing, flat-screen TV, tea/coffee maker, private bathroom, and outdoor furniture on balcony/patio.",
     amenities: [
       ...BASE_AMENITIES,
       "balcony",
@@ -325,11 +301,108 @@ async function main() {
   const col = mongoose.connection.collection(collectionName);
   console.log(`DB=${dbName} collection=${collectionName} COMPANY_ID=${COMPANY_ID}`);
 
+  // One-time renumber after removing invalid #6: 7→6, 8→7, 9→8.
+  // Two-phase to avoid unique index collisions on carNumber.
+  // Skip if already renumbered (no VLS-09 / old slugs left).
+  const needsRenumber =
+    (await col.countDocuments({
+      $or: [
+        { carNumber: "VLS-09" },
+        { slug: "junior-suite-sea-view-7" },
+        { slug: "deluxe-king-room-9" },
+      ],
+    })) > 0;
+
+  if (needsRenumber) {
+    const renumberFinal = [
+      {
+        fromCar: "VLS-07",
+        toCar: "VLS-06",
+        fromSlug: "junior-suite-sea-view-7",
+        toSlug: "junior-suite-sea-view-6",
+        model: "V Luxury Suites, 6",
+        sort: 6,
+      },
+      {
+        fromCar: "VLS-08",
+        toCar: "VLS-07",
+        fromSlug: "deluxe-double-balcony-sea-view-8",
+        toSlug: "deluxe-double-balcony-sea-view-7",
+        model: "V Luxury Suites, 7",
+        sort: 7,
+      },
+      {
+        fromCar: "VLS-09",
+        toCar: "VLS-08",
+        fromSlug: "deluxe-king-room-9",
+        toSlug: "deluxe-king-room-8",
+        model: "V Luxury Suites, 8",
+        sort: 8,
+      },
+    ];
+    for (const step of renumberFinal) {
+      const tmpCar = `${step.fromCar}-TMP`;
+      const parked = await col.updateOne(
+        { carNumber: step.fromCar },
+        { $set: { carNumber: tmpCar, regNumber: tmpCar } }
+      );
+      if (parked.modifiedCount) {
+        console.log(`Parked ${step.fromCar} → ${tmpCar}`);
+      }
+    }
+    for (const step of renumberFinal) {
+      const tmpCar = `${step.fromCar}-TMP`;
+      const res = await col.updateOne(
+        { carNumber: tmpCar },
+        {
+          $set: {
+            carNumber: step.toCar,
+            regNumber: step.toCar,
+            slug: step.toSlug,
+            model: step.model,
+            sort: step.sort,
+            dateLastModified: new Date(),
+          },
+        }
+      );
+      if (res.modifiedCount) {
+        console.log(`Renumbered ${tmpCar} → ${step.toCar}`);
+      } else {
+        const bySlug = await col.updateOne(
+          { slug: step.fromSlug },
+          {
+            $set: {
+              carNumber: step.toCar,
+              regNumber: step.toCar,
+              slug: step.toSlug,
+              model: step.model,
+              sort: step.sort,
+              dateLastModified: new Date(),
+            },
+          }
+        );
+        if (bySlug.modifiedCount) {
+          console.log(`Renumbered by slug ${step.fromSlug} → ${step.toCar}`);
+        }
+      }
+    }
+  }
+
   const cleared = await col.deleteMany({
     carNumber: { $not: { $regex: /^VLS-/ } },
   });
   if (cleared.deletedCount) {
     console.log(`Removed ${cleared.deletedCount} non-VLS inventory docs.`);
+  }
+
+  const keepNumbers = units.map((u) => u.carNumber);
+  const removedStale = await col.deleteMany({
+    carNumber: { $nin: keepNumbers },
+  });
+  if (removedStale.deletedCount) {
+    console.log(
+      `Removed ${removedStale.deletedCount} stale VLS units (not in seed list).`
+    );
   }
 
   for (const unit of units) {
@@ -433,7 +506,7 @@ async function main() {
   }
 
   await mongoose.disconnect();
-  console.log("Done seeding V Luxury Suites (9 units).");
+  console.log("Done seeding V Luxury Suites (8 units).");
 }
 
 main().catch((err) => {
