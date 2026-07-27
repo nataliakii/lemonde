@@ -5,12 +5,7 @@ import { revalidatePath } from "next/cache";
 
 /**
  * PUT /api/company/buffer/[id]
- * 
- * Обновляет bufferTime компании
- * 
- * @param {Object} request - Request объект
- * @param {Object} params - Параметры маршрута { id: string }
- * @returns {NextResponse} - Обновлённая компания или ошибка
+ * Updates only bufferTime (partial $set — does not re-validate unrelated fields).
  */
 export const PUT = async (request, { params }) => {
   try {
@@ -25,11 +20,9 @@ export const PUT = async (request, { params }) => {
       );
     }
 
-    // Получаем bufferTime из тела запроса
     const body = await request.json();
     const { bufferTime } = body;
 
-    // Валидация
     if (bufferTime === undefined || bufferTime === null) {
       return NextResponse.json(
         { error: "bufferTime is required" },
@@ -38,28 +31,30 @@ export const PUT = async (request, { params }) => {
     }
 
     const bufferTimeNumber = Number(bufferTime);
-    if (isNaN(bufferTimeNumber) || bufferTimeNumber < 0 || bufferTimeNumber > 24) {
+    if (
+      isNaN(bufferTimeNumber) ||
+      bufferTimeNumber < 0 ||
+      bufferTimeNumber > 24
+    ) {
       return NextResponse.json(
         { error: "bufferTime must be a number between 0 and 24 hours" },
         { status: 400 }
       );
     }
 
-    // Находим компанию
-    const company = await Company.findById(companyId);
+    const updatedCompany = await Company.findByIdAndUpdate(
+      companyId,
+      { $set: { bufferTime: bufferTimeNumber } },
+      { new: true, runValidators: false }
+    );
 
-    if (!company) {
+    if (!updatedCompany) {
       return NextResponse.json(
         { error: "Company not found" },
         { status: 404 }
       );
     }
 
-    // Обновляем bufferTime
-    company.bufferTime = bufferTimeNumber;
-    const updatedCompany = await company.save();
-
-    // Инвалидируем кэш GET /api/company/[id], чтобы в production сразу отдавался свежий bufferTime
     revalidatePath(`/api/company/${companyId}`);
 
     return NextResponse.json(
@@ -78,4 +73,3 @@ export const PUT = async (request, { params }) => {
     );
   }
 };
-

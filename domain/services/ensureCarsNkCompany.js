@@ -79,20 +79,52 @@ export function getCarsNkCompanyDefaults() {
 }
 
 /**
- * Ensure company with COMPANY_ID exists. Creates it if missing.
+ * Ensure company with COMPANY_ID exists and has required operational fields.
+ * Creates if missing; backfills seasons / hoursDiff / bufferTime if incomplete.
  * @param {import("mongoose").Model} CompanyModel
  * @returns {Promise<object>} lean company document
  */
 export async function ensureCarsNkCompany(CompanyModel) {
   const existing = await CompanyModel.findById(COMPANY_ID).lean();
-  if (existing) return existing;
-
   const defaults = getCarsNkCompanyDefaults();
-  const created = await CompanyModel.create({
-    _id: new mongoose.Types.ObjectId(COMPANY_ID),
-    ...defaults,
-  });
-  return created.toObject ? created.toObject() : created;
+  const id = new mongoose.Types.ObjectId(COMPANY_ID);
+
+  if (!existing) {
+    const created = await CompanyModel.create({
+      _id: id,
+      ...defaults,
+    });
+    return created.toObject ? created.toObject() : created;
+  }
+
+  const patch = {};
+  if (existing.hoursDiffForStart == null) {
+    patch.hoursDiffForStart = defaults.hoursDiffForStart;
+  }
+  if (existing.hoursDiffForEnd == null) {
+    patch.hoursDiffForEnd = defaults.hoursDiffForEnd;
+  }
+  if (existing.bufferTime == null) {
+    patch.bufferTime = defaults.bufferTime;
+  }
+  if (!existing.defaultStart) patch.defaultStart = defaults.defaultStart;
+  if (!existing.defaultEnd) patch.defaultEnd = defaults.defaultEnd;
+  if (!existing.seasons?.HighSeason || !existing.seasons?.NoSeason) {
+    patch.seasons = defaults.seasons;
+  }
+  if (existing.useSeasons == null) patch.useSeasons = defaults.useSeasons;
+  if (existing.useEmail == null) patch.useEmail = defaults.useEmail;
+  if (!existing.tel) patch.tel = defaults.tel;
+  if (!Array.isArray(existing.locations) || !existing.locations.length) {
+    patch.locations = defaults.locations;
+  }
+
+  if (Object.keys(patch).length) {
+    await CompanyModel.updateOne({ _id: id }, { $set: patch });
+    return CompanyModel.findById(COMPANY_ID).lean();
+  }
+
+  return existing;
 }
 
 export default ensureCarsNkCompany;

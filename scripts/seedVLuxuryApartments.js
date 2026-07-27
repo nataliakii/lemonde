@@ -467,14 +467,35 @@ async function main() {
         $set: {
           name: "V Luxury Suites",
           slogan: "Suites · Pefkohori · Kassandra · Halkidiki",
-          email: "nataliakireewa@gmail.com",
+          tel: "+380 68 100 3771",
+          tel2: "+353 85 270 96 05",
           address: ADDRESS,
           coords: {
             lat: "39.982398",
             lon: "23.635154",
           },
+          hoursDiffForStart: 1,
+          hoursDiffForEnd: -1,
+          bufferTime: 2,
           defaultStart: "15:00",
           defaultEnd: "10:00",
+          seasons: {
+            NoSeason: { start: "01/10", end: "24/05" },
+            LowSeason: { start: "25/05", end: "30/06" },
+            LowUpSeason: { start: "01/09", end: "30/09" },
+            MiddleSeason: { start: "01/07", end: "31/07" },
+            HighSeason: { start: "01/08", end: "31/08" },
+          },
+          useSeasons: true,
+          useEmail: true,
+          langAdmin: "en",
+          langSuperadmin: "en",
+          locations: [
+            {
+              name: "Pefkohori",
+              coords: { lat: "39.982398", lon: "23.635154" },
+            },
+          ],
           branding: {
             primary: "#9AA3AD",
             primaryLight: "#D0D5DB",
@@ -507,6 +528,7 @@ async function main() {
           },
         },
         $setOnInsert: {
+          email: "",
           assets: {
             logoMark: "",
             logoWordmark: "",
