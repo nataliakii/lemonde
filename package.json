@@ -18,6 +18,8 @@
     "seed:delivery-zones": "node scripts/seedDeliveryZones.js",
     "seed:lemond-apartments": "node scripts/seedLeMondeApartments.js",
     "seed:vluxury-apartments": "node scripts/seedVLuxuryApartments.js",
+    "sync:property-gallery": "node scripts/syncPropertyGallery.js",
+    "seed:vluxury-local-photos": "node scripts/seedVLuxuryLocalPhotos.js",
     "migrate:cars-to-apartments": "node scripts/migrateCarsCollectionToApartments.js",
     "seed:carsnk-company": "node scripts/seedCarsNkCompany.js",
     "seed:owners": "node scripts/seedOwners.js",

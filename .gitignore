@@ -52,3 +52,6 @@ exports/cars-noseason-prices.csv
 exports/cars-noseason-prices.xlsx
 
 .venv-img/
+public/ChatGPT Image*.png
+public/images/vluxury/**/*.html
+public/images/vluxury/**/*_files/

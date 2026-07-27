@@ -109,7 +109,7 @@ export async function createOfflineOrderStub(row, ctx) {
       }
     }
 
-    const placeIn = String(row?.placeIn || "Nea Kallikratia").trim();
+    const placeIn = String(row?.placeIn || "Pefkohori").trim();
     const placeOut = String(row?.placeOut || placeIn).trim();
     const totalPrice = Number(row?.totalPrice);
     const orderNumber = await resolveUniqueOrderNumber(row?.orderNumber);

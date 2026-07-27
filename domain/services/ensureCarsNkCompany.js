@@ -72,6 +72,9 @@ export function getCarsNkCompanyDefaults() {
       ru: "Infinity pool, террасы с видом на море и спокойный отдых в Пефкохори.",
       el: "Infinity pool, βεράντες με θέα στη θάλασσα και ήρεμη διαμονή στο Πευκοχώρι.",
     },
+    seo: {
+      placeName: "Pefkohori",
+    },
   };
 }
 

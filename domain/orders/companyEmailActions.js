@@ -7,6 +7,7 @@ import { Order } from "@models/order";
 import { connectToDB } from "@lib/database";
 import { DEVELOPER_EMAIL } from "@config/email";
 import { getBaseUrl, absoluteUrl } from "@config/domain";
+import { getSeoConfig } from "@config/seo";
 import { sendEmailDirect } from "@/lib/email/sendDirect";
 import { sendTelegramDirect } from "@/lib/telegram/sendDirect";
 import { renderAdminOrderNotificationEmail } from "@/app/ui/email/renderEmail";
@@ -133,7 +134,7 @@ export async function applyCompanyEmailDecision({ token, decision }) {
   await notifySuperadmins({
     title,
     bodyLines: lines,
-    telegramText: `${title}\n\n${lines.join("\n")}\n\nLe Monde Suites · ${getBaseUrl()}`,
+    telegramText: `${title}\n\n${lines.join("\n")}\n\n${getSeoConfig().siteName} · ${getBaseUrl()}`,
   });
 
   return {

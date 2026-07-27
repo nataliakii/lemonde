@@ -11,10 +11,9 @@ function isUsablePhotoRef(value) {
   if (typeof value !== "string") return false;
   const s = value.trim();
   if (!s || PLACEHOLDER_RE.test(s)) return false;
-  // Absolute Cloudinary / CDN URL, or a Cloudinary public_id path
-  if (/^https?:\/\//i.test(s)) {
-    return /cloudinary\.com/i.test(s);
-  }
+  // Absolute CDN URL, local public path, or Cloudinary public_id
+  if (/^https?:\/\//i.test(s)) return true;
+  if (s.startsWith("/")) return true;
   return true;
 }
 
@@ -24,7 +23,9 @@ function collectApartmentPhotos(apartment) {
   const push = (raw) => {
     if (!isUsablePhotoRef(raw)) return;
     const url = buildCloudinaryImageUrl(raw);
-    if (!url || !/^https?:\/\//i.test(url) || PLACEHOLDER_RE.test(url)) return;
+    if (!url || PLACEHOLDER_RE.test(url)) return;
+    // Absolute URL or local public path
+    if (!/^https?:\/\//i.test(url) && !url.startsWith("/")) return;
     if (seen.has(url)) return;
     seen.add(url);
     out.push(url);

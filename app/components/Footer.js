@@ -21,66 +21,72 @@ const LinkedInIcon = dynamic(() => import("@mui/icons-material/LinkedIn"), {
   ssr: false,
 });
 
-const Section = styled("footer")(({ theme }) => ({
-  position: "relative",
-  padding: theme.spacing(6, 3, 4),
-  textAlign: "center",
-  overflow: "hidden",
-  background: `
-    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(201,162,39,0.16) 0%, transparent 55%),
-    linear-gradient(180deg, #1A1612 0%, #0E0C0A 100%)
-  `,
-  color: "#F5F0E6",
-}));
+const Section = styled("footer")(({ theme }) => {
+  const surfaces = theme.brandSurfaces || {};
+  return {
+    position: "relative",
+    padding: theme.spacing(6, 3, 4),
+    textAlign: "center",
+    overflow: "hidden",
+    background:
+      surfaces.footer ||
+      `linear-gradient(180deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.dark} 100%)`,
+    color: surfaces.onDark || "#F5F0E6",
+  };
+});
 
-const GoldRule = styled("div")(() => ({
+const AccentRule = styled("div")(({ theme }) => ({
   width: 72,
   height: 1,
   margin: "0 auto 20px",
   background:
-    "linear-gradient(90deg, transparent, #C9A227 20%, #E8D5A3 50%, #C9A227 80%, transparent)",
+    theme.brandSurfaces?.accentRule ||
+    `linear-gradient(90deg, transparent, ${theme.palette.primary.main} 20%, ${theme.palette.primary.light} 50%, ${theme.palette.primary.main} 80%, transparent)`,
 }));
 
-const Slogan = styled(Typography)(() => ({
+const Slogan = styled(Typography)(({ theme }) => ({
   marginTop: 4,
   fontSize: "0.75rem",
   letterSpacing: "0.22em",
   textTransform: "uppercase",
-  color: "rgba(232,213,163,0.72)",
+  color: theme.palette.primary.light,
+  opacity: 0.72,
   fontFamily: "var(--font-body)",
 }));
 
-const ContactLink = styled("a")(() => ({
-  color: "rgba(245,240,230,0.92)",
+const ContactLink = styled("a")(({ theme }) => ({
+  color: theme.brandSurfaces?.onDark || "rgba(245,240,230,0.92)",
   textDecoration: "none",
   fontSize: "0.92rem",
   fontFamily: "var(--font-body)",
   "&:hover": {
-    color: "#E8D5A3",
+    color: theme.palette.primary.light,
   },
 }));
 
-const LegalLink = styled(Link)(() => ({
+const LegalLink = styled(Link)(({ theme }) => ({
   fontSize: "0.68rem",
   textTransform: "uppercase",
   letterSpacing: "0.14em",
   textDecoration: "none",
-  color: "rgba(232,213,163,0.55)",
+  color: theme.palette.primary.light,
+  opacity: 0.55,
   fontFamily: "var(--font-body)",
   "&:hover": {
-    color: "#E8D5A3",
+    color: theme.palette.primary.light,
+    opacity: 1,
   },
 }));
 
-const CreditLink = styled(MuiLink)(() => ({
-  color: "rgba(245,240,230,0.45)",
+const CreditLink = styled(MuiLink)(({ theme }) => ({
+  color: theme.brandSurfaces?.onDarkMuted || "rgba(245,240,230,0.45)",
   textDecoration: "none",
   display: "inline-flex",
   alignItems: "center",
   gap: 4,
   fontSize: "0.68rem",
   "&:hover": {
-    color: "rgba(232,213,163,0.85)",
+    color: theme.palette.primary.light,
   },
 }));
 
@@ -128,12 +134,12 @@ function Footer() {
         />
 
         <Slogan sx={{ mt: 2 }}>{slogan}</Slogan>
-        <GoldRule sx={{ mt: 2.5 }} />
+        <AccentRule sx={{ mt: 2.5 }} />
 
         <Stack spacing={1.25} alignItems="center" sx={{ mb: 3 }}>
           {(tel || tel2) && (
             <Stack direction="row" alignItems="center" spacing={1}>
-              <CallIcon sx={{ fontSize: 16, color: "#C9A227" }} />
+              <CallIcon sx={{ fontSize: 16, color: "primary.main" }} />
               {tel && <ContactLink href={`tel:${tel}`}>{tel}</ContactLink>}
               {tel && tel2 && (
                 <Box component="span" sx={{ opacity: 0.35 }}>
@@ -144,7 +150,7 @@ function Footer() {
             </Stack>
           )}
           <Stack direction="row" alignItems="center" spacing={1}>
-            <EmailIcon sx={{ fontSize: 16, color: "#C9A227" }} />
+            <EmailIcon sx={{ fontSize: 16, color: "primary.main" }} />
             <ContactLink href={`mailto:${email}`}>{email}</ContactLink>
           </Stack>
           <Stack
@@ -154,11 +160,12 @@ function Footer() {
             sx={{ maxWidth: 420, px: 1 }}
           >
             <LocationOnIcon
-              sx={{ fontSize: 16, color: "#C9A227", mt: "2px", flexShrink: 0 }}
+              sx={{ fontSize: 16, color: "primary.main", mt: "2px", flexShrink: 0 }}
             />
             <Typography
               sx={{
-                color: "rgba(245,240,230,0.7)",
+                color: (theme) =>
+                  theme.brandSurfaces?.onDarkMuted || "rgba(245,240,230,0.7)",
                 fontSize: "0.82rem",
                 lineHeight: 1.45,
                 textAlign: "left",
@@ -210,7 +217,8 @@ function Footer() {
           sx={{
             width: "100%",
             maxWidth: 360,
-            borderColor: "rgba(201,162,39,0.18)",
+            borderColor: (theme) =>
+              `color-mix(in srgb, ${theme.palette.primary.main} 18%, transparent)`,
             mb: 2.5,
           }}
         />
@@ -235,7 +243,9 @@ function Footer() {
         <Typography
           sx={{
             fontSize: "0.7rem",
-            color: "rgba(245,240,230,0.35)",
+            color: (theme) =>
+              theme.brandSurfaces?.onDarkMuted || "rgba(245,240,230,0.35)",
+            opacity: 0.55,
             letterSpacing: "0.06em",
           }}
         >

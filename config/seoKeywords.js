@@ -282,18 +282,18 @@ export function getKeywordsForLanguages(langs) {
     .flatMap((lang) => seoKeywords[lang]);
 }
 
-/** Le Monde Suites — apartment keywords for meta tags */
+/** V Luxury Suites — apartment keywords for meta tags */
 const suitesPrimaryKeywords = [
-  "Le Monde Suites",
-  "apartments Nea Kallikratia",
-  "apartment stays Halkidiki",
-  "suites Nea Kallikratia",
-  "Halkidiki apartments",
-  "Le Monde Suites Halkidiki",
-  "апартаменты Неа Калликратия",
-  "апартаменти Халкідіки",
-  "Apartments Chalkidiki",
-  "διαμερίσματα Νέα Καλλικράτεια",
+  "V Luxury Suites",
+  "suites Pefkohori",
+  "apartments Pefkohori",
+  "Pefkohori Halkidiki",
+  "Kassandra suites",
+  "V Luxury Suites Halkidiki",
+  "сьюты Пефкохори",
+  "апартаменти Пефкохорі",
+  "Suites Chalkidiki",
+  "διαμερίσματα Πευκοχώρι",
 ];
 
 /**

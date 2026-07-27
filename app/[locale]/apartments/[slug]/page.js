@@ -52,9 +52,15 @@ export async function generateMetadata({ params }) {
     return { robots: { index: false, follow: false } };
   }
 
-  const fallbackLocation = getLocationById(locale, LOCATION_IDS.NEA_KALLIKRATIA)
-    || getLocationById(locale, LOCATION_IDS.HALKIDIKI);
-  const locationName = fallbackLocation?.shortName || "Nea Kallikratia";
+  const fallbackLocation =
+    getLocationById(locale, LOCATION_IDS.PEFKOHORI) ||
+    getLocationById(locale, LOCATION_IDS.KASSANDRA) ||
+    getLocationById(locale, LOCATION_IDS.HALKIDIKI);
+  const company = await getCompany(COMPANY_ID).catch(() => null);
+  const { getSeoConfig } = await import("@config/seo");
+  const seoConfig = getSeoConfig(company);
+  const locationName =
+    fallbackLocation?.shortName || seoConfig.placeName || "Pefkohori";
   const canonicalSlug = car.slug || params.slug;
 
   return buildApartmentMetadata({

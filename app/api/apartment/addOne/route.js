@@ -8,9 +8,11 @@ import cloudinary, {
   ensureCloudinaryConfigured,
 } from "@utils/cloudinary";
 import {
-  getCloudinaryCarsFolder,
+  getCloudinaryApartmentUploadOptions,
   getCloudinaryPlaceholderPublicId,
 } from "@config/cloudinary";
+import { COMPANY_ID } from "@config/company";
+import { syncCompanyGalleryFromApartments } from "@/domain/branding/syncCompanyGalleryFromApartments";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { generateSlugBase, ensureUniqueSlug } from "@utils/slugCar";
 import { requireAdmin } from "@lib/adminAuth";
@@ -82,6 +84,12 @@ export async function POST(req) {
     revalidateTag("cars");
     revalidatePath("/api/apartment/all");
     revalidatePath("/api/apartment/models");
+
+    try {
+      await syncCompanyGalleryFromApartments({ companyId: COMPANY_ID });
+    } catch (syncErr) {
+      console.warn("Property gallery sync skipped:", syncErr?.message || syncErr);
+    }
 
     return NextResponse.json(
       {
@@ -266,10 +274,7 @@ async function handleImageUpload(file) {
 
       cloudinary.uploader
         .upload_stream(
-          {
-            folder: getCloudinaryCarsFolder(),
-            resource_type: "image",
-          },
+          getCloudinaryApartmentUploadOptions(),
           (error, result) => {
             if (error) {
               reject(new Error("Failed to upload image to Cloudinary"));

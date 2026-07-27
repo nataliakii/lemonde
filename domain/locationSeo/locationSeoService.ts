@@ -312,10 +312,13 @@ export function getLocaleDictionary(localeCandidate: string | undefined | null) 
   return localeSeoDictionary[locale];
 }
 
-export function getHubSeo(localeCandidate: string | undefined | null) {
+export function getHubSeo(
+  localeCandidate: string | undefined | null,
+  companyData: object | null = null
+) {
   const locale = normalizeLocale(localeCandidate);
   if (SINGLE_PROPERTY_MODE) {
-    const seo = getSeoConfig();
+    const seo = getSeoConfig(companyData);
     const title = seo.titles?.[locale] || seo.defaultTitle;
     const description = seo.descriptions?.[locale] || seo.defaultDescription;
     return {
@@ -334,11 +337,12 @@ export function getHubSeo(localeCandidate: string | undefined | null) {
 
 export function getStaticPageSeo(
   localeCandidate: string | undefined | null,
-  staticPageKey: StaticPageKey
+  staticPageKey: StaticPageKey,
+  companyData: object | null = null
 ) {
   const locale = normalizeLocale(localeCandidate);
   if (SINGLE_PROPERTY_MODE) {
-    const seo = getSeoConfig();
+    const seo = getSeoConfig(companyData);
     const site = seo.siteName;
     const suitesStatic: Record<string, { seoTitle: string; seoDescription: string }> = {
       contacts: {

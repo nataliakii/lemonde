@@ -48,14 +48,18 @@ describe("buildApartmentPhotoMix", () => {
     );
   });
 
-  test("ignores non-cloudinary http urls", () => {
+  test("keeps absolute http urls and local public paths", () => {
     expect(
       buildApartmentPhotoMix([
         {
           photoUrl: "https://example.com/x.jpg",
-          gallery: ["folder/ok"],
+          gallery: ["/images/vluxury/a.jpg", "folder/ok"],
         },
       ])
-    ).toEqual(["https://res.cloudinary.com/demo/image/upload/folder/ok"]);
+    ).toEqual([
+      "https://example.com/x.jpg",
+      "/images/vluxury/a.jpg",
+      "https://res.cloudinary.com/demo/image/upload/folder/ok",
+    ]);
   });
 });

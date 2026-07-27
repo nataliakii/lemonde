@@ -168,8 +168,11 @@ export default async function RootLayout({ children }) {
         <meta name="color-scheme" content="light only" />
         <meta name="supported-color-schemes" content="light" />
         <meta name="prefers-color-scheme" content="light" />
-        <meta name="theme-color" content="#F4F5F7" />
-        <meta name="msapplication-navbutton-color" content="#1B1E24" />
+        <meta name="theme-color" content={brand.branding.primaryLight || "#F4F5F7"} />
+        <meta
+          name="msapplication-navbutton-color"
+          content={brand.branding.secondary || "#1B1E24"}
+        />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="color-scheme" content="only light" />
         <Script
@@ -182,8 +185,8 @@ export default async function RootLayout({ children }) {
         />
       </head>
       <body>
-        <Providers>
-          <LoaderWrapper>{children}</LoaderWrapper>
+        <Providers company={company}>
+          <LoaderWrapper company={company}>{children}</LoaderWrapper>
         </Providers>
       </body>
     </html>

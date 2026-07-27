@@ -1,46 +1,87 @@
 /**
- * SEO Configuration — V Luxury Suites (Pefkohori)
- * Centralized SEO constants to avoid duplication
- * Can accept companyData from DB or fallback to config
+ * SEO Configuration — per-property via company (Mongo) + env base URL.
+ * Templates use {siteName} and {placeName}; filled in getSeoConfig(company).
  */
 
 import { getBaseUrl } from "@config/domain";
 
 const fallbackCompanyData = {
   name: "V Luxury Suites",
-  tel: "+30 000 000 0000",
+  tel: "+353 85 270 96 05",
   tel2: "",
   email: "admin@bbqr.site",
   address: "Xoris Odo 0, Pefkochori, Kassandra, Halkidiki, Greece",
+  slogan: "Suites · Pefkohori · Kassandra · Halkidiki",
   coords: { lat: "39.982398", lon: "23.635154" },
+  locations: [
+    { name: "Pefkohori", coords: { lat: "39.982398", lon: "23.635154" } },
+  ],
 };
 
 /** Single source of truth for production base URL. */
 export const PRODUCTION_BASE_URL = getBaseUrl();
 
-export const multilingualDescriptions = {
-  en: "V Luxury Suites — stylish suites in Pefkohori, Kassandra, Halkidiki. Infinity pool, sea-view terraces, free parking and Wi‑Fi. Book online.",
-  ru: "V Luxury Suites — стильные сьюты в Пефкохори, Кассандра, Халкидики. Infinity pool, террасы с видом на море, бесплатная парковка и Wi‑Fi. Бронируйте онлайн.",
-  uk: "V Luxury Suites — стильні сьюті в Пефкохорі, Кассандра, Халкідіки. Infinity pool, тераси з видом на море, безкоштовна парковка та Wi‑Fi. Бронюйте онлайн.",
-  de: "V Luxury Suites — stilvolle Suiten in Pefkohori, Kassandra, Chalkidiki. Infinity-Pool, Meerblick-Terrassen, kostenlose Parkplätze und WLAN. Online buchen.",
-  sr: "V Luxury Suites — elegantni apartmani u Pefkohoriju, Kasandra, Halkidiki. Infinity pool, terase sa pogledom na more, besplatan parking i Wi‑Fi. Rezervišite online.",
-  ro: "V Luxury Suites — suite elegante în Pefkohori, Kassandra, Halkidiki. Piscină infinity, terase cu vedere la mare, parcare gratuită și Wi‑Fi. Rezervați online.",
-  bg: "V Luxury Suites — стилни апартаменти в Пефкохори, Касандра, Халкидики. Infinity pool, тераси с морска гледка, безплатен паркинг и Wi‑Fi. Резервирайте онлайн.",
-  el: "V Luxury Suites — κομψά suites στο Πευκοχώρι, Κασσάνδρα, Χαλκιδική. Infinity pool, βεράντες με θέα στη θάλασσα, δωρεάν πάρκινγκ και Wi‑Fi. Κλείστε online.",
-  pl: "V Luxury Suites — stylowe apartamenty w Pefkohori, Kassandra, Chalkidiki. Infinity pool, tarasy z widokiem na morze, darmowy parking i Wi‑Fi. Rezerwuj online.",
+const titleTemplates = {
+  en: "{siteName} — {placeName}, Kassandra, Halkidiki",
+  ru: "{siteName} — {placeName}, Кассандра, Халкидики",
+  uk: "{siteName} — {placeName}, Кассандра, Халкідіки",
+  de: "{siteName} — {placeName}, Kassandra, Chalkidiki",
+  sr: "{siteName} — {placeName}, Kasandra, Halkidiki",
+  ro: "{siteName} — {placeName}, Kassandra, Halkidiki",
+  bg: "{siteName} — {placeName}, Касандра, Халкидики",
+  el: "{siteName} — {placeName}, Κασσάνδρα, Χαλκιδική",
+  pl: "{siteName} — {placeName}, Kassandra, Chalkidiki",
 };
 
-export const multilingualTitles = {
-  en: "V Luxury Suites — Pefkohori, Kassandra, Halkidiki",
-  ru: "V Luxury Suites — Пефкохори, Кассандра, Халкидики",
-  uk: "V Luxury Suites — Пефкохорі, Кассандра, Халкідіки",
-  de: "V Luxury Suites — Pefkohori, Kassandra, Chalkidiki",
-  sr: "V Luxury Suites — Pefkohori, Kasandra, Halkidiki",
-  ro: "V Luxury Suites — Pefkohori, Kassandra, Halkidiki",
-  bg: "V Luxury Suites — Пефкохори, Касандра, Халкидики",
-  el: "V Luxury Suites — Πευκοχώρι, Κασσάνδρα, Χαλκιδική",
-  pl: "V Luxury Suites — Pefkohori, Kassandra, Chalkidiki",
+const descriptionTemplates = {
+  en: "{siteName} — stylish suites in {placeName}, Kassandra, Halkidiki. Infinity pool, sea-view terraces, free parking and Wi‑Fi. Book online.",
+  ru: "{siteName} — стильные сьюты в {placeName}, Кассандра, Халкидики. Infinity pool, террасы с видом на море, бесплатная парковка и Wi‑Fi. Бронируйте онлайн.",
+  uk: "{siteName} — стильні сьюті в {placeName}, Кассандра, Халкідіки. Infinity pool, тераси з видом на море, безкоштовна парковка та Wi‑Fi. Бронюйте онлайн.",
+  de: "{siteName} — stilvolle Suiten in {placeName}, Kassandra, Chalkidiki. Infinity-Pool, Meerblick-Terrassen, kostenlose Parkplätze und WLAN. Online buchen.",
+  sr: "{siteName} — elegantni apartmani u {placeName}, Kasandra, Halkidiki. Infinity pool, terase sa pogledom na more, besplatan parking i Wi‑Fi. Rezervišite online.",
+  ro: "{siteName} — suite elegante în {placeName}, Kassandra, Halkidiki. Piscină infinity, terase cu vedere la mare, parcare gratuită și Wi‑Fi. Rezervați online.",
+  bg: "{siteName} — стилни апартаменти в {placeName}, Касандра, Халкидики. Infinity pool, тераси с морска гледка, безплатен паркинг и Wi‑Fi. Резервирайте онлайн.",
+  el: "{siteName} — κομψά suites στο {placeName}, Κασσάνδρα, Χαλκιδική. Infinity pool, βεράντες με θέα στη θάλασσα, δωρεάν πάρκινγκ και Wi‑Fi. Κλείστε online.",
+  pl: "{siteName} — stylowe apartamenty w {placeName}, Kassandra, Chalkidiki. Infinity pool, tarasy z widokiem na morze, darmowy parking i Wi‑Fi. Rezerwuj online.",
 };
+
+function fillTemplate(template, vars) {
+  return String(template || "").replace(/\{(\w+)\}/g, (_, key) =>
+    vars[key] != null ? String(vars[key]) : ""
+  );
+}
+
+function mapTemplates(templates, vars) {
+  return Object.fromEntries(
+    Object.entries(templates).map(([locale, template]) => [
+      locale,
+      fillTemplate(template, vars),
+    ])
+  );
+}
+
+/**
+ * Primary town / resort for this property (SEO + booking defaults).
+ * Order: env → company.seo.placeName → company.locations[0] → slogan middle token → Pefkohori.
+ */
+export function resolvePlaceName(companyData = null) {
+  const fromEnv = String(process.env.SEO_PLACE_NAME || "").trim();
+  if (fromEnv) return fromEnv;
+  const fromSeo = String(companyData?.seo?.placeName || "").trim();
+  if (fromSeo) return fromSeo;
+  const fromLoc = String(companyData?.locations?.[0]?.name || "").trim();
+  if (fromLoc) return fromLoc;
+  const slogan = String(companyData?.slogan || "");
+  const parts = slogan
+    .split(/[·|,]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (parts.length >= 2 && !/suites|apartments|stays/i.test(parts[1])) {
+    return parts[1];
+  }
+  if (parts.length >= 2) return parts[1];
+  return "Pefkohori";
+}
 
 /**
  * Get SEO configuration
@@ -51,22 +92,42 @@ export function getSeoConfig(dbCompanyData = null) {
   const companyData = dbCompanyData || fallbackCompanyData;
   const siteName =
     companyData?.name || fallbackCompanyData.name || "V Luxury Suites";
+  const placeName = resolvePlaceName(companyData);
+  const vars = { siteName, placeName };
+
+  const dbTitles =
+    companyData?.seo?.titles && typeof companyData.seo.titles === "object"
+      ? companyData.seo.titles
+      : null;
+  const dbDescriptions =
+    companyData?.seo?.descriptions &&
+    typeof companyData.seo.descriptions === "object"
+      ? companyData.seo.descriptions
+      : null;
+
+  const titles = dbTitles
+    ? { ...mapTemplates(titleTemplates, vars), ...dbTitles }
+    : mapTemplates(titleTemplates, vars);
+  const descriptions = dbDescriptions
+    ? { ...mapTemplates(descriptionTemplates, vars), ...dbDescriptions }
+    : mapTemplates(descriptionTemplates, vars);
 
   return {
     siteName,
+    placeName,
     baseUrl: getBaseUrl(),
     defaultLocale: "en",
     supportedLocales: ["en", "ru", "uk", "de", "sr", "ro", "bg", "el", "pl"],
     primaryLocation: "Greece",
     titleTemplate: `%s | ${siteName}`,
-    defaultTitle: multilingualTitles.en,
-    defaultDescription: multilingualDescriptions.en,
-    descriptions: multilingualDescriptions,
-    titles: multilingualTitles,
+    defaultTitle: titles.en,
+    defaultDescription: descriptions.en,
+    descriptions,
+    titles,
     social: {
-      facebook: "",
-      instagram: "",
-      linkedin: "",
+      facebook: companyData?.seo?.social?.facebook || "",
+      instagram: companyData?.seo?.social?.instagram || "",
+      linkedin: companyData?.seo?.social?.linkedin || "",
     },
     contact: {
       email: companyData?.email || fallbackCompanyData.email || "admin@bbqr.site",
@@ -93,6 +154,7 @@ export function getSeoConfig(dbCompanyData = null) {
       process.env.NEXT_PUBLIC_HERO_IMAGE_URL ||
       null,
     heroImages: getHeroImages(companyData),
+    ogImage: companyData?.assets?.ogImage || "",
   };
 }
 

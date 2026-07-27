@@ -333,6 +333,9 @@
     "extrasSection": "Επιπλέον",
     "shortDescription": "Σύντομη περιγραφή",
     "amenities": "Παροχές",
+    "balcony": "Μπαλκόνι",
+    "terrace": "Βεράντα",
+    "seaView": "Θέα στη θάλασσα",
     "company": "Εταιρεία",
     "savePhotosFailed": "Αποτυχία αποθήκευσης φωτογραφιών"
   },

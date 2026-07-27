@@ -63,11 +63,36 @@ export const APARTMENT_AMENITIES = [
   "air conditioning",
   "parking",
   "balcony",
+  "terrace",
   "sea view",
   "tv",
   "heating",
   "elevator",
 ];
+
+/** Quick-toggle flags shown in suite admin forms (stored in amenities[]). */
+export const SUITE_OUTDOOR_AMENITIES = ["balcony", "terrace", "sea view"];
+
+export function apartmentHasAmenity(amenities, key) {
+  const needle = String(key || "")
+    .trim()
+    .toLowerCase();
+  if (!needle) return false;
+  return (Array.isArray(amenities) ? amenities : []).some(
+    (a) => String(a).trim().toLowerCase() === needle
+  );
+}
+
+export function toggleApartmentAmenity(amenities, key, enabled) {
+  const label = String(key || "").trim();
+  if (!label) return Array.isArray(amenities) ? [...amenities] : [];
+  const needle = label.toLowerCase();
+  const next = (Array.isArray(amenities) ? amenities : []).filter(
+    (a) => String(a).trim().toLowerCase() !== needle
+  );
+  if (enabled) next.push(label);
+  return next;
+}
 
 export const defaultPrices = {
   NoSeason: {

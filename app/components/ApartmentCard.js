@@ -24,6 +24,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CldImage } from "next-cloudinary";
 import { CLOUDINARY_PLACEHOLDER_PUBLIC_ID } from "@config/cloudinary";
+import { isDirectImageSrc } from "@/domain/media/imageSrc";
 import { useMainContext } from "@app/Context";
 import { getApartmentPriceFrom } from "@utils/stayAvailability";
 import { getApartmentPath } from "@domain/locationSeo/locationSeoService";
@@ -33,10 +34,6 @@ import { useSnackbar } from "notistack";
 const BookingModal = lazy(() =>
   import("@app/components/CarComponent/BookingModal")
 );
-
-function isHttpUrl(src) {
-  return typeof src === "string" && /^https?:\/\//i.test(src);
-}
 
 function buildApartmentPhotos(apartment) {
   const list = [];
@@ -178,7 +175,7 @@ const ApartmentCard = React.memo(function ApartmentCard({
         height: { xs: 280, sm: 340, md: "100%" },
         minHeight: { md: 380 },
         overflow: "hidden",
-        bgcolor: "#1A1612",
+        bgcolor: "secondary.main",
       }}
     >
       <Box
@@ -216,7 +213,7 @@ const ApartmentCard = React.memo(function ApartmentCard({
               cursor: !multiPhoto && suiteHref ? "pointer" : "default",
             }}
           >
-            {isHttpUrl(src) ? (
+            {isDirectImageSrc(src) ? (
               <Image
                 src={src}
                 alt={`${apartment.model || "Suite"} photo ${i + 1}`}
@@ -377,11 +374,16 @@ const ApartmentCard = React.memo(function ApartmentCard({
         justifyContent: "center",
         px: { xs: 2.5, md: 5 },
         py: { xs: 3, md: 4.5 },
-        background:
+        background: (theme) =>
           index % 2 === 0
-            ? "linear-gradient(160deg, #FFFCFA 0%, #F3F0EA 100%)"
-            : "linear-gradient(200deg, #1A1612 0%, #2A2218 100%)",
-        color: index % 2 === 0 ? "secondary.main" : "#F5F0E6",
+            ? theme.brandSurfaces?.apartmentPanelLight ||
+              theme.palette.background.default
+            : theme.brandSurfaces?.apartmentPanelDark ||
+              theme.palette.secondary.main,
+        color: (theme) =>
+          index % 2 === 0
+            ? "secondary.main"
+            : theme.brandSurfaces?.onDark || "#F5F0E6",
         minHeight: { md: 380 },
       }}
     >
@@ -392,7 +394,11 @@ const ApartmentCard = React.memo(function ApartmentCard({
           fontWeight: 600,
           letterSpacing: "0.22em",
           textTransform: "uppercase",
-          color: index % 2 === 0 ? "primary.dark" : "rgba(232,213,163,0.85)",
+          color: (theme) =>
+            index % 2 === 0
+              ? "primary.dark"
+              : theme.palette.primary.light,
+          opacity: index % 2 === 0 ? 1 : 0.85,
           mb: 1.5,
         }}
       >
@@ -415,7 +421,7 @@ const ApartmentCard = React.memo(function ApartmentCard({
           transition: "color 0.25s ease",
           "&:hover": suiteHref
             ? {
-                color: index % 2 === 0 ? "primary.dark" : "#E8D5A3",
+                color: index % 2 === 0 ? "primary.dark" : "primary.light",
               }
             : undefined,
         }}
@@ -520,7 +526,7 @@ const ApartmentCard = React.memo(function ApartmentCard({
               fontStyle: "italic",
               fontSize: "1.55rem",
               fontWeight: 500,
-              color: index % 2 === 0 ? "secondary.main" : "#E8D5A3",
+              color: index % 2 === 0 ? "secondary.main" : "primary.light",
             }}
           >
             €{Math.round(stayTotal)}
@@ -547,7 +553,7 @@ const ApartmentCard = React.memo(function ApartmentCard({
               fontStyle: "italic",
               fontSize: "1.55rem",
               fontWeight: 500,
-              color: index % 2 === 0 ? "secondary.main" : "#E8D5A3",
+              color: index % 2 === 0 ? "secondary.main" : "primary.light",
             }}
           >
             from €{priceFrom}
@@ -577,7 +583,10 @@ const ApartmentCard = React.memo(function ApartmentCard({
               letterSpacing: "0.05em",
               boxShadow: "none",
               bgcolor: index % 2 === 0 ? "secondary.main" : "primary.main",
-              color: index % 2 === 0 ? "#F5F0E6" : "secondary.main",
+              color: (theme) =>
+                index % 2 === 0
+                  ? theme.brandSurfaces?.onDark || "#F5F0E6"
+                  : "secondary.main",
               "&:hover": {
                 bgcolor: index % 2 === 0 ? "#2A2218" : "primary.light",
                 boxShadow:
@@ -600,7 +609,7 @@ const ApartmentCard = React.memo(function ApartmentCard({
                   index % 2 === 0
                     ? "rgba(26,22,18,0.22)"
                     : "rgba(232,213,163,0.4)",
-                color: index % 2 === 0 ? "secondary.main" : "#E8D5A3",
+                color: index % 2 === 0 ? "secondary.main" : "primary.light",
                 "&:hover": {
                   borderColor: "primary.main",
                   bgcolor:

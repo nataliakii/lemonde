@@ -19,22 +19,18 @@ function buildAreaServed(areaNames: string[]) {
   }));
 }
 
-function buildPickupAddress() {
-  const seoConfig = getSeoConfig();
-
+function buildPickupAddress(seoConfig = getSeoConfig()) {
   return {
     "@type": "PostalAddress",
     streetAddress: seoConfig.contact.address.split(",")[0] || seoConfig.contact.address,
-    addressLocality: "Nea Kallikratia",
+    addressLocality: seoConfig.placeName || "Pefkohori",
     addressRegion: "Halkidiki",
-    postalCode: "63080",
+    postalCode: "63085",
     addressCountry: "GR",
   };
 }
 
-function buildGeoCoordinates() {
-  const seoConfig = getSeoConfig();
-
+function buildGeoCoordinates(seoConfig = getSeoConfig()) {
   return {
     "@type": "GeoCoordinates",
     latitude: Number.parseFloat(seoConfig.coordinates.lat),
@@ -50,9 +46,10 @@ export function buildAutoRentalJsonLd(input: {
     "seoDescription" | "areaServed" | "pickupLocation" | "offerName" | "offerDescription"
   >;
   offerUrlPath?: string;
+  company?: object | null;
 }) {
   const locale = normalizeLocale(input.localeCandidate);
-  const seoConfig = getSeoConfig();
+  const seoConfig = getSeoConfig(input.company || null);
   const pageUrl = toAbsoluteUrl(input.pagePath);
   const offerUrl = toAbsoluteUrl(input.offerUrlPath || input.pagePath);
 
@@ -69,8 +66,8 @@ export function buildAutoRentalJsonLd(input: {
     pickupLocation: {
       "@type": "Place",
       name: input.location.pickupLocation,
-      address: buildPickupAddress(),
-      geo: buildGeoCoordinates(),
+      address: buildPickupAddress(seoConfig),
+      geo: buildGeoCoordinates(seoConfig),
     },
     offers: {
       "@type": "Offer",
@@ -257,9 +254,11 @@ export function buildHubJsonLd(input: {
     LocationSeoResolved,
     "seoDescription" | "areaServed" | "pickupLocation" | "offerName" | "offerDescription"
   >;
+  company?: object | null;
 }) {
   const locale = normalizeLocale(input.localeCandidate);
-  const hubSeo = getHubSeo(locale);
+  const hubSeo = getHubSeo(locale, input.company || null);
+  const seoConfig = getSeoConfig(input.company || null);
 
   return {
     ...buildAutoRentalJsonLd({
@@ -269,7 +268,9 @@ export function buildHubJsonLd(input: {
         ...input.primaryLocation,
         seoDescription: hubSeo.seoDescription,
       },
+      company: input.company || null,
     }),
     description: hubSeo.seoDescription,
+    name: seoConfig.siteName,
   };
 }

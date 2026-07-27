@@ -16,10 +16,7 @@ import Image from "next/image";
 import { CldImage } from "next-cloudinary";
 import { CLOUDINARY_PLACEHOLDER_PUBLIC_ID } from "@config/cloudinary";
 import { getApartmentPriceFrom } from "@utils/stayAvailability";
-
-function isHttp(url) {
-  return typeof url === "string" && /^https?:\/\//i.test(url);
-}
+import { isDirectImageSrc as isHttp } from "@/domain/media/imageSrc";
 
 /**
  * Suite gallery + stay details (replaces car-spec modal on apartments catalog).

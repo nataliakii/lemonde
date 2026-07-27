@@ -264,19 +264,33 @@ async function main() {
     );
   }
 
-  // Upsert company brand + media (copy-friendly property profile)
+  // Upsert company brand + media (gallery from suite photos — round-robin)
   try {
     const companies = mongoose.connection.collection("companies");
-    const galleryImages = [
-      "https://res.cloudinary.com/dn513dy1y/image/upload/v1778342496/NK-site/listings/apartment-rent/ext-db-64abf11051d4/gotup85kawvwgtbcwd77.jpg",
-      "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530482/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/jkpbjezq0ujcxpxojfxu.jpg",
-      "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530481/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/laurom3hdqecvfjxpy2x.jpg",
-      "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530486/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/tombq0lhvblmbyucsclz.jpg",
-      "https://res.cloudinary.com/dn513dy1y/image/upload/v1778342506/NK-site/listings/apartment-rent/ext-db-64abf11051d4/ks0r84tpxhaigxn1sjdl.jpg",
-      "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530484/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/w4klswub7f8mp3w2f39v.jpg",
-      "https://res.cloudinary.com/dn513dy1y/image/upload/v1778342513/NK-site/listings/apartment-rent/ext-db-64abf11051d4/qpjp8p9ag7729rpfraqp.jpg",
-      "https://res.cloudinary.com/dn513dy1y/image/upload/v1773530487/NK-site/listings/apartment-rent/ext-db-64917ca47f3b/merwwpxyqpz5hj8hlmzx.jpg",
-    ];
+    const galleryImages = (() => {
+      const pools = units
+        .map((u) =>
+          [u.photoUrl, ...(Array.isArray(u.gallery) ? u.gallery : [])].filter(
+            (x) => typeof x === "string" && x.trim() && !/NO_PHOTO/i.test(x)
+          )
+        )
+        .filter((p) => p.length > 0);
+      const mix = [];
+      const cursors = pools.map(() => 0);
+      let added = true;
+      while (mix.length < 36 && added) {
+        added = false;
+        for (let i = 0; i < pools.length && mix.length < 36; i += 1) {
+          const idx = cursors[i];
+          if (idx < pools[i].length) {
+            mix.push(pools[i][idx]);
+            cursors[i] = idx + 1;
+            added = true;
+          }
+        }
+      }
+      return mix;
+    })();
     await companies.updateOne(
       { _id: new mongoose.Types.ObjectId(COMPANY_ID) },
       {
@@ -305,7 +319,7 @@ async function main() {
             logoMark: "/logo-mark.png",
             logoWordmark: "",
             favicon: "/favicon.ico",
-            ogImage: galleryImages[0],
+            ogImage: galleryImages[0] || "",
             heroImages: [],
             galleryImages,
           },

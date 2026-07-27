@@ -788,12 +788,12 @@ const BookingModal = ({
         orderNumber: orderNumber,
         placeIn: SIMPLIFIED_CLIENT_BOOKING
           ? String(
-              company?.address || company?.name || "Le Monde Suites, Nea Kallikratia"
+              company?.address || company?.name || "V Luxury Suites, Pefkohori"
             ).trim()
           : canonIn || placeIn,
         placeOut: SIMPLIFIED_CLIENT_BOOKING
           ? String(
-              company?.address || company?.name || "Le Monde Suites, Nea Kallikratia"
+              company?.address || company?.name || "V Luxury Suites, Pefkohori"
             ).trim()
           : canonOut || placeOut,
         placeInDetail: SIMPLIFIED_CLIENT_BOOKING

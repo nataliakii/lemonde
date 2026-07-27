@@ -22,12 +22,12 @@ import PricingTiers from "../PricingTiers";
 import { useMainContext } from "@app/Context";
 import {
   APARTMENT_TYPES,
-  APARTMENT_AMENITIES,
   defaultPrices,
+  apartmentHasAmenity,
+  toggleApartmentAmenity,
 } from "@models/enums";
 import {
   RenderTextField,
-  RenderSelectField,
 } from "@/app/components/ui/inputs/Fields";
 import SuiteGalleryEditor from "@/app/components/ui/media/SuiteGalleryEditor";
 import { useTranslation } from "react-i18next";
@@ -306,14 +306,6 @@ const AddCarModal = ({
                     />
                   )}
                 />
-                <RenderSelectField
-                  name="class"
-                  label={t("car.class") || "Type"}
-                  options={Object.values(APARTMENT_TYPES)}
-                  required
-                  updatedCar={carData}
-                  handleChange={handleChange}
-                />
                 <RenderTextField
                   type="number"
                   name="seats"
@@ -395,6 +387,60 @@ const AddCarModal = ({
                   }
                   label={t("car.air") || "Air conditioning"}
                 />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={apartmentHasAmenity(carData.amenities, "balcony")}
+                      onChange={(e) =>
+                        setCarData((prev) => ({
+                          ...prev,
+                          amenities: toggleApartmentAmenity(
+                            prev.amenities,
+                            "balcony",
+                            e.target.checked
+                          ),
+                        }))
+                      }
+                    />
+                  }
+                  label={t("car.balcony")}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={apartmentHasAmenity(carData.amenities, "terrace")}
+                      onChange={(e) =>
+                        setCarData((prev) => ({
+                          ...prev,
+                          amenities: toggleApartmentAmenity(
+                            prev.amenities,
+                            "terrace",
+                            e.target.checked
+                          ),
+                        }))
+                      }
+                    />
+                  }
+                  label={t("car.terrace")}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={apartmentHasAmenity(carData.amenities, "sea view")}
+                      onChange={(e) =>
+                        setCarData((prev) => ({
+                          ...prev,
+                          amenities: toggleApartmentAmenity(
+                            prev.amenities,
+                            "sea view",
+                            e.target.checked
+                          ),
+                        }))
+                      }
+                    />
+                  }
+                  label={t("car.seaView")}
+                />
               </Stack>
             </Grid>
             <Grid item xs={12} sm={4}>
@@ -407,17 +453,6 @@ const AddCarModal = ({
                   value={carData.description || ""}
                   onChange={handleChange}
                   fullWidth
-                />
-                <Autocomplete
-                  multiple
-                  options={APARTMENT_AMENITIES}
-                  value={carData.amenities || []}
-                  onChange={(_, newValue) =>
-                    setCarData((prev) => ({ ...prev, amenities: newValue }))
-                  }
-                  renderInput={(params) => (
-                    <TextField {...params} label={t("car.amenities")} />
-                  )}
                 />
                 <SuiteGalleryEditor
                   photoUrl={carData.photoUrl}

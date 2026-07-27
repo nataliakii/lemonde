@@ -7,12 +7,13 @@ import Image from "next/image";
 /**
  * Full-bleed landing hero.
  * Brand name / optional hero image come from company (DB) via props.
+ * Gradients use theme.brandSurfaces from Mongo company.branding.
  */
 export default function SuitesHero({
   locale = "en",
   tagline,
   ctaLabel,
-  brandName = "Le Monde Suites",
+  brandName = "V Luxury Suites",
   heroImage = "",
 }) {
   const apartmentsHref = `/${locale}/apartments`;
@@ -21,7 +22,7 @@ export default function SuitesHero({
   return (
     <Box
       component="section"
-      sx={{
+      sx={(theme) => ({
         position: "relative",
         left: "50%",
         right: "50%",
@@ -34,13 +35,9 @@ export default function SuitesHero({
         justifyContent: "center",
         overflow: "hidden",
         background: hasHeroImage
-          ? "#0E0C0A"
-          : `
-          radial-gradient(ellipse 80% 60% at 70% 20%, rgba(201,162,39,0.22) 0%, transparent 55%),
-          radial-gradient(ellipse 60% 50% at 15% 80%, rgba(232,213,163,0.12) 0%, transparent 50%),
-          linear-gradient(165deg, #0E0C0A 0%, #1A1612 45%, #2A2218 100%)
-        `,
-      }}
+          ? theme.palette.secondary.dark
+          : theme.brandSurfaces?.hero || theme.palette.secondary.main,
+      })}
     >
       {hasHeroImage ? (
         <>
@@ -54,12 +51,13 @@ export default function SuitesHero({
           />
           <Box
             aria-hidden
-            sx={{
+            sx={(theme) => ({
               position: "absolute",
               inset: 0,
               background:
+                theme.brandSurfaces?.heroImageOverlay ||
                 "linear-gradient(165deg, rgba(14,12,10,0.72) 0%, rgba(26,22,18,0.55) 50%, rgba(14,12,10,0.78) 100%)",
-            }}
+            })}
           />
         </>
       ) : (
@@ -99,8 +97,8 @@ export default function SuitesHero({
 
         <Typography
           className="hero-reveal-delay"
-          sx={{
-            color: "rgba(245, 240, 230, 0.82)",
+          sx={(theme) => ({
+            color: theme.brandSurfaces?.onDarkMuted || "rgba(245, 240, 230, 0.82)",
             fontFamily: "var(--font-body)",
             fontWeight: 400,
             fontSize: { xs: "1.05rem", md: "1.25rem" },
@@ -108,7 +106,7 @@ export default function SuitesHero({
             maxWidth: 480,
             mx: "auto",
             mb: 4,
-          }}
+          })}
         >
           {tagline}
         </Typography>
@@ -118,7 +116,7 @@ export default function SuitesHero({
             component={Link}
             href={apartmentsHref}
             variant="contained"
-            sx={{
+            sx={(theme) => ({
               px: 4,
               py: 1.4,
               borderRadius: 1,
@@ -128,13 +126,13 @@ export default function SuitesHero({
               fontSize: "0.85rem",
               backgroundColor: "primary.main",
               color: "secondary.main",
-              boxShadow: "0 0 24px rgba(201,162,39,0.35)",
+              boxShadow: `0 0 24px color-mix(in srgb, ${theme.palette.primary.main} 35%, transparent)`,
               "&:hover": {
                 backgroundColor: "primary.light",
                 color: "secondary.main",
-                boxShadow: "0 0 32px rgba(232,213,163,0.45)",
+                boxShadow: `0 0 32px color-mix(in srgb, ${theme.palette.primary.light} 45%, transparent)`,
               },
-            }}
+            })}
           >
             {ctaLabel}
           </Button>

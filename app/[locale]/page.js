@@ -62,13 +62,15 @@ export default async function LocalizedHomePage({ params }) {
     getCompany(COMPANY_ID),
   ]);
 
-  const primaryLocation = getLocationById(locale, LOCATION_IDS.HALKIDIKI);
+  const primaryLocation = getLocationById(locale, LOCATION_IDS.PEFKOHORI)
+    || getLocationById(locale, LOCATION_IDS.HALKIDIKI);
 
   const hubJsonLd = primaryLocation
     ? buildHubJsonLd({
         localeCandidate: locale,
         pagePath: `/${locale}`,
         primaryLocation,
+        company: companyData,
       })
     : null;
 

@@ -9,6 +9,8 @@ import {
   isSuperAdminUser,
   normalizeOwnerId,
 } from "@/domain/owners/ownerScope";
+import { COMPANY_ID } from "@config/company";
+import { syncCompanyGalleryFromApartments } from "@/domain/branding/syncCompanyGalleryFromApartments";
 
 export const PUT = async (req) => {
   try {
@@ -80,7 +82,18 @@ export const PUT = async (req) => {
     revalidateTag("cars");
     revalidatePath("/api/apartment/all");
     revalidatePath(`/api/apartment/${_id}`);
-    
+
+    const photosChanged =
+      Object.prototype.hasOwnProperty.call(updateFields, "photoUrl") ||
+      Object.prototype.hasOwnProperty.call(updateFields, "gallery");
+    if (photosChanged) {
+      try {
+        await syncCompanyGalleryFromApartments({ companyId: COMPANY_ID });
+      } catch (syncErr) {
+        console.warn("Property gallery sync skipped:", syncErr?.message || syncErr);
+      }
+    }
+
     return new Response(JSON.stringify(updatedCar), {
       status: 200,
       headers: { "Content-Type": "application/json" },

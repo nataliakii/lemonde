@@ -33,6 +33,30 @@ export function getCloudinaryCarsFolder(company = null) {
   return `${getCloudinaryRootFolder(company)}/${sub}`;
 }
 
+/**
+ * Optional signed upload preset (e.g. "vluxury").
+ * When set, server uploads include upload_preset alongside API key/secret.
+ */
+export function getCloudinaryUploadPreset() {
+  return String(process.env.CLOUDINARY_UPLOAD_PRESET || "").trim();
+}
+
+/**
+ * Options for apartment/car image uploads to Cloudinary.
+ * @param {object|null} [company]
+ */
+export function getCloudinaryApartmentUploadOptions(company = null) {
+  const options = {
+    folder: getCloudinaryCarsFolder(company),
+    resource_type: "image",
+  };
+  const preset = getCloudinaryUploadPreset();
+  if (preset) {
+    options.upload_preset = preset;
+  }
+  return options;
+}
+
 /** Alias for suites wording */
 export function getCloudinaryApartmentsFolder(company = null) {
   return getCloudinaryCarsFolder(company);

@@ -29,19 +29,19 @@ export const seasons = {
  */
 export const companyData = {
   companyId: COMPANY_ID,
-  name: "Le Monde Suites",
-  tel: "+380 68 100 3771",
-  tel2: "+353 85 270 96 05",
-  email: "stay@lemondesuites.com",
-  address: "Leoforos Nikis, Kato Galini, Nea Kallikratia 630 80, Greece",
-  slogan: "Apartment stays · Nea Kallikratia · Halkidiki",
-  coords: { lat: "40.31059163454398", lon: "23.063829408712166" },
+  name: "V Luxury Suites",
+  tel: "+353 85 270 96 05",
+  tel2: "",
+  email: "admin@bbqr.site",
+  address: "Xoris Odo 0, Pefkochori, Kassandra, Halkidiki, Greece",
+  slogan: "Suites · Pefkohori · Kassandra · Halkidiki",
+  coords: { lat: "39.982398", lon: "23.635154" },
   defaultStart: "15:00",
-  defaultEnd: "11:00",
+  defaultEnd: "10:00",
   hoursDiffForStart: 1,
   hoursDiffForEnd: -1,
   seasons,
   locations: [
-    { name: "Nea Kalikratia", coords: { lat: "40.31", lon: "23.06" } },
+    { name: "Pefkohori", coords: { lat: "39.982398", lon: "23.635154" } },
   ],
 };

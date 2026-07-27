@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import cloudinary, {
   ensureCloudinaryConfigured,
 } from "@utils/cloudinary";
-import { getCloudinaryCarsFolder } from "@config/cloudinary";
+import { getCloudinaryApartmentUploadOptions } from "@config/cloudinary";
 
 export async function POST(req) {
   try {
@@ -32,10 +32,7 @@ export async function POST(req) {
     // Upload image to Cloudinary
     const cloudinaryResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: getCloudinaryCarsFolder(),
-          resource_type: "image",
-        },
+        getCloudinaryApartmentUploadOptions(),
         (error, result) => {
           if (error) {
             reject(error);

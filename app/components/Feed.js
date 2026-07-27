@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, Suspense, useMemo } from "react";
 import { ThemeProvider } from "@mui/material";
+import CssBaseline from "@mui/material/CssBaseline";
 import { I18nextProvider } from "react-i18next";
 
 import Loading from "@app/loading";
@@ -60,6 +61,8 @@ function Feed({ children, ...props }) {
   const firstOrderId = props.orders?.[0]?._id;
   const companyId = props.company?._id;
   const brandPrimary = props.company?.branding?.primary;
+  const brandSecondary = props.company?.branding?.secondary;
+  const brandPrimaryLight = props.company?.branding?.primaryLight;
   
   const contextProps = useMemo(
     () => ({
@@ -68,7 +71,16 @@ function Feed({ children, ...props }) {
       companyData: props.company,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [carsLength, firstCarId, ordersLength, firstOrderId, companyId, brandPrimary]
+    [
+      carsLength,
+      firstCarId,
+      ordersLength,
+      firstOrderId,
+      companyId,
+      brandPrimary,
+      brandSecondary,
+      brandPrimaryLight,
+    ]
   );
 
   const companyTheme = useCompanyTheme(props.company);
@@ -76,19 +88,34 @@ function Feed({ children, ...props }) {
   return (
     <Suspense fallback={<Loading />}>
       <ThemeProvider theme={companyTheme}>
+        <CssBaseline />
         <I18nextProvider i18n={i}>
           <MainContextProvider
             carsData={contextProps.carsData}
             ordersData={contextProps.ordersData}
             companyData={contextProps.companyData}
           >
-            <Navbar isMain={props.isMain} isAdmin={props.isAdmin} />
-            {/* main paddingTop keeps content below fixed Navbar + filters; responsive values */}
-            <Box component="main" sx={{ pt: mainPt }}>
-              {children}
+            <Box
+              sx={{
+                bgcolor: "background.default",
+                minHeight: "100vh",
+                "--color-primary": companyTheme.palette.primary.main,
+                "--color-primary-light": companyTheme.palette.primary.light,
+                "--color-primary-dark": companyTheme.palette.primary.dark,
+                "--color-secondary": companyTheme.palette.secondary.main,
+                "--color-secondary-light": companyTheme.palette.secondary.light,
+                "--color-secondary-dark": companyTheme.palette.secondary.dark,
+                "--color-bg-default": companyTheme.palette.background.default,
+              }}
+            >
+              <Navbar isMain={props.isMain} isAdmin={props.isAdmin} />
+              {/* main paddingTop keeps content below fixed Navbar + filters; responsive values */}
+              <Box component="main" sx={{ pt: mainPt }}>
+                {children}
+              </Box>
+              {shouldShowFooter && <Footer />}
+              <ScrollButton />
             </Box>
-            {shouldShowFooter && <Footer />}
-            <ScrollButton />
           </MainContextProvider>
         </I18nextProvider>
       </ThemeProvider>

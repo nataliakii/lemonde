@@ -34,6 +34,7 @@ import { calculateTotalPrice } from "@utils/action";
 import { buildBookingPriceSummary } from "@/domain/orders/bookingPriceSummary";
 import { useSnackbar } from "notistack";
 import dayjs from "dayjs";
+import { isDirectImageSrc as isHttp } from "@/domain/media/imageSrc";
 
 const BookingModal = lazy(() =>
   import("@app/components/CarComponent/BookingModal")
@@ -41,10 +42,6 @@ const BookingModal = lazy(() =>
 
 function isPastDay(date, today) {
   return Boolean(date && date.isValid() && date.isBefore(today, "day"));
-}
-
-function isHttp(url) {
-  return typeof url === "string" && /^https?:\/\//i.test(url);
 }
 
 function guestsLabel(seats) {

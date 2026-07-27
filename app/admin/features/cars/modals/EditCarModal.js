@@ -28,6 +28,8 @@ import {
   TRANSMISSION_TYPES,
   FUEL_TYPES,
   PREDEFINED_COLORS,
+  apartmentHasAmenity,
+  toggleApartmentAmenity,
 } from "@models/enums";
 import {
   RenderTextField,
@@ -318,22 +320,6 @@ const EditCarModal = ({
                   isLoading={isLoading}
                 />
               </Grid>
-              <Grid item xs={12} sm={3}>
-                <RenderSelectField
-                  name="class"
-                  label={t("car.class")}
-                  options={[
-                    ...Object.values(APARTMENT_TYPES),
-                    ...Object.values(CAR_CLASSES).filter(
-                      (v) => !Object.values(APARTMENT_TYPES).includes(v)
-                    ),
-                  ]}
-                  required
-                  updatedCar={updatedCar}
-                  handleChange={handleChange}
-                  isLoading={isLoading}
-                />
-              </Grid>
 
               <Grid item xs={6} sm={3}>
                 <RenderTextField
@@ -402,7 +388,7 @@ const EditCarModal = ({
                   isLoading={isLoading}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} sx={{ display: "flex", alignItems: "center" }}>
+              <Grid item xs={12} sm={6} sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -413,6 +399,82 @@ const EditCarModal = ({
                     />
                   }
                   label={t("car.air")}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={apartmentHasAmenity(updatedCar.amenities, "balcony")}
+                      onChange={(e) =>
+                        handleChange({
+                          target: {
+                            name: "amenities",
+                            value: toggleApartmentAmenity(
+                              updatedCar.amenities,
+                              "balcony",
+                              e.target.checked
+                            ),
+                          },
+                        })
+                      }
+                      disabled={isLoading}
+                    />
+                  }
+                  label={t("car.balcony")}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={apartmentHasAmenity(updatedCar.amenities, "terrace")}
+                      onChange={(e) =>
+                        handleChange({
+                          target: {
+                            name: "amenities",
+                            value: toggleApartmentAmenity(
+                              updatedCar.amenities,
+                              "terrace",
+                              e.target.checked
+                            ),
+                          },
+                        })
+                      }
+                      disabled={isLoading}
+                    />
+                  }
+                  label={t("car.terrace")}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={apartmentHasAmenity(updatedCar.amenities, "sea view")}
+                      onChange={(e) =>
+                        handleChange({
+                          target: {
+                            name: "amenities",
+                            value: toggleApartmentAmenity(
+                              updatedCar.amenities,
+                              "sea view",
+                              e.target.checked
+                            ),
+                          },
+                        })
+                      }
+                      disabled={isLoading}
+                    />
+                  }
+                  label={t("car.seaView")}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  name="description"
+                  label={t("car.shortDescription")}
+                  multiline
+                  minRows={3}
+                  fullWidth
+                  value={updatedCar.description || ""}
+                  onChange={handleChange}
+                  disabled={isLoading}
                 />
               </Grid>
 

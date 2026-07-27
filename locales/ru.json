@@ -331,6 +331,9 @@
     "extrasSection": "Дополнительно",
     "shortDescription": "Краткое описание",
     "amenities": "Удобства",
+    "balcony": "Балкон",
+    "terrace": "Терраса",
+    "seaView": "Вид на море",
     "company": "Компания",
     "savePhotosFailed": "Не удалось сохранить фото"
   },

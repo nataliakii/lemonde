@@ -184,7 +184,7 @@ export function renderCustomerOrderConfirmation(data) {
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width:600px;margin-top:20px;">
           <tr>
             <td style="text-align:center;padding:20px;color:${s.muted};font-size:12px;font-family:${s.fontSans};">
-              <p style="margin:0;">© ${new Date().getFullYear()} Le Monde Suites. All rights reserved.</p>
+              <p style="margin:0;">© ${new Date().getFullYear()} ${escapeHtml(teamText || "V Luxury Suites")}. All rights reserved.</p>
             </td>
           </tr>
         </table>

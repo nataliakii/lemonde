@@ -60,18 +60,12 @@ export default function PropertyGallery({
         marginLeft: "-50vw",
         marginRight: "-50vw",
         width: "100vw",
-        // Fixed dark band + extra top padding so the title sits fully on beige
+        // Dark brand band → page canvas from company.branding
         pt: { xs: 11, md: 14 },
         pb: { xs: 6, md: 8 },
-        background: `
-          linear-gradient(
-            180deg,
-            #1B1E24 0%,
-            #0E1014 56px,
-            #F4F5F7 56px,
-            #F4F5F7 100%
-          )
-        `,
+        background: (theme) =>
+          theme.brandSurfaces?.galleryBand ||
+          `linear-gradient(180deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.dark} 56px, ${theme.palette.background.default} 56px, ${theme.palette.background.default} 100%)`,
       }}
     >
       <Box

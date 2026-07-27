@@ -398,6 +398,7 @@ async function main() {
             logoMark: "/logo-mark.png",
             logoWordmark: "",
             favicon: "/favicon.ico",
+            // Filled from suite photos after admin upload (npm run sync:property-gallery)
             ogImage: "",
             heroImages: [],
             galleryImages: [],
@@ -418,6 +419,9 @@ async function main() {
             en: "Infinity pool, sea-view terraces, and calm stays in Pefkohori.",
             ru: "Infinity pool, террасы с видом на море и спокойный отдых в Пефкохори.",
             el: "Infinity pool, βεράντες με θέα στη θάλασσα και ήρεμη διαμονή στο Πευκοχώρι.",
+          },
+          seo: {
+            placeName: "Pefkohori",
           },
         },
       },

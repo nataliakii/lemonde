@@ -3,7 +3,7 @@ import { useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Preloader from "./Preloader";
 
-export default function RouteTransitionLoader({ children }) {
+export default function RouteTransitionLoader({ children, company = null }) {
   const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [firstLoad, setFirstLoad] = useState(true);
@@ -28,7 +28,7 @@ export default function RouteTransitionLoader({ children }) {
 
   return (
     <>
-      <Preloader loading={loading} />
+      <Preloader loading={loading} company={company} />
       {children}
     </>
   );

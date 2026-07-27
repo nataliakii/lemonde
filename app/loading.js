@@ -1,10 +1,13 @@
-//"use client";
-
-// import { useEffect, useState } from "react";
-// import { usePathname } from "next/navigation";
-// import Image from "next/image";
 import Preloader from "./components/Loader/Preloader";
+import { COMPANY_ID } from "@config/company";
+import { getCompany } from "@/domain/services";
 
-export default function Loading() {
-  return <Preloader loading={true} />;
+export default async function Loading() {
+  let company = null;
+  try {
+    company = await getCompany(COMPANY_ID);
+  } catch {
+    company = null;
+  }
+  return <Preloader loading={true} company={company} />;
 }

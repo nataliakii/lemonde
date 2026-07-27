@@ -14,6 +14,8 @@ export function buildCloudinaryImageUrl(photoUrl) {
   const trimmed = photoUrl.trim();
   if (!trimmed) return null;
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  // Local public assets (/images/...) — keep as site-relative paths
+  if (trimmed.startsWith("/")) return trimmed;
   const cloud =
     process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
     process.env.CLOUDINARY_CLOUD_NAME ||

@@ -5,7 +5,7 @@
 import cloudinary, {
   ensureCloudinaryConfigured,
 } from "@utils/cloudinary";
-import { getCloudinaryCarsFolder } from "@config/cloudinary";
+import { getCloudinaryApartmentUploadOptions } from "@config/cloudinary";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
 
@@ -35,10 +35,7 @@ export async function uploadCarImageFile(file) {
 
     cloudinary.uploader
       .upload_stream(
-        {
-          folder: getCloudinaryCarsFolder(),
-          resource_type: "image",
-        },
+        getCloudinaryApartmentUploadOptions(),
         (error, result) => {
           if (error) {
             reject(new Error("Failed to upload image to Cloudinary"));

@@ -331,6 +331,9 @@
     "extrasSection": "Extras",
     "shortDescription": "Short description",
     "amenities": "Amenities",
+    "balcony": "Balcony",
+    "terrace": "Terrace",
+    "seaView": "Sea view",
     "company": "Company",
     "savePhotosFailed": "Failed to save photos"
   },

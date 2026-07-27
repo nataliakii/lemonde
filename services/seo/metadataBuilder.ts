@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getSeoConfig } from "@config/seo";
+import { COMPANY_ID } from "@config/company";
 import {
   buildCarSeoText,
   getApartmentAlternates,
@@ -50,6 +51,26 @@ function isRobotsIndexable(robots: Metadata["robots"]): boolean {
   return robots?.index !== false;
 }
 
+function toAbsoluteAssetUrl(
+  baseUrl: string,
+  assetUrl: string | null | undefined,
+  fallbackPath: string
+): string {
+  const raw = String(assetUrl || "").trim() || fallbackPath;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  const path = raw.startsWith("/") ? raw : `/${raw}`;
+  return `${baseUrl}${path}`;
+}
+
+async function loadCompanyForSeo(): Promise<object | null> {
+  try {
+    const { getCompany } = await import("@/domain/services");
+    return await getCompany(COMPANY_ID);
+  } catch {
+    return null;
+  }
+}
+
 function buildBaseMetadata(input: {
   title: string;
   description: string;
@@ -58,14 +79,23 @@ function buildBaseMetadata(input: {
   locale: string;
   /** When true, set robots to noindex,follow (for legal/technical pages). */
   noindex?: boolean;
+  seoConfig?: ReturnType<typeof getSeoConfig>;
+  ogImageUrl?: string | null;
 }): Metadata {
-  const seoConfig = getSeoConfig();
+  const seoConfig = input.seoConfig || getSeoConfig();
   const robots = getRobotsForPath(input.canonicalPath, Boolean(input.noindex));
   const isIndexable = isRobotsIndexable(robots);
   const hreflangAlternates = isIndexable
     ? buildHreflangAlternates(input.alternatePathsByLocale)
     : ({} as Record<string, string>);
   const canonicalUrl = toAbsoluteUrl(input.canonicalPath);
+  const ogImage =
+    input.ogImageUrl ||
+    toAbsoluteAssetUrl(
+      seoConfig.baseUrl,
+      seoConfig.ogImage || seoConfig.heroImageUrl,
+      "/logo-mark.png"
+    );
 
   const alternates: Metadata["alternates"] = {
     canonical: canonicalUrl,
@@ -87,9 +117,9 @@ function buildBaseMetadata(input: {
       siteName: seoConfig.siteName,
       images: [
         {
-          url: `${seoConfig.baseUrl}/logo-mark.png`,
-          width: 1024,
-          height: 1024,
+          url: ogImage,
+          width: 1200,
+          height: 630,
           alt: seoConfig.siteName,
         },
       ],
@@ -98,16 +128,25 @@ function buildBaseMetadata(input: {
       card: "summary_large_image",
       title: input.title,
       description: input.description,
-      images: [`${seoConfig.baseUrl}/logo-mark.png`],
+      images: [ogImage],
     },
     robots,
   };
 }
 
-export function buildHubMetadata(localeCandidate: string | undefined | null): Metadata {
+export async function buildHubMetadata(
+  localeCandidate: string | undefined | null
+): Promise<Metadata> {
   const locale = normalizeLocale(localeCandidate);
-  const hubSeo = getHubSeo(locale);
+  const company = await loadCompanyForSeo();
+  const seoConfig = getSeoConfig(company);
+  const hubSeo = getHubSeo(locale, company);
   const canonicalPath = getLocaleRootPath(locale);
+  const ogImageUrl = toAbsoluteAssetUrl(
+    seoConfig.baseUrl,
+    seoConfig.ogImage || seoConfig.heroImageUrl,
+    "/logo-mark.png"
+  );
 
   return buildBaseMetadata({
     title: hubSeo.seoTitle,
@@ -115,14 +154,18 @@ export function buildHubMetadata(localeCandidate: string | undefined | null): Me
     canonicalPath,
     alternatePathsByLocale: getHubAlternates(),
     locale,
+    seoConfig,
+    ogImageUrl,
   });
 }
 
-export function buildLocationsIndexMetadata(
+export async function buildLocationsIndexMetadata(
   localeCandidate: string | undefined | null
-): Metadata {
+): Promise<Metadata> {
   const locale = normalizeLocale(localeCandidate);
-  const hubSeo = getHubSeo(locale);
+  const company = await loadCompanyForSeo();
+  const seoConfig = getSeoConfig(company);
+  const hubSeo = getHubSeo(locale, company);
   const canonicalPath = `/${locale}/locations`;
   const alternatePathsByLocale = Object.fromEntries(
     getSupportedLocales().map((supportedLocale) => [
@@ -137,6 +180,7 @@ export function buildLocationsIndexMetadata(
     canonicalPath,
     alternatePathsByLocale,
     locale,
+    seoConfig,
   });
 }
 
@@ -166,7 +210,7 @@ export function buildCarMetadata(input: {
   transmission?: string;
   fuelType?: string;
   seats?: string;
-}): Metadata {
+}): Metadata | Promise<Metadata> {
   const locale = normalizeLocale(input.localeCandidate);
   if (SINGLE_PROPERTY_MODE) {
     return buildApartmentMetadata({
@@ -195,20 +239,28 @@ export function buildCarMetadata(input: {
   });
 }
 
-export function buildApartmentMetadata(input: {
+export async function buildApartmentMetadata(input: {
   localeCandidate: string | undefined | null;
   apartmentSlug: string;
   apartmentName: string;
-  locationName: string;
+  locationName?: string;
   guests?: string;
-}): Metadata {
+}): Promise<Metadata> {
   const locale = normalizeLocale(input.localeCandidate);
+  const company = await loadCompanyForSeo();
+  const seoConfig = getSeoConfig(company);
   const name = input.apartmentName || input.apartmentSlug;
-  const locationName = input.locationName || "Nea Kallikratia";
+  const locationName =
+    input.locationName || seoConfig.placeName || "Pefkohori";
   const guestsPart = input.guests ? ` · up to ${input.guests} guests` : "";
-  const title = name;
-  const description = `${name} at Le Monde Suites in ${locationName}${guestsPart}. Browse photos and request your stay.`;
+  const title = `${name} | ${seoConfig.siteName}`;
+  const description = `${name} at ${seoConfig.siteName} in ${locationName}${guestsPart}. Browse photos and request your stay.`;
   const canonicalPath = getApartmentPath(locale, input.apartmentSlug);
+  const ogImageUrl = toAbsoluteAssetUrl(
+    seoConfig.baseUrl,
+    seoConfig.ogImage || seoConfig.heroImageUrl,
+    "/logo-mark.png"
+  );
 
   return buildBaseMetadata({
     title,
@@ -216,15 +268,19 @@ export function buildApartmentMetadata(input: {
     canonicalPath,
     alternatePathsByLocale: getApartmentAlternates(input.apartmentSlug),
     locale,
+    seoConfig,
+    ogImageUrl,
   });
 }
 
-export function buildStaticPageMetadata(
+export async function buildStaticPageMetadata(
   localeCandidate: string | undefined | null,
   pageKey: StaticPageKey
-): Metadata {
+): Promise<Metadata> {
   const locale = normalizeLocale(localeCandidate);
-  const pageSeo = getStaticPageSeo(locale, pageKey);
+  const company = await loadCompanyForSeo();
+  const seoConfig = getSeoConfig(company);
+  const pageSeo = getStaticPageSeo(locale, pageKey, company);
 
   const alternatesByLocale = Object.fromEntries(
     Object.keys(getHubAlternates()).map((supportedLocale) => [
@@ -240,5 +296,6 @@ export function buildStaticPageMetadata(
     alternatePathsByLocale: alternatesByLocale,
     locale,
     noindex: NOINDEX_STATIC_PAGES.has(pageKey),
+    seoConfig,
   });
 }

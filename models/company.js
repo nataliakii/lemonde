@@ -111,6 +111,21 @@ const CompanySchema = new Schema({
     ru: { type: String, default: "Пространства для спокойного средиземноморского отдыха." },
     el: { type: String, default: "Χώροι σχεδιασμένοι για ήρεμη μεσογειακή διαμονή." },
   },
+
+  /**
+   * Optional SEO overrides (titles/descriptions per locale, placeName, social).
+   * When empty, config/seo.js builds from name + locations[0]/slogan.
+   */
+  seo: {
+    placeName: { type: String, default: "" },
+    titles: { type: Schema.Types.Mixed, default: undefined },
+    descriptions: { type: Schema.Types.Mixed, default: undefined },
+    social: {
+      facebook: { type: String, default: "" },
+      instagram: { type: String, default: "" },
+      linkedin: { type: String, default: "" },
+    },
+  },
 });
 
 // В клиентском бандле mongoose.models может быть undefined — не обращаться без проверки
