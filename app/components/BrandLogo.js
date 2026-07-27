@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMainContext } from "@app/Context";
 import { resolveBrandConfig } from "@/domain/branding/resolveBrandConfig";
+import { brandWordmarkSx } from "@/domain/branding/brandWordmarkSx";
 
 /**
  * Brand mark + wordmark from company.assets / company.name (DB),
@@ -57,12 +58,13 @@ export default function BrandLogo({
         <Box
           component="span"
           className="brand-wordmark"
-          sx={{
+          sx={(theme) => ({
+            ...brandWordmarkSx(theme),
             fontSize: { xs: "1.2rem", md: "1.45rem" },
             lineHeight: 1.1,
             whiteSpace: "nowrap",
             ...wordmarkSx,
-          }}
+          })}
         >
           {name}
         </Box>

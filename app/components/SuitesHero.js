@@ -3,6 +3,7 @@
 import { Box, Button, Typography } from "@mui/material";
 import Link from "next/link";
 import Image from "next/image";
+import { brandWordmarkSx } from "@/domain/branding/brandWordmarkSx";
 
 /**
  * Full-bleed landing hero.
@@ -86,11 +87,12 @@ export default function SuitesHero({
         <Typography
           component="h1"
           className="brand-wordmark hero-reveal"
-          sx={{
+          sx={(theme) => ({
+            ...brandWordmarkSx(theme),
             fontSize: { xs: "clamp(2.8rem, 12vw, 5.5rem)", md: "5.5rem" },
             lineHeight: 1.05,
             mb: 2,
-          }}
+          })}
         >
           {brandName}
         </Typography>

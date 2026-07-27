@@ -11,6 +11,7 @@ import {
   brandGalleryBand,
   brandHeroGradient,
   brandHeroImageOverlay,
+  brandOnDarkText,
   hexToRgba,
   softPageBackground,
 } from "./brandSurfaces";
@@ -25,7 +26,7 @@ export function createThemeFromCompany(company) {
     return lightTheme;
   }
 
-  const pageBg = softPageBackground(branding.primaryLight, 14);
+  const pageBg = softPageBackground(branding.primaryLight, 16);
   const pageSubtle = softPageBackground(branding.primaryLight, 10);
 
   return createTheme(lightTheme, {
@@ -103,8 +104,8 @@ export function createThemeFromCompany(company) {
       galleryBand: brandGalleryBand(branding, pageBg),
       apartmentPanelLight: brandApartmentPanelGradient(branding, true),
       apartmentPanelDark: brandApartmentPanelGradient(branding, false),
-      onDark: hexToRgba("#F5F0E6", 0.92),
-      onDarkMuted: hexToRgba("#F5F0E6", 0.7),
+      onDark: brandOnDarkText(branding, 0.94),
+      onDarkMuted: brandOnDarkText(branding, 0.72),
     },
   });
 }

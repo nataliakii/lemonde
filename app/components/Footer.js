@@ -31,7 +31,7 @@ const Section = styled("footer")(({ theme }) => {
     background:
       surfaces.footer ||
       `linear-gradient(180deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.dark} 100%)`,
-    color: surfaces.onDark || "#F5F0E6",
+    color: surfaces.onDark || theme.palette.primary.light,
   };
 });
 

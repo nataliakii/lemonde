@@ -1,5 +1,6 @@
 /**
  * Derive page / hero / footer surfaces from company.branding (Mongo).
+ * Dark bands use a cool metallic wash from primary (silver for V Luxury).
  */
 
 /**
@@ -28,10 +29,10 @@ export function hexToRgba(hex, alpha = 1) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-/** Soft page canvas: brand light tint on white (Le Monde warm / V Luxury cool). */
-export function softPageBackground(primaryLight, amountPercent = 14) {
+/** Soft page canvas: brand light tint on white (cool platinum for silver brands). */
+export function softPageBackground(primaryLight, amountPercent = 16) {
   const tint = String(primaryLight || "#D0D5DB").trim() || "#D0D5DB";
-  const pct = Math.min(40, Math.max(4, Number(amountPercent) || 14));
+  const pct = Math.min(40, Math.max(4, Number(amountPercent) || 16));
   return `color-mix(in srgb, ${tint} ${pct}%, #ffffff)`;
 }
 
@@ -46,18 +47,21 @@ export function softPageBackground(primaryLight, amountPercent = 14) {
  */
 export function brandHeroGradient(b) {
   return [
-    `radial-gradient(ellipse 80% 60% at 70% 20%, ${hexToRgba(b.primary, 0.22)} 0%, transparent 55%)`,
-    `radial-gradient(ellipse 60% 50% at 15% 80%, ${hexToRgba(b.primaryLight, 0.12)} 0%, transparent 50%)`,
-    `linear-gradient(165deg, ${b.secondaryDark} 0%, ${b.secondary} 45%, ${b.secondaryLight} 100%)`,
+    `radial-gradient(ellipse 90% 55% at 50% -10%, ${hexToRgba(b.primaryLight, 0.28)} 0%, transparent 58%)`,
+    `radial-gradient(ellipse 70% 50% at 78% 30%, ${hexToRgba(b.primary, 0.18)} 0%, transparent 55%)`,
+    `radial-gradient(ellipse 55% 45% at 12% 85%, ${hexToRgba(b.primaryLight, 0.1)} 0%, transparent 50%)`,
+    `linear-gradient(165deg, ${b.secondaryDark} 0%, ${b.secondary} 48%, ${b.secondaryLight} 100%)`,
   ].join(", ");
 }
 
 /**
- * @param {{ primary: string, secondary: string, secondaryDark: string }} b
+ * Matches the dark brand card: slate base + soft silver glow from the top.
+ * @param {{ primary: string, primaryLight: string, secondary: string, secondaryDark: string }} b
  */
 export function brandFooterGradient(b) {
   return [
-    `radial-gradient(ellipse 70% 50% at 50% 0%, ${hexToRgba(b.primary, 0.16)} 0%, transparent 55%)`,
+    `radial-gradient(ellipse 85% 60% at 50% -5%, ${hexToRgba(b.primaryLight, 0.26)} 0%, transparent 58%)`,
+    `radial-gradient(ellipse 50% 40% at 80% 40%, ${hexToRgba(b.primary, 0.1)} 0%, transparent 55%)`,
     `linear-gradient(180deg, ${b.secondary} 0%, ${b.secondaryDark} 100%)`,
   ].join(", ");
 }
@@ -79,7 +83,7 @@ export function brandHeroImageOverlay(b) {
 
 /**
  * Dark strip → page canvas (property gallery band).
- * @param {{ secondary: string, secondaryDark: string }} b
+ * @param {{ secondary: string, secondaryDark: string, primaryLight?: string }} b
  * @param {string} pageBg
  */
 export function brandGalleryBand(b, pageBg) {
@@ -99,4 +103,9 @@ export function brandApartmentPanelGradient(b, light) {
     return `linear-gradient(160deg, ${softPageBackground(b.primaryLight, 8)} 0%, ${softPageBackground(b.primaryLight, 22)} 100%)`;
   }
   return `linear-gradient(200deg, ${b.secondary} 0%, ${b.secondaryLight} 100%)`;
+}
+
+/** Cool on-dark text (platinum), not warm cream. */
+export function brandOnDarkText(b, alpha = 0.92) {
+  return hexToRgba(b.primaryLight || "#D0D5DB", alpha);
 }

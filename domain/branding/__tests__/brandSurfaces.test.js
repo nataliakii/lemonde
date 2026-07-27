@@ -17,15 +17,15 @@ describe("brandSurfaces", () => {
 
   test("hero/footer gradients use branding tokens", () => {
     const b = {
-      primary: "#C9A227",
-      primaryLight: "#E8D5A3",
-      secondary: "#1A1612",
-      secondaryDark: "#0E0C0A",
-      secondaryLight: "#3A322A",
+      primary: "#9AA3AD",
+      primaryLight: "#D0D5DB",
+      secondary: "#1B1E24",
+      secondaryDark: "#0E1014",
+      secondaryLight: "#3A404A",
     };
-    expect(brandHeroGradient(b)).toContain("#1A1612");
-    expect(brandHeroGradient(b)).toContain("rgba(201,162,39,0.22)");
-    expect(brandFooterGradient(b)).toContain("#0E0C0A");
-    expect(brandFooterGradient(b)).toContain("rgba(201,162,39,0.16)");
+    expect(brandHeroGradient(b)).toContain("#1B1E24");
+    expect(brandHeroGradient(b)).toContain("rgba(208,213,219,0.28)");
+    expect(brandFooterGradient(b)).toContain("#0E1014");
+    expect(brandFooterGradient(b)).toContain("rgba(208,213,219,0.26)");
   });
 });

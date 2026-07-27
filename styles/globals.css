@@ -1,10 +1,10 @@
 /**
  * Глобальные стили
- * Цвета синхронизированы с theme.js (Le Monde Suites)
+ * Цвета синхронизированы с theme.js / company.branding (V Luxury Suites — silver)
  *
- * - Primary gold: #C9A227
- * - Secondary espresso: #1A1612
- * - Champagne: #E8D5A3
+ * - Primary silver: #9AA3AD
+ * - Secondary slate: #1B1E24
+ * - Platinum: #D0D5DB
  */
 
 /* ============================================
@@ -20,81 +20,81 @@
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-body: 'Manrope', Helvetica, Arial, sans-serif;
 
-  /* Primary — brand gold */
-  --color-primary: #C9A227;
-  --color-primary-light: #E8D5A3;
-  --color-primary-dark: #9A7B2E;
+  /* Primary — brand silver / platinum */
+  --color-primary: #9AA3AD;
+  --color-primary-light: #D0D5DB;
+  --color-primary-dark: #6B737C;
   
-  /* Secondary — espresso */
-  --color-secondary: #1A1612;
-  --color-secondary-light: #3A322A;
-  --color-secondary-dark: #0E0C0A;
+  /* Secondary — slate */
+  --color-secondary: #1B1E24;
+  --color-secondary-light: #3A404A;
+  --color-secondary-dark: #0E1014;
   
   /* Analogous */
-  --color-rose: #B85C38;
-  --color-rose-light: #D4896A;
-  --color-amber: #E0C56A;
-  --color-amber-light: #F0DFA0;
+  --color-rose: #8B5A5A;
+  --color-rose-light: #A87878;
+  --color-amber: #B8C0C8;
+  --color-amber-light: #D8DDE2;
   
   /* Triadic */
-  --color-olive: #6B6B4A;
-  --color-olive-light: #8A8A68;
+  --color-olive: #6B737C;
+  --color-olive-light: #8A929A;
   --color-green: #3D7A5A;
   --color-green-light: #5A9A78;
   
   /* Neutrals */
   --color-white: #ffffff;
   --color-black: #0a0a0a;
-  --color-gray-50: #F2F1EF;
-  --color-gray-100: #E8E6E2;
-  --color-gray-200: #D4D0C8;
-  --color-gray-300: #B8B2A8;
-  --color-gray-400: #8F887C;
-  --color-gray-500: #6B655C;
-  --color-gray-600: #524C44;
-  --color-gray-700: #3C3832;
-  --color-gray-800: #2A2622;
-  --color-gray-900: #1A1612;
+  --color-gray-50: #F4F5F7;
+  --color-gray-100: #E8EAED;
+  --color-gray-200: #D2D6DB;
+  --color-gray-300: #B0B6BE;
+  --color-gray-400: #8A919A;
+  --color-gray-500: #6B727C;
+  --color-gray-600: #525860;
+  --color-gray-700: #3A4048;
+  --color-gray-800: #2A2E34;
+  --color-gray-900: #1B1E24;
 
   /* Фон */
-  --color-bg-default: #F2F1EF;
+  --color-bg-default: #F4F5F7;
   --color-bg-paper: #ffffff;
-  --color-bg-subtle: #F2F1EF;
+  --color-bg-subtle: #F4F5F7;
 
   /* Текст */
-  --color-text-primary: #1A1612;
-  --color-text-secondary: #3C3832;
+  --color-text-primary: #1B1E24;
+  --color-text-secondary: #3A4048;
   --color-text-inverse: #ffffff;
 
   /* Статусы */
   --color-success: #3D7A5A;
-  --color-warning: #E0C56A;
-  --color-error: #B85C38;
-  --color-info: #C9A227;
+  --color-warning: #B8C0C8;
+  --color-error: #8B5A5A;
+  --color-info: #9AA3AD;
 
   /* Заказы */
-  --color-order-confirmed: #C9A227;
+  --color-order-confirmed: #9AA3AD;
   --color-order-confirmed-my: #3D7A5A;
-  --color-order-pending: #E0C56A;
-  --color-order-conflict: #E0C56A;
+  --color-order-pending: #B8C0C8;
+  --color-order-conflict: #B8C0C8;
 
   /* Календарь */
-  --color-calendar-today: #E0C56A;
-  --color-calendar-today-text: #1A1612;
-  --color-calendar-sunday: #B85C38;
-  --color-calendar-first-col-bg: #1A1612;
+  --color-calendar-today: #B8C0C8;
+  --color-calendar-today-text: #1B1E24;
+  --color-calendar-sunday: #8B5A5A;
+  --color-calendar-first-col-bg: #1B1E24;
   --color-calendar-first-col-text: #ffffff;
-  --color-calendar-border: #D4D0C8;
-  --color-calendar-selected: #C9A227;
-  --color-calendar-move: #E0C56A;
+  --color-calendar-border: #D2D6DB;
+  --color-calendar-selected: #9AA3AD;
+  --color-calendar-move: #B8C0C8;
 
   /* Кнопки */
-  --color-btn-book: #C9A227;
-  --color-btn-book-light: #E8D5A3;
-  --color-btn-book-dark: #9A7B2E;
-  --color-btn-submit: #1A1612;
-  --color-btn-submit-light: #3A322A;
-  --color-btn-submit-dark: #0E0C0A;
+  --color-btn-book: #9AA3AD;
+  --color-btn-book-light: #D0D5DB;
+  --color-btn-book-dark: #6B737C;
+  --color-btn-submit: #1B1E24;
+  --color-btn-submit-light: #3A404A;
+  --color-btn-submit-dark: #0E1014;
 
   /* UI элементы */
   --color-ui-border: #e0e0e0;
@@ -1127,7 +1127,8 @@ body.hide-navbar-on-landscape-sm
 }
 
 /* ============================================
-   LE MONDE SUITES — brand utilities
+   Brand wordmark — metallic wash from CSS vars
+   (V Luxury silver by default; overridden per company)
    ============================================ */
 .brand-wordmark {
   font-family: var(--font-display);
@@ -1136,18 +1137,24 @@ body.hide-navbar-on-landscape-sm
   letter-spacing: 0.02em;
   background: linear-gradient(
     110deg,
-    #9A7B2E 0%,
-    #E8D5A3 28%,
-    #C9A227 48%,
-    #F5E6C0 62%,
-    #C9A227 78%,
-    #9A7B2E 100%
+    var(--color-primary-dark) 0%,
+    var(--color-primary-light) 28%,
+    var(--color-primary) 48%,
+    color-mix(in srgb, var(--color-primary-light) 55%, #ffffff) 62%,
+    var(--color-primary) 78%,
+    var(--color-primary-dark) 100%
   );
   background-size: 220% auto;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: goldShimmer 6s ease-in-out infinite;
+  animation: brandShimmer 6s ease-in-out infinite;
+}
+
+@keyframes brandShimmer {
+  0% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+  100% { background-position: 0% center; }
 }
 
 @keyframes goldShimmer {
