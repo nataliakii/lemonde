@@ -8,13 +8,27 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET() {
-  const cars = await getCars().catch(() => []);
-  const entries = buildLocalizedSitemap(cars ?? []);
-  const xml = sitemapToPrettyXml(entries);
-  return new NextResponse(xml, {
-    headers: {
-      "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=3600, s-maxage=3600",
-    },
-  });
+  try {
+    const cars = await getCars().catch(() => []);
+    const entries = buildLocalizedSitemap(cars ?? []);
+    const xml = sitemapToPrettyXml(entries);
+    return new NextResponse(xml, {
+      headers: {
+        "Content-Type": "application/xml; charset=utf-8",
+        "Cache-Control": "public, max-age=300, s-maxage=300",
+      },
+    });
+  } catch (error) {
+    console.error("[sitemap.xml]", error);
+    return new NextResponse(
+      '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>\n',
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/xml; charset=utf-8",
+          "Cache-Control": "no-store",
+        },
+      }
+    );
+  }
 }
