@@ -1,6 +1,8 @@
 import { MetadataRoute } from "next";
 import {
   getAllLocationsForLocale,
+  getApartmentAlternates,
+  getApartmentPath,
   getCarAlternates,
   getCarPath,
   getDefaultLocale,
@@ -15,7 +17,9 @@ import {
   SITEMAP_STATIC_PAGES,
   isNoindexLocation,
 } from "@config/sitemapConfig";
+import { SINGLE_PROPERTY_MODE } from "@config/domain";
 import {
+  APARTMENTS_ROUTE_SEGMENT,
   LOCATION_IDS,
   type LocationId,
   type StaticPageKey,
@@ -48,7 +52,10 @@ type SitemapCar = {
 
 function getLastModifiedDate(car: SitemapCar): string {
   const value =
-    car.updatedAt || car.dateLastModified || car.dateAddCar || new Date().toISOString();
+    car.updatedAt ||
+    car.dateLastModified ||
+    car.dateAddCar ||
+    new Date().toISOString();
   return new Date(value).toISOString();
 }
 
@@ -62,9 +69,14 @@ function isPublicCar(car: SitemapCar): boolean {
   );
 }
 
-function buildLocaleStaticAlternates(pageKey: StaticPageKey): Record<string, string> {
+function buildLocaleStaticAlternates(
+  pageKey: StaticPageKey
+): Record<string, string> {
   const alternatesByLocale = Object.fromEntries(
-    getSupportedLocales().map((locale) => [locale, getStaticPagePath(locale, pageKey)])
+    getSupportedLocales().map((locale) => [
+      locale,
+      getStaticPagePath(locale, pageKey),
+    ])
   );
   return buildHreflangAlternates(alternatesByLocale);
 }
@@ -103,25 +115,113 @@ export function validateSitemapEntries(entries: MetadataRoute.Sitemap) {
   };
 }
 
-export function buildLocalizedSitemap(cars: SitemapCar[] = []): MetadataRoute.Sitemap {
+function getLatestDateForCars(
+  candidateCars: SitemapCar[],
+  fallbackIso: string
+): string {
+  if (!candidateCars || candidateCars.length === 0) return fallbackIso;
+  let latest = "1970-01-01T00:00:00.000Z";
+  for (const car of candidateCars) {
+    const d = getLastModifiedDate(car);
+    if (d > latest) latest = d;
+  }
+  return latest === "1970-01-01T00:00:00.000Z" ? fallbackIso : latest;
+}
+
+/**
+ * V Luxury / single-property sitemap — only this site's public pages.
+ * Base URL comes from getBaseUrl() (vluxury.kalikratia.com).
+ */
+function buildApartmentPropertySitemap(
+  apartments: SitemapCar[] = []
+): MetadataRoute.Sitemap {
+  const nowIso = new Date().toISOString();
+  const defaultLocale = getDefaultLocale();
+  const supportedLocales = getSupportedLocales();
+  const publicApartments = (apartments || []).filter(isPublicCar);
+  const lastMod = getLatestDateForCars(publicApartments, nowIso);
+  const entries: MetadataRoute.Sitemap = [];
+
+  const hubAlternates = buildHreflangAlternates(getHubAlternates());
+  for (const locale of supportedLocales) {
+    entries.push({
+      url: toAbsoluteUrl(`/${locale}`),
+      lastModified: lastMod,
+      changeFrequency: "daily",
+      priority: locale === defaultLocale ? 1 : 0.9,
+      alternates: { languages: hubAlternates },
+    });
+  }
+
+  const apartmentsIndexAlternates = buildHreflangAlternates(
+    Object.fromEntries(
+      supportedLocales.map((locale) => [
+        locale,
+        `/${locale}/${APARTMENTS_ROUTE_SEGMENT}`,
+      ])
+    )
+  );
+  for (const locale of supportedLocales) {
+    entries.push({
+      url: toAbsoluteUrl(`/${locale}/${APARTMENTS_ROUTE_SEGMENT}`),
+      lastModified: lastMod,
+      changeFrequency: "weekly",
+      priority: locale === defaultLocale ? 0.95 : 0.9,
+      alternates: { languages: apartmentsIndexAlternates },
+    });
+  }
+
+  for (const pageKey of SITEMAP_STATIC_PAGES) {
+    const alternates = buildLocaleStaticAlternates(pageKey);
+    for (const locale of supportedLocales) {
+      entries.push({
+        url: toAbsoluteUrl(getStaticPagePath(locale, pageKey)),
+        lastModified: nowIso,
+        changeFrequency: "monthly",
+        priority: 0.6,
+        alternates: { languages: alternates },
+      });
+    }
+  }
+
+  for (const apartment of publicApartments) {
+    const slug = String(apartment.slug).trim();
+    const alternates = buildHreflangAlternates(getApartmentAlternates(slug));
+    const apartmentLastModified = getLastModifiedDate(apartment);
+
+    for (const locale of supportedLocales) {
+      entries.push({
+        url: toAbsoluteUrl(getApartmentPath(locale, slug)),
+        lastModified: apartmentLastModified,
+        changeFrequency: "weekly",
+        priority: locale === defaultLocale ? 0.85 : 0.8,
+        alternates: { languages: alternates },
+      });
+    }
+  }
+
+  const filteredEntries = entries.filter((entry) =>
+    shouldIndexPath(new URL(entry.url).pathname)
+  );
+
+  const validation = validateSitemapEntries(filteredEntries);
+  if (validation.duplicateUrls.length > 0) {
+    throw new Error(
+      `[sitemapBuilder] Duplicate sitemap URLs found: ${validation.duplicateUrls.join(", ")}`
+    );
+  }
+
+  return filteredEntries;
+}
+
+function buildCarRentalSitemap(cars: SitemapCar[] = []): MetadataRoute.Sitemap {
   const nowIso = new Date().toISOString();
   const defaultLocale = getDefaultLocale();
   const entries: MetadataRoute.Sitemap = [];
   const supportedLocales = getSupportedLocales();
 
   const publicCars = (cars || []).filter(isPublicCar);
-
-  function getLatestDateForCars(candidateCars: SitemapCar[]): string {
-    if (!candidateCars || candidateCars.length === 0) return nowIso;
-    let latest = "1970-01-01T00:00:00.000Z";
-    for (const car of candidateCars) {
-      const d = getLastModifiedDate(car);
-      if (d > latest) latest = d;
-    }
-    return latest === "1970-01-01T00:00:00.000Z" ? nowIso : latest;
-  }
-
-  const globalCarsLastModified = getLatestDateForCars(publicCars);
+  const globalCarsLastModified = getLatestDateForCars(publicCars, nowIso);
 
   const hubAlternates = buildHreflangAlternates(getHubAlternates());
   for (const locale of supportedLocales) {
@@ -163,7 +263,6 @@ export function buildLocalizedSitemap(cars: SitemapCar[] = []): MetadataRoute.Si
     });
   }
 
-  // Only SEO-relevant static pages. Exclude legal/technical (noindex) from sitemap.
   for (const pageKey of SITEMAP_STATIC_PAGES) {
     const alternates = buildLocaleStaticAlternates(pageKey);
     for (const locale of supportedLocales) {
@@ -183,7 +282,9 @@ export function buildLocalizedSitemap(cars: SitemapCar[] = []): MetadataRoute.Si
   for (const location of defaultLocations) {
     if (isNoindexLocation(location.id)) continue;
 
-    const alternates = buildHreflangAlternates(getLocationAlternatesById(location.id));
+    const alternates = buildHreflangAlternates(
+      getLocationAlternatesById(location.id)
+    );
     for (const locale of supportedLocales) {
       const localizedLocation = getAllLocationsForLocale(locale).find(
         (item) => item.id === location.id
@@ -191,7 +292,10 @@ export function buildLocalizedSitemap(cars: SitemapCar[] = []): MetadataRoute.Si
 
       if (!localizedLocation) continue;
 
-      const locationPath = getLocationPathFromLocation(locale, localizedLocation);
+      const locationPath = getLocationPathFromLocation(
+        locale,
+        localizedLocation
+      );
       entries.push({
         url: toAbsoluteUrl(locationPath),
         lastModified: globalCarsLastModified,
@@ -222,17 +326,24 @@ export function buildLocalizedSitemap(cars: SitemapCar[] = []): MetadataRoute.Si
     }
   }
 
-  // ── Category × Location SEO pages (localized slug per locale) ──
   for (const locale of supportedLocales) {
     const seoPageSlugs = getAllSeoPageSlugs(locale);
     for (const seoPage of seoPageSlugs) {
       const alternates = buildHreflangAlternates(
-        getSeoPageAlternatesForCategoryLocation(seoPage.categoryId, seoPage.locationId)
+        getSeoPageAlternatesForCategoryLocation(
+          seoPage.categoryId,
+          seoPage.locationId
+        )
       );
       const category = getCategoryById(seoPage.categoryId);
       const categoryCars =
-        category && category.filter ? filterCarsByCategory(publicCars, category.filter) : [];
-      const categoryLastModified = getLatestDateForCars(categoryCars);
+        category && category.filter
+          ? filterCarsByCategory(publicCars, category.filter)
+          : [];
+      const categoryLastModified = getLatestDateForCars(
+        categoryCars,
+        globalCarsLastModified
+      );
       entries.push({
         url: toAbsoluteUrl(getSeoPagePath(locale, seoPage.seoSlug)),
         lastModified: categoryLastModified,
@@ -243,7 +354,6 @@ export function buildLocalizedSitemap(cars: SitemapCar[] = []): MetadataRoute.Si
     }
   }
 
-  // ── Brand × Location SEO pages (localized slug per locale) ──
   for (const locale of supportedLocales) {
     const brandPages = buildAllBrandPageSlugs(publicCars, locale);
     for (const brandPage of brandPages) {
@@ -251,7 +361,10 @@ export function buildLocalizedSitemap(cars: SitemapCar[] = []): MetadataRoute.Si
         getBrandPageAlternates(brandPage.brandSlug, brandPage.locationId)
       );
       const brandCars = filterCarsByBrand(publicCars, brandPage.brand);
-      const brandLastModified = getLatestDateForCars(brandCars);
+      const brandLastModified = getLatestDateForCars(
+        brandCars,
+        globalCarsLastModified
+      );
       entries.push({
         url: toAbsoluteUrl(getSeoPagePath(locale, brandPage.seoSlug)),
         lastModified: brandLastModified,
@@ -262,7 +375,6 @@ export function buildLocalizedSitemap(cars: SitemapCar[] = []): MetadataRoute.Si
     }
   }
 
-  // ── Programmatic rent-{car}-{location} pages (localized slug per locale) ──
   for (const locale of supportedLocales) {
     const progSlugs = buildAllProgrammaticSlugs(
       publicCars.map((c) => String(c.slug).trim()),
@@ -272,18 +384,22 @@ export function buildLocalizedSitemap(cars: SitemapCar[] = []): MetadataRoute.Si
       const progAlternates: Record<string, string> = {};
       for (const loc of supportedLocales) {
         const slug = buildProgrammaticSlug(
-        prog.carSlug,
-        getLocationSeoSlug(prog.locationId as LocationId, loc)
-      );
+          prog.carSlug,
+          getLocationSeoSlug(prog.locationId as LocationId, loc)
+        );
         progAlternates[loc] = getSeoPagePath(loc, slug);
       }
       const car = publicCars.find((c) => String(c.slug).trim() === prog.carSlug);
       entries.push({
         url: toAbsoluteUrl(getSeoPagePath(locale, prog.seoSlug)),
-        lastModified: car ? getLastModifiedDate(car) : globalCarsLastModified,
+        lastModified: car
+          ? getLastModifiedDate(car)
+          : globalCarsLastModified,
         changeFrequency: "weekly",
         priority: locale === defaultLocale ? 0.7 : 0.65,
-        alternates: { languages: buildHreflangAlternates(progAlternates) },
+        alternates: {
+          languages: buildHreflangAlternates(progAlternates),
+        },
       });
     }
   }
@@ -300,4 +416,13 @@ export function buildLocalizedSitemap(cars: SitemapCar[] = []): MetadataRoute.Si
   }
 
   return filteredEntries;
+}
+
+export function buildLocalizedSitemap(
+  cars: SitemapCar[] = []
+): MetadataRoute.Sitemap {
+  if (SINGLE_PROPERTY_MODE) {
+    return buildApartmentPropertySitemap(cars);
+  }
+  return buildCarRentalSitemap(cars);
 }

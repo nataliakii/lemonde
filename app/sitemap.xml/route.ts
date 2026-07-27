@@ -3,6 +3,7 @@ import { getCars } from "@/domain/services";
 import { buildLocalizedSitemap } from "@lib/sitemap/sitemapBuilder";
 import { sitemapToPrettyXml } from "@lib/sitemap/sitemapToXml";
 
+/** Per-site sitemap: V Luxury uses apartment URLs on vluxury.kalikratia.com */
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 

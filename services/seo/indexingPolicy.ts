@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PRODUCTION_BASE_URL } from "@config/seo";
+import { SINGLE_PROPERTY_MODE } from "@config/domain";
 import {
   isNoindexPath,
   NOINDEX_LOCATION_IDS,
@@ -13,7 +14,14 @@ import {
 } from "@domain/locationSeo/locationSeoService";
 
 export type IndexingMode = "allowlist" | "all";
-export const INDEXING_MODE: IndexingMode = "allowlist";
+
+/**
+ * V Luxury (single-property): index all public suite pages.
+ * Le Monde / car-rental branches keep the temporary CarsNK allowlist.
+ */
+export const INDEXING_MODE: IndexingMode = SINGLE_PROPERTY_MODE
+  ? "all"
+  : "allowlist";
 
 /** Paths for locations in NOINDEX_LOCATION_IDS (all locales). */
 function buildNoindexLocationPaths(): Set<string> {
@@ -23,7 +31,9 @@ function buildNoindexLocationPaths(): Set<string> {
     const locations = getAllLocationsForLocale(locale);
     for (const loc of locations) {
       if (NOINDEX_LOCATION_IDS.includes(loc.id)) {
-        set.add(getLocationPathFromLocation(locale, loc).replace(/\/+$/, "") || "/");
+        set.add(
+          getLocationPathFromLocation(locale, loc).replace(/\/+$/, "") || "/"
+        );
       }
     }
   }
@@ -32,7 +42,7 @@ function buildNoindexLocationPaths(): Set<string> {
 
 const NOINDEX_LOCATION_PATHS = buildNoindexLocationPaths();
 
-/** Temporary hard allowlist: index only these 4 Thessaloniki location pages. */
+/** Temporary hard allowlist: index only these Thessaloniki location pages (car-rental). */
 const ALLOWLISTED_LOCATION_IDS = [LOCATION_IDS.THESSALONIKI] as const;
 const ALLOWLISTED_LOCALES = ["en", "ru", "de", "el"] as const;
 
@@ -72,19 +82,24 @@ export const INDEXABLE_PATHS = new Set(
 
 export function shouldIndexPath(path: string): boolean {
   const normalized = normalizePath(path);
-  // Le Monde Suites: do not index legacy CarsNK location SEO pages
+
+  // Never index legacy CarsNK location / car-rental SEO pages on suite sites
   if (
     normalized.includes("/locations/") ||
-    /\/car-rental-/.test(normalized)
+    /\/car-rental-/.test(normalized) ||
+    /\/rent-/.test(normalized)
   ) {
     return false;
   }
+
   if (isNoindexPath(normalized) || NOINDEX_LOCATION_PATHS.has(normalized)) {
     return false;
   }
+
   if (INDEXING_MODE === "all") {
     return true;
   }
+
   return INDEXABLE_PATHS.has(normalized);
 }
 
@@ -98,4 +113,3 @@ export function getRobotsForPath(
 
   return { index: true, follow: true };
 }
-
