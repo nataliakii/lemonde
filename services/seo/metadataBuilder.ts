@@ -75,7 +75,8 @@ function buildBaseMetadata(input: {
   }
 
   return {
-    title: input.title,
+    // Absolute: hub/suite titles already include the brand; avoid `| siteName` from layout template.
+    title: { absolute: input.title },
     description: input.description,
     alternates,
     openGraph: {
