@@ -337,7 +337,7 @@ export function buildApartmentJsonLd(input: {
       ? apt.gallery.map((g) => resolveMediaUrl(g, seoConfig.baseUrl))
       : []),
   ].filter(Boolean) as string[];
-  const uniqueImages = [...new Set(images)];
+  const uniqueImages = Array.from(new Set(images));
 
   const amenityFeature = (Array.isArray(apt.amenities) ? apt.amenities : [])
     .map((a) => String(a || "").trim())
