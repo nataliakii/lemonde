@@ -108,7 +108,7 @@ function buildBaseMetadata(input: {
   }
 
   return {
-    title: input.title,
+    title: { absolute: input.title },
     description: input.description,
     alternates,
     openGraph: {

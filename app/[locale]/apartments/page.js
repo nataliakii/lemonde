@@ -24,18 +24,22 @@ const APARTMENTS_ALTERNATES = Object.fromEntries(
 
 export async function generateMetadata({ params }) {
   const locale = normalizeLocale(params.locale);
-  const title = "Rooms | V Luxury Suites";
-  const description =
-    "Browse our suites and rooms in Pefkohori. Choose dates and request your stay with V Luxury Suites.";
+  const company = await getCompany(COMPANY_ID).catch(() => null);
+  const { getSeoConfig } = await import("@config/seo");
+  const seo = getSeoConfig(company);
+  const site = seo.siteName;
+  const place = seo.placeName || "Pefkohori";
+  const title = `Rooms | ${site}`;
+  const description = `Browse our suites and rooms in ${place}. Choose dates and request your stay with ${site}.`;
   const path = `/${locale}/apartments`;
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: {
       canonical: toAbsoluteUrl(path),
       languages: buildHreflangAlternates(APARTMENTS_ALTERNATES),
     },
-    openGraph: { title, description },
+    openGraph: { title, description, siteName: site },
     robots: getRobotsForPath(path),
   };
 }
