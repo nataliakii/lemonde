@@ -28,11 +28,11 @@ export default function Preloader({ loading, company: companyProp = null }) {
   const logoSrc =
     typeof brand.assets.logoMark === "string" ? brand.assets.logoMark.trim() : "";
   const pageBg = softPageBackground(brand.branding.primaryLight, 14);
-  const ink = brand.branding.secondary || "#1B1E24";
+  const ink = brand.branding.secondary || "#0B1218";
   const shadow = hexToRgba(brand.branding.secondaryDark || ink, 0.18);
-  const primary = brand.branding.primary || "#9AA3AD";
-  const primaryLight = brand.branding.primaryLight || "#D0D5DB";
-  const primaryDark = brand.branding.primaryDark || "#6B737C";
+  const primary = brand.branding.primary || "#AEC0D0";
+  const primaryLight = brand.branding.primaryLight || "#E6EEF5";
+  const primaryDark = brand.branding.primaryDark || "#6F8496";
 
   useLayoutEffect(() => {
     if (!loading) {

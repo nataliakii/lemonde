@@ -119,7 +119,7 @@ export default function SuitesHero({
               zIndex: 1,
               background:
                 theme.brandSurfaces?.heroImageOverlay ||
-                "linear-gradient(165deg, rgba(14,12,10,0.72) 0%, rgba(26,22,18,0.55) 50%, rgba(14,12,10,0.78) 100%)",
+                "linear-gradient(165deg, rgba(5,8,12,0.72) 0%, rgba(11,18,24,0.55) 50%, rgba(5,8,12,0.78) 100%)",
             })}
           />
         </>
@@ -142,36 +142,36 @@ export default function SuitesHero({
           <IconButton
             aria-label="Previous hero photo"
             onClick={() => go(index - 1)}
-            sx={{
+            sx={(theme) => ({
               position: "absolute",
               left: { xs: 8, md: 20 },
               top: "50%",
               transform: "translateY(-50%)",
               zIndex: 3,
-              bgcolor: "rgba(14,12,10,0.42)",
-              color: "#F5F0E6",
+              bgcolor: "rgba(5,8,12,0.42)",
+              color: theme.brandSurfaces?.onDark || theme.palette.primary.light,
               width: 40,
               height: 40,
-              "&:hover": { bgcolor: "rgba(14,12,10,0.68)" },
-            }}
+              "&:hover": { bgcolor: "rgba(5,8,12,0.68)" },
+            })}
           >
             <ChevronLeftIcon />
           </IconButton>
           <IconButton
             aria-label="Next hero photo"
             onClick={() => go(index + 1)}
-            sx={{
+            sx={(theme) => ({
               position: "absolute",
               right: { xs: 8, md: 20 },
               top: "50%",
               transform: "translateY(-50%)",
               zIndex: 3,
-              bgcolor: "rgba(14,12,10,0.42)",
-              color: "#F5F0E6",
+              bgcolor: "rgba(5,8,12,0.42)",
+              color: theme.brandSurfaces?.onDark || theme.palette.primary.light,
               width: 40,
               height: 40,
-              "&:hover": { bgcolor: "rgba(14,12,10,0.68)" },
-            }}
+              "&:hover": { bgcolor: "rgba(5,8,12,0.68)" },
+            })}
           >
             <ChevronRightIcon />
           </IconButton>
@@ -193,7 +193,7 @@ export default function SuitesHero({
                 type="button"
                 aria-label={`Go to hero photo ${i + 1}`}
                 onClick={() => setIndex(i)}
-                sx={{
+                sx={(theme) => ({
                   width: i === index ? 22 : 8,
                   height: 8,
                   borderRadius: 4,
@@ -202,10 +202,10 @@ export default function SuitesHero({
                   p: 0,
                   bgcolor:
                     i === index
-                      ? "rgba(245,240,230,0.95)"
-                      : "rgba(245,240,230,0.4)",
+                      ? theme.palette.primary.light
+                      : "rgba(230,238,245,0.4)",
                   transition: "width 0.25s ease, background-color 0.25s ease",
-                }}
+                })}
               />
             ))}
           </Box>
@@ -237,7 +237,7 @@ export default function SuitesHero({
         <Typography
           className="hero-reveal-delay"
           sx={(theme) => ({
-            color: theme.brandSurfaces?.onDarkMuted || "rgba(245, 240, 230, 0.82)",
+            color: theme.brandSurfaces?.onDarkMuted || theme.palette.primary.light,
             fontFamily: "var(--font-body)",
             fontWeight: 400,
             fontSize: { xs: "1.05rem", md: "1.25rem" },

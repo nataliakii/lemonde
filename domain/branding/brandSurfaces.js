@@ -31,7 +31,7 @@ export function hexToRgba(hex, alpha = 1) {
 
 /** Soft page canvas: brand light tint on white (cool platinum for silver brands). */
 export function softPageBackground(primaryLight, amountPercent = 16) {
-  const tint = String(primaryLight || "#D0D5DB").trim() || "#D0D5DB";
+  const tint = String(primaryLight || "#E6EEF5").trim() || "#E6EEF5";
   const pct = Math.min(40, Math.max(4, Number(amountPercent) || 16));
   return `color-mix(in srgb, ${tint} ${pct}%, #ffffff)`;
 }
@@ -107,5 +107,5 @@ export function brandApartmentPanelGradient(b, light) {
 
 /** Cool on-dark text (platinum), not warm cream. */
 export function brandOnDarkText(b, alpha = 0.92) {
-  return hexToRgba(b.primaryLight || "#D0D5DB", alpha);
+  return hexToRgba(b.primaryLight || "#E6EEF5", alpha);
 }

@@ -66,14 +66,14 @@ const CompanySchema = new Schema({
    * Secrets stay in env; visual identity lives here so deploys can copy with a new company doc.
    */
   branding: {
-    primary: { type: String, default: "#C9A227" },
-    primaryLight: { type: String, default: "#E8D5A3" },
-    primaryDark: { type: String, default: "#9A7B2E" },
-    secondary: { type: String, default: "#1A1612" },
-    secondaryLight: { type: String, default: "#3A322A" },
-    secondaryDark: { type: String, default: "#0E0C0A" },
-    accent: { type: String, default: "#B85C38" },
-    ink: { type: String, default: "#2A2520" },
+    primary: { type: String, default: "#AEC0D0" },
+    primaryLight: { type: String, default: "#E6EEF5" },
+    primaryDark: { type: String, default: "#6F8496" },
+    secondary: { type: String, default: "#0B1218" },
+    secondaryLight: { type: String, default: "#243040" },
+    secondaryDark: { type: String, default: "#05080C" },
+    accent: { type: String, default: "#5A7D9A" },
+    ink: { type: String, default: "#15202B" },
   },
 
   /**

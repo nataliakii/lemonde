@@ -783,7 +783,7 @@ export default function NavBar({
                           fontSize: { md: "1.15rem", lg: "1.25rem" },
                           letterSpacing: "0.02em",
                           textTransform: "none",
-                          color: "rgba(245,240,230,0.9)",
+                          color: "rgba(230,238,245,0.92)",
                           transition: "color 0.25s ease",
                           "&:hover": { color: "primary.light" },
                         }}
@@ -821,15 +821,15 @@ export default function NavBar({
                           fontWeight: 500,
                           fontSize: { md: "1.15rem", lg: "1.25rem" },
                           letterSpacing: "0.02em",
-                          color: "rgba(245,240,230,0.9)",
+                          color: "rgba(230,238,245,0.92)",
                           transition: "color 0.25s ease",
-                          ".MuiButton-root:hover &": { color: "#E8D5A3" },
+                          ".MuiButton-root:hover &": { color: "primary.light" },
                         }}
                       >
                         {t("header.locations") || "Locations"}
                       </Typography>
                       <KeyboardArrowDownIcon
-                        sx={{ fontSize: 18, ml: 0.25, color: "rgba(232,213,163,0.7)" }}
+                        sx={{ fontSize: 18, ml: 0.25, color: "primary.light", opacity: 0.7 }}
                       />
                     </Button>
                     )}
@@ -842,7 +842,7 @@ export default function NavBar({
                           fontSize: { md: "1.15rem", lg: "1.25rem" },
                           letterSpacing: "0.02em",
                           textTransform: "none",
-                          color: "rgba(245,240,230,0.9)",
+                          color: "rgba(230,238,245,0.92)",
                           transition: "color 0.25s ease",
                           "&:hover": { color: "primary.light" },
                         }}
@@ -870,9 +870,9 @@ export default function NavBar({
                           fontWeight: 500,
                           fontSize: { md: "1.15rem", lg: "1.25rem" },
                           letterSpacing: "0.02em",
-                          color: "rgba(245,240,230,0.9)",
+                          color: "rgba(230,238,245,0.92)",
                           transition: "color 0.25s ease",
-                          ".MuiButton-root:hover &": { color: "#E8D5A3" },
+                          ".MuiButton-root:hover &": { color: "primary.light" },
                         }}
                       >
                         {t("header.transfer")}

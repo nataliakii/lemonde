@@ -1,6 +1,6 @@
 /**
- * Metallic wordmark wash from theme primary (silver for V Luxury).
- * Prefer this over relying only on .brand-wordmark CSS when deploying.
+ * Metallic wordmark wash from theme primary (cool steel for V Luxury).
+ * Biased toward primaryLight so it stays readable on dark heroes.
  */
 
 /**
@@ -22,10 +22,10 @@ export function brandWordmarkSx(theme) {
     overflow: "visible",
     background: `linear-gradient(
       110deg,
-      ${dark} 0%,
-      ${light} 28%,
-      ${main} 48%,
-      color-mix(in srgb, ${light} 55%, #ffffff) 62%,
+      ${main} 0%,
+      ${light} 22%,
+      color-mix(in srgb, ${light} 65%, #ffffff) 42%,
+      ${light} 58%,
       ${main} 78%,
       ${dark} 100%
     )`,

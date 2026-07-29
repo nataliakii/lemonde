@@ -1,10 +1,10 @@
 /**
  * Глобальные стили
- * Цвета синхронизированы с theme.js / company.branding (V Luxury Suites — silver)
+ * Цвета синхронизированы с theme.js / company.branding (V Luxury — cool steel)
  *
- * - Primary silver: #9AA3AD
- * - Secondary slate: #1B1E24
- * - Platinum: #D0D5DB
+ * - Primary steel: #AEC0D0
+ * - Secondary night: #0B1218
+ * - Platinum: #E6EEF5
  */
 
 /* ============================================
@@ -20,81 +20,81 @@
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-body: 'Manrope', Helvetica, Arial, sans-serif;
 
-  /* Primary — brand silver / platinum */
-  --color-primary: #9AA3AD;
-  --color-primary-light: #D0D5DB;
-  --color-primary-dark: #6B737C;
+  /* Primary — cool steel / icy platinum */
+  --color-primary: #AEC0D0;
+  --color-primary-light: #E6EEF5;
+  --color-primary-dark: #6F8496;
   
-  /* Secondary — slate */
-  --color-secondary: #1B1E24;
-  --color-secondary-light: #3A404A;
-  --color-secondary-dark: #0E1014;
+  /* Secondary — cool night */
+  --color-secondary: #0B1218;
+  --color-secondary-light: #243040;
+  --color-secondary-dark: #05080C;
   
   /* Analogous */
   --color-rose: #8B5A5A;
   --color-rose-light: #A87878;
-  --color-amber: #B8C0C8;
-  --color-amber-light: #D8DDE2;
+  --color-amber: #B8C8D6;
+  --color-amber-light: #D8E2EA;
   
   /* Triadic */
-  --color-olive: #6B737C;
-  --color-olive-light: #8A929A;
+  --color-olive: #6F8496;
+  --color-olive-light: #8A9AAC;
   --color-green: #3D7A5A;
   --color-green-light: #5A9A78;
   
   /* Neutrals */
   --color-white: #ffffff;
   --color-black: #0a0a0a;
-  --color-gray-50: #F4F5F7;
-  --color-gray-100: #E8EAED;
-  --color-gray-200: #D2D6DB;
-  --color-gray-300: #B0B6BE;
-  --color-gray-400: #8A919A;
-  --color-gray-500: #6B727C;
-  --color-gray-600: #525860;
-  --color-gray-700: #3A4048;
-  --color-gray-800: #2A2E34;
-  --color-gray-900: #1B1E24;
+  --color-gray-50: #F2F5F8;
+  --color-gray-100: #E6EEF5;
+  --color-gray-200: #C5D0DA;
+  --color-gray-300: #A0AEBA;
+  --color-gray-400: #7A8A98;
+  --color-gray-500: #5C6A78;
+  --color-gray-600: #455260;
+  --color-gray-700: #303C48;
+  --color-gray-800: #1A2430;
+  --color-gray-900: #0B1218;
 
   /* Фон */
-  --color-bg-default: #F4F5F7;
+  --color-bg-default: #F2F5F8;
   --color-bg-paper: #ffffff;
-  --color-bg-subtle: #F4F5F7;
+  --color-bg-subtle: #F2F5F8;
 
   /* Текст */
-  --color-text-primary: #1B1E24;
-  --color-text-secondary: #3A4048;
+  --color-text-primary: #0B1218;
+  --color-text-secondary: #303C48;
   --color-text-inverse: #ffffff;
 
   /* Статусы */
   --color-success: #3D7A5A;
-  --color-warning: #B8C0C8;
+  --color-warning: #B8C8D6;
   --color-error: #8B5A5A;
-  --color-info: #9AA3AD;
+  --color-info: #AEC0D0;
 
   /* Заказы */
-  --color-order-confirmed: #9AA3AD;
+  --color-order-confirmed: #AEC0D0;
   --color-order-confirmed-my: #3D7A5A;
-  --color-order-pending: #B8C0C8;
-  --color-order-conflict: #B8C0C8;
+  --color-order-pending: #B8C8D6;
+  --color-order-conflict: #B8C8D6;
 
   /* Календарь */
-  --color-calendar-today: #B8C0C8;
-  --color-calendar-today-text: #1B1E24;
+  --color-calendar-today: #B8C8D6;
+  --color-calendar-today-text: #0B1218;
   --color-calendar-sunday: #8B5A5A;
-  --color-calendar-first-col-bg: #1B1E24;
+  --color-calendar-first-col-bg: #0B1218;
   --color-calendar-first-col-text: #ffffff;
-  --color-calendar-border: #D2D6DB;
-  --color-calendar-selected: #9AA3AD;
-  --color-calendar-move: #B8C0C8;
+  --color-calendar-border: #C5D0DA;
+  --color-calendar-selected: #AEC0D0;
+  --color-calendar-move: #B8C8D6;
 
   /* Кнопки */
-  --color-btn-book: #9AA3AD;
-  --color-btn-book-light: #D0D5DB;
-  --color-btn-book-dark: #6B737C;
-  --color-btn-submit: #1B1E24;
-  --color-btn-submit-light: #3A404A;
-  --color-btn-submit-dark: #0E1014;
+  --color-btn-book: #AEC0D0;
+  --color-btn-book-light: #E6EEF5;
+  --color-btn-book-dark: #6F8496;
+  --color-btn-submit: #0B1218;
+  --color-btn-submit-light: #243040;
+  --color-btn-submit-dark: #05080C;
 
   /* UI элементы */
   --color-ui-border: #e0e0e0;
@@ -1142,10 +1142,10 @@ body.hide-navbar-on-landscape-sm
   overflow: visible;
   background: linear-gradient(
     110deg,
-    var(--color-primary-dark) 0%,
-    var(--color-primary-light) 28%,
-    var(--color-primary) 48%,
-    color-mix(in srgb, var(--color-primary-light) 55%, #ffffff) 62%,
+    var(--color-primary) 0%,
+    var(--color-primary-light) 22%,
+    color-mix(in srgb, var(--color-primary-light) 65%, #ffffff) 42%,
+    var(--color-primary-light) 58%,
     var(--color-primary) 78%,
     var(--color-primary-dark) 100%
   );
