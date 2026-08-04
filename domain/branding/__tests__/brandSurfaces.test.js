@@ -10,9 +10,12 @@ describe("brandSurfaces", () => {
     expect(hexToRgba("#C9A227", 0.16)).toBe("rgba(201,162,39,0.16)");
   });
 
-  test("softPageBackground uses color-mix with brand tint", () => {
-    expect(softPageBackground("#E8D5A3", 14)).toContain("#E8D5A3");
-    expect(softPageBackground("#E8D5A3", 14)).toContain("color-mix");
+  test("softPageBackground returns MUI-parseable hex tinted toward white", () => {
+    const bg = softPageBackground("#E8D5A3", 14);
+    expect(bg).toMatch(/^#[0-9a-f]{6}$/i);
+    // 14% tint → closer to white than the source color
+    expect(bg.toLowerCase()).not.toBe("#e8d5a3");
+    expect(softPageBackground("#E6EEF5", 16)).toMatch(/^#[0-9a-f]{6}$/i);
   });
 
   test("hero/footer gradients use branding tokens", () => {

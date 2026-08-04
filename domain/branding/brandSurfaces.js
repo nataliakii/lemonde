@@ -5,15 +5,13 @@
 
 /**
  * @param {string} hex
- * @param {number} alpha 0..1
+ * @returns {[number, number, number] | null}
  */
-export function hexToRgba(hex, alpha = 1) {
+function parseHexRgb(hex) {
   const raw = String(hex || "")
     .replace("#", "")
     .trim();
-  if (raw.length !== 3 && raw.length !== 6) {
-    return `rgba(0,0,0,${alpha})`;
-  }
+  if (raw.length !== 3 && raw.length !== 6) return null;
   const full =
     raw.length === 3
       ? raw
@@ -22,18 +20,37 @@ export function hexToRgba(hex, alpha = 1) {
           .join("")
       : raw;
   const n = Number.parseInt(full, 16);
-  if (!Number.isFinite(n)) return `rgba(0,0,0,${alpha})`;
-  const r = (n >> 16) & 255;
-  const g = (n >> 8) & 255;
-  const b = n & 255;
+  if (!Number.isFinite(n)) return null;
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/**
+ * @param {string} hex
+ * @param {number} alpha 0..1
+ */
+export function hexToRgba(hex, alpha = 1) {
+  const rgb = parseHexRgb(hex);
+  if (!rgb) return `rgba(0,0,0,${alpha})`;
+  const [r, g, b] = rgb;
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-/** Soft page canvas: brand light tint on white (cool platinum for silver brands). */
+/**
+ * Soft page canvas: brand light tint on white as a real #rrggbb.
+ * Must stay MUI-parseable (no CSS color-mix) — used in palette.background.
+ */
 export function softPageBackground(primaryLight, amountPercent = 16) {
   const tint = String(primaryLight || "#E6EEF5").trim() || "#E6EEF5";
-  const pct = Math.min(40, Math.max(4, Number(amountPercent) || 16));
-  return `color-mix(in srgb, ${tint} ${pct}%, #ffffff)`;
+  const pct = Math.min(40, Math.max(4, Number(amountPercent) || 16)) / 100;
+  const rgb = parseHexRgb(tint) || parseHexRgb("#E6EEF5");
+  if (!rgb) return "#F2F5F8";
+  const [tr, tg, tb] = rgb;
+  const r = Math.round(tr * pct + 255 * (1 - pct));
+  const g = Math.round(tg * pct + 255 * (1 - pct));
+  const b = Math.round(tb * pct + 255 * (1 - pct));
+  return `#${[r, g, b]
+    .map((v) => Math.min(255, Math.max(0, v)).toString(16).padStart(2, "0"))
+    .join("")}`;
 }
 
 /**
