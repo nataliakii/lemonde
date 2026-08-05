@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * Homepage hero photos — company.assets.heroImages in Mongo.
- * These are the ONLY images used by SuitesHero carousel (never suite photos).
+ * General (property) photos — company.assets.galleryImages.
+ * Shown in homepage PropertyGallery. Optionally one URL → assets.heroLeadImage
+ * as the first SuitesHero slide.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -23,11 +24,13 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import PhotoCameraOutlinedIcon from "@mui/icons-material/PhotoCameraOutlined";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import StarIcon from "@mui/icons-material/Star";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
 import { useMainContext } from "@app/Context";
 import { isDirectImageSrc } from "@/domain/media/imageSrc";
 import { CldImage } from "next-cloudinary";
 
-function HeroThumb({ src }) {
+function Thumb({ src }) {
   if (!src) return null;
   if (isDirectImageSrc(src)) {
     return (
@@ -58,10 +61,11 @@ function HeroThumb({ src }) {
   );
 }
 
-export default function HeroImagesModal({ open, onClose }) {
+export default function GeneralImagesModal({ open, onClose }) {
   const { company, updateCompanyInContext } = useMainContext();
   const inputRef = useRef(null);
   const [images, setImages] = useState([]);
+  const [heroLead, setHeroLead] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -69,35 +73,45 @@ export default function HeroImagesModal({ open, onClose }) {
 
   useEffect(() => {
     if (!open) return;
-    const fromDb = Array.isArray(company?.assets?.heroImages)
-      ? company.assets.heroImages.filter(
+    const fromDb = Array.isArray(company?.assets?.galleryImages)
+      ? company.assets.galleryImages.filter(
           (u) => typeof u === "string" && u.trim()
         )
       : [];
+    const lead = String(company?.assets?.heroLeadImage || "").trim();
     setImages(fromDb);
+    setHeroLead(lead && fromDb.includes(lead) ? lead : "");
     setError("");
     setSavedOk(false);
-  }, [open, company?.assets?.heroImages]);
+  }, [open, company?.assets?.galleryImages, company?.assets?.heroLeadImage]);
 
   const persist = useCallback(
-    async (nextImages) => {
+    async ({ nextImages, nextLead }) => {
       setSaving(true);
       setError("");
       setSavedOk(false);
+      const gallery = Array.isArray(nextImages) ? nextImages : images;
+      let lead =
+        nextLead !== undefined ? String(nextLead || "").trim() : heroLead;
+      if (lead && !gallery.includes(lead)) lead = "";
       try {
         const response = await fetch("/api/company", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ "assets.heroImages": nextImages }),
+          body: JSON.stringify({
+            "assets.galleryImages": gallery,
+            "assets.heroLeadImage": lead,
+          }),
         });
         const data = await response.json().catch(() => null);
         if (!response.ok) {
-          throw new Error(data?.message || "Failed to save hero photos");
+          throw new Error(data?.message || "Failed to save General photos");
         }
         if (company?._id) {
           await updateCompanyInContext(company._id, data);
         }
-        setImages(nextImages);
+        setImages(gallery);
+        setHeroLead(lead);
         setSavedOk(true);
       } catch (e) {
         setError(e?.message || "Failed to save");
@@ -105,7 +119,7 @@ export default function HeroImagesModal({ open, onClose }) {
         setSaving(false);
       }
     },
-    [company?._id, updateCompanyInContext]
+    [company?._id, heroLead, images, updateCompanyInContext]
   );
 
   const uploadFiles = async (fileList) => {
@@ -122,7 +136,7 @@ export default function HeroImagesModal({ open, onClose }) {
       for (const file of files) {
         const formData = new FormData();
         formData.append("image", file);
-        formData.append("purpose", "hero");
+        formData.append("purpose", "general");
         const response = await fetch("/api/order/update/image", {
           method: "POST",
           body: formData,
@@ -137,7 +151,7 @@ export default function HeroImagesModal({ open, onClose }) {
       uploaded.forEach((url) => {
         if (url && !merged.includes(url)) merged.push(url);
       });
-      await persist(merged);
+      await persist({ nextImages: merged });
     } catch (e) {
       setError(e?.message || "Upload failed");
     } finally {
@@ -147,8 +161,10 @@ export default function HeroImagesModal({ open, onClose }) {
   };
 
   const removeAt = async (idx) => {
+    const removed = images[idx];
     const next = images.filter((_, i) => i !== idx);
-    await persist(next);
+    const nextLead = heroLead === removed ? "" : heroLead;
+    await persist({ nextImages: next, nextLead });
   };
 
   const move = async (idx, dir) => {
@@ -158,19 +174,24 @@ export default function HeroImagesModal({ open, onClose }) {
     const tmp = next[idx];
     next[idx] = next[j];
     next[j] = tmp;
-    await persist(next);
+    await persist({ nextImages: next });
+  };
+
+  const toggleLead = async (src) => {
+    const nextLead = heroLead === src ? "" : src;
+    await persist({ nextLead });
   };
 
   const busy = uploading || saving;
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Homepage hero photos</DialogTitle>
+      <DialogTitle>General photos (homepage gallery)</DialogTitle>
       <DialogContent dividers>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Extra homepage hero carousel slides (after an optional General “first
-          hero”). Suite / room photos are never used here. For the property
-          gallery strip and first-hero pick, use General photos.
+          These photos appear in the homepage “The property” gallery. Optionally
+          mark one as the first hero slide (star). Dedicated hero carousel photos
+          are managed separately.
         </Typography>
 
         {error ? (
@@ -180,7 +201,7 @@ export default function HeroImagesModal({ open, onClose }) {
         ) : null}
         {savedOk ? (
           <Alert severity="success" sx={{ mb: 2 }}>
-            Saved to Mongo — live site uses these images.
+            Saved to Mongo — live homepage gallery uses these images.
           </Alert>
         ) : null}
 
@@ -195,76 +216,96 @@ export default function HeroImagesModal({ open, onClose }) {
               }}
             >
               <Typography variant="body2" color="text.secondary">
-                No hero photos yet — homepage shows the branded gradient.
+                No General photos yet — homepage gallery falls back to suite
+                photos if any.
               </Typography>
             </Box>
           ) : (
-            images.map((src, idx) => (
-              <Stack
-                key={`${src}-${idx}`}
-                direction="row"
-                spacing={1.5}
-                alignItems="center"
-                sx={{
-                  p: 1,
-                  border: "1px solid",
-                  borderColor: "divider",
-                  borderRadius: 1,
-                }}
-              >
-                <Box
+            images.map((src, idx) => {
+              const isLead = heroLead === src;
+              return (
+                <Stack
+                  key={`${src}-${idx}`}
+                  direction="row"
+                  spacing={1.5}
+                  alignItems="center"
                   sx={{
-                    width: 96,
-                    height: 64,
-                    flexShrink: 0,
-                    borderRadius: 0.5,
-                    overflow: "hidden",
-                    bgcolor: "grey.200",
-                    position: "relative",
+                    p: 1,
+                    border: "1px solid",
+                    borderColor: isLead ? "primary.main" : "divider",
+                    borderRadius: 1,
                   }}
                 >
-                  <HeroThumb src={src} />
-                </Box>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    flex: 1,
-                    minWidth: 0,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {idx === 0 ? "1st (first slide) · " : `${idx + 1} · `}
-                  {src}
-                </Typography>
-                <IconButton
-                  size="small"
-                  aria-label="Move up"
-                  disabled={busy || idx === 0}
-                  onClick={() => move(idx, -1)}
-                >
-                  <ArrowUpwardIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  aria-label="Move down"
-                  disabled={busy || idx === images.length - 1}
-                  onClick={() => move(idx, 1)}
-                >
-                  <ArrowDownwardIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  aria-label="Remove"
-                  disabled={busy}
-                  onClick={() => removeAt(idx)}
-                  color="error"
-                >
-                  <DeleteOutlineIcon fontSize="small" />
-                </IconButton>
-              </Stack>
-            ))
+                  <Box
+                    sx={{
+                      width: 96,
+                      height: 64,
+                      flexShrink: 0,
+                      borderRadius: 0.5,
+                      overflow: "hidden",
+                      bgcolor: "grey.200",
+                      position: "relative",
+                    }}
+                  >
+                    <Thumb src={src} />
+                  </Box>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {isLead ? "First hero · " : `${idx + 1} · `}
+                    {src}
+                  </Typography>
+                  <IconButton
+                    size="small"
+                    aria-label={
+                      isLead ? "Clear first hero" : "Use as first hero"
+                    }
+                    title={isLead ? "Clear first hero" : "Use as first hero"}
+                    disabled={busy}
+                    color={isLead ? "primary" : "default"}
+                    onClick={() => toggleLead(src)}
+                  >
+                    {isLead ? (
+                      <StarIcon fontSize="small" />
+                    ) : (
+                      <StarBorderIcon fontSize="small" />
+                    )}
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    aria-label="Move up"
+                    disabled={busy || idx === 0}
+                    onClick={() => move(idx, -1)}
+                  >
+                    <ArrowUpwardIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    aria-label="Move down"
+                    disabled={busy || idx === images.length - 1}
+                    onClick={() => move(idx, 1)}
+                  >
+                    <ArrowDownwardIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    aria-label="Remove"
+                    disabled={busy}
+                    onClick={() => removeAt(idx)}
+                    color="error"
+                  >
+                    <DeleteOutlineIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              );
+            })
           )}
         </Stack>
 
@@ -288,7 +329,7 @@ export default function HeroImagesModal({ open, onClose }) {
           disabled={busy}
           onClick={() => inputRef.current?.click()}
         >
-          {uploading ? "Uploading…" : "Upload hero photos"}
+          {uploading ? "Uploading…" : "Upload General photos"}
         </Button>
       </DialogContent>
       <DialogActions>

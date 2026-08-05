@@ -11,7 +11,7 @@ import {
  * POST /api/order/update/image
  * form fields:
  *   image — file
- *   purpose — optional "hero" | "brand" → brand folder + returns secure_url
+ *   purpose — optional "hero" | "brand" | "general" → brand folder + returns secure_url
  *             otherwise apartments folder + returns public_id (legacy)
  */
 export async function POST(req) {
@@ -29,7 +29,8 @@ export async function POST(req) {
     const purpose = String(formData.get("purpose") || "")
       .trim()
       .toLowerCase();
-    const forHero = purpose === "hero" || purpose === "brand";
+    const forBrandFolder =
+      purpose === "hero" || purpose === "brand" || purpose === "general";
 
     if (!file) {
       return NextResponse.json(
@@ -40,7 +41,7 @@ export async function POST(req) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const uploadOptions = forHero
+    const uploadOptions = forBrandFolder
       ? getCloudinaryBrandUploadOptions()
       : getCloudinaryApartmentUploadOptions();
 
@@ -62,9 +63,9 @@ export async function POST(req) {
       passthrough.pipe(uploadStream);
     });
 
-    // Hero/brand: store absolute CDN URL in Mongo (site source of truth).
+    // Brand/hero/general: store absolute CDN URL in Mongo (site source of truth).
     // Apartments: keep public_id for existing CldImage flows.
-    const data = forHero
+    const data = forBrandFolder
       ? cloudinaryResult.secure_url || cloudinaryResult.url
       : cloudinaryResult.public_id;
 

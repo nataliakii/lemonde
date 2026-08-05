@@ -17,6 +17,7 @@ import { buildHubJsonLd } from "@/services/seo/jsonLdBuilder";
 import { buildHubMetadata } from "@/services/seo/metadataBuilder";
 import { resolveBrandConfig } from "@/domain/branding/resolveBrandConfig";
 import { buildApartmentPhotoMix } from "@/domain/branding/buildApartmentPhotoMix";
+import { buildHomepageHeroSlides } from "@/domain/branding/buildHomepageHeroSlides";
 import { DEFAULT_PROPERTY_GALLERY } from "@/domain/services/ensureCarsNkCompany";
 
 /** Always render with live Mongo data — avoid baking failed builds into static HTML. */
@@ -76,18 +77,20 @@ export default async function LocalizedHomePage({ params }) {
 
   const copy = HERO_COPY[locale] || HERO_COPY.en;
   const brand = resolveBrandConfig(companyData, locale);
-  // Homepage strip: mix Cloudinary photos from all suites (round-robin).
-  // Fallback to company.assets.galleryImages / defaults only if inventory has none.
+  // Homepage strip: curated General photos (assets.galleryImages).
+  // Fallback to suite mix / defaults only when General is empty.
   const apartmentPhotoMix = buildApartmentPhotoMix(carsData, { max: 36 });
   const galleryImages =
-    apartmentPhotoMix.length > 0
-      ? apartmentPhotoMix
-      : brand.assets.galleryImages.length > 0
-        ? brand.assets.galleryImages
+    brand.assets.galleryImages.length > 0
+      ? brand.assets.galleryImages
+      : apartmentPhotoMix.length > 0
+        ? apartmentPhotoMix
         : DEFAULT_PROPERTY_GALLERY;
-  // Homepage hero carousel: ONLY company.assets.heroImages from Mongo/admin.
-  // Never use suite / apartment photos here.
-  const heroImages = brand.assets.heroImages;
+  // Hero: optional General lead first, then dedicated heroImages.
+  const heroImages = buildHomepageHeroSlides({
+    heroLeadImage: brand.assets.heroLeadImage,
+    heroImages: brand.assets.heroImages,
+  });
 
   return (
     <>

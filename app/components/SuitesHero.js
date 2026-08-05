@@ -14,8 +14,8 @@ const AUTO_MS = 5500;
 
 /**
  * Full-bleed landing hero.
- * Photos ONLY from company.assets.heroImages (Mongo / admin) — never suite photos.
- * Empty heroImages → branded gradient screen.
+ * Photos from company.assets.heroImages (+ optional General heroLeadImage on the page).
+ * Empty slides → branded gradient screen.
  */
 export default function SuitesHero({
   locale = "en",

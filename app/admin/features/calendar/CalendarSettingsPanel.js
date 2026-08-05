@@ -27,6 +27,10 @@ const HeroImagesModal = dynamic(
   () => import("@/app/admin/features/settings/HeroImagesModal"),
   { ssr: false }
 );
+const GeneralImagesModal = dynamic(
+  () => import("@/app/admin/features/settings/GeneralImagesModal"),
+  { ssr: false }
+);
 const LegendCalendarAdmin = dynamic(
   () => import("@/app/components/calendar-ui/LegendCalendarAdmin"),
   { ssr: false }
@@ -49,6 +53,7 @@ export default function CalendarSettingsPanel({
   const { t } = useTranslation();
   const [bufferModalOpen, setBufferModalOpen] = useState(false);
   const [heroModalOpen, setHeroModalOpen] = useState(false);
+  const [generalModalOpen, setGeneralModalOpen] = useState(false);
 
   const showBufferShortcut =
     !settings.showLegend || !settings.showBufferInLegend;
@@ -221,6 +226,15 @@ export default function CalendarSettingsPanel({
             <Button
               variant="outlined"
               size="small"
+              onClick={() => setGeneralModalOpen(true)}
+              sx={{ alignSelf: "flex-start", mt: 1 }}
+            >
+              General photos (homepage gallery)
+            </Button>
+
+            <Button
+              variant="outlined"
+              size="small"
               onClick={() => setHeroModalOpen(true)}
               sx={{ alignSelf: "flex-start", mt: 1 }}
             >
@@ -255,6 +269,10 @@ export default function CalendarSettingsPanel({
       <HeroImagesModal
         open={heroModalOpen}
         onClose={() => setHeroModalOpen(false)}
+      />
+      <GeneralImagesModal
+        open={generalModalOpen}
+        onClose={() => setGeneralModalOpen(false)}
       />
     </>
   );

@@ -54,6 +54,7 @@ export function getCarsNkCompanyDefaults() {
       favicon: "/favicon.ico",
       ogImage: "",
       heroImages: [],
+      heroLeadImage: "",
       galleryImages: DEFAULT_PROPERTY_GALLERY,
     },
     cloudinary: {

@@ -535,6 +535,7 @@ async function main() {
             favicon: "/favicon.ico",
             ogImage: "",
             heroImages: [],
+            heroLeadImage: "",
             galleryImages: [],
           },
         },

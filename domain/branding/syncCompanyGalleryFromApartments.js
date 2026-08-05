@@ -2,8 +2,8 @@
  * Persist homepage "The property" gallery on the company document
  * from a round-robin mix of apartment Cloudinary photos.
  *
- * Homepage already prefers a live mix; this keeps assets.galleryImages /
- * ogImage in sync per hotel DB for OG, fallbacks, and seed/admin updates.
+ * Only fills assets.galleryImages when empty so admin-managed General photos
+ * are not overwritten. Can still set ogImage when unset.
  */
 
 import { COMPANY_ID } from "@config/company";
@@ -18,7 +18,7 @@ import { buildApartmentPhotoMix } from "@/domain/branding/buildApartmentPhotoMix
  *   max?: number,
  *   setOgImage?: boolean,
  * }} [options]
- * @returns {Promise<{ companyId: string, count: number, galleryImages: string[] }>}
+ * @returns {Promise<{ companyId: string, count: number, galleryImages: string[], skippedGallery?: boolean }>}
  */
 export async function syncCompanyGalleryFromApartments(options = {}) {
   const companyId = String(options.companyId || COMPANY_ID || "").trim();
@@ -33,18 +33,46 @@ export async function syncCompanyGalleryFromApartments(options = {}) {
     options.apartments ||
     (await Apartment.find({}).select("photoUrl gallery carNumber model sort").lean());
 
-  const galleryImages = buildApartmentPhotoMix(apartments, { max });
+  const mix = buildApartmentPhotoMix(apartments, { max });
 
-  const $set = {
-    "assets.galleryImages": galleryImages,
-  };
-  if (setOgImage && galleryImages[0]) {
-    $set["assets.ogImage"] = galleryImages[0];
+  const existing = await Company.findById(companyId)
+    .select("assets.galleryImages assets.ogImage")
+    .lean();
+  if (!existing) {
+    throw new Error(`Company not found: ${companyId}`);
   }
 
-  await Company.findByIdAndUpdate(companyId, { $set });
+  const currentGallery = Array.isArray(existing.assets?.galleryImages)
+    ? existing.assets.galleryImages.filter(
+        (u) => typeof u === "string" && u.trim()
+      )
+    : [];
+  const galleryEmpty = currentGallery.length === 0;
+  const ogEmpty = !String(existing.assets?.ogImage || "").trim();
 
-  return { companyId, count: galleryImages.length, galleryImages };
+  const $set = {};
+  if (galleryEmpty && mix.length) {
+    $set["assets.galleryImages"] = mix;
+  }
+  if (setOgImage && ogEmpty) {
+    const ogCandidate = (galleryEmpty ? mix[0] : currentGallery[0]) || mix[0];
+    if (ogCandidate) $set["assets.ogImage"] = ogCandidate;
+  }
+
+  if (Object.keys($set).length) {
+    await Company.findByIdAndUpdate(companyId, { $set });
+  }
+
+  const galleryImages = galleryEmpty
+    ? mix
+    : currentGallery;
+
+  return {
+    companyId,
+    count: galleryImages.length,
+    galleryImages,
+    skippedGallery: !galleryEmpty,
+  };
 }
 
 export default syncCompanyGalleryFromApartments;
