@@ -9,10 +9,12 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
+import { hexToRgba } from "@/domain/branding/brandSurfaces";
 
 dayjs.extend(isBetween);
 
 function RangeDay(props) {
+  const theme = useTheme();
   const {
     day,
     outsideCurrentMonth,
@@ -21,6 +23,9 @@ function RangeDay(props) {
     selected,
     ...other
   } = props;
+
+  const primary = theme.palette.primary.main;
+  const secondary = theme.palette.secondary.main;
 
   const isStart =
     rangeStart && day.isSame(rangeStart, "day") && !outsideCurrentMonth;
@@ -40,15 +45,15 @@ function RangeDay(props) {
       sx={{
         ...(inMiddle
           ? {
-              bgcolor: "rgba(201,162,39,0.18) !important",
+              bgcolor: `${hexToRgba(primary, 0.18)} !important`,
               borderRadius: 0,
-              color: "secondary.main",
+              color: secondary,
             }
           : null),
         ...(isStart || isEnd
           ? {
-              bgcolor: "#C9A227 !important",
-              color: "#1A1612 !important",
+              bgcolor: `${primary} !important`,
+              color: `${secondary} !important`,
               fontWeight: 700,
             }
           : null),
@@ -82,8 +87,10 @@ export default function StayRangeCalendar({
     ).startOf("month")
   );
 
-  const rangeStart = value?.[0] && dayjs(value[0]).isValid() ? dayjs(value[0]) : null;
-  const rangeEnd = value?.[1] && dayjs(value[1]).isValid() ? dayjs(value[1]) : null;
+  const rangeStart =
+    value?.[0] && dayjs(value[0]).isValid() ? dayjs(value[0]) : null;
+  const rangeEnd =
+    value?.[1] && dayjs(value[1]).isValid() ? dayjs(value[1]) : null;
 
   const handleSelect = (day) => {
     if (!day || !day.isValid()) return;
@@ -104,7 +111,6 @@ export default function StayRangeCalendar({
       return;
     }
 
-    // End-day shouldDisableDate (from parent) already validates the whole stay range
     onChange?.([rangeStart, day.startOf("day")]);
   };
 
@@ -114,6 +120,9 @@ export default function StayRangeCalendar({
     );
   }, [calendarCount, monthLeft]);
 
+  const pageBg =
+    theme.palette.background?.default || theme.palette.background?.paper || "#fff";
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box
@@ -122,8 +131,8 @@ export default function StayRangeCalendar({
           flexWrap: "wrap",
           justifyContent: { xs: "center", md: "flex-start" },
           gap: { xs: 1, md: 0 },
-          border: "1px solid rgba(26,22,18,0.08)",
-          bgcolor: "#FFFCFA",
+          border: `1px solid ${hexToRgba(theme.palette.secondary.main, 0.08)}`,
+          bgcolor: pageBg,
           overflow: "hidden",
         }}
       >
