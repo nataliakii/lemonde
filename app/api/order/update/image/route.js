@@ -2,8 +2,18 @@ import { NextResponse } from "next/server";
 import cloudinary, {
   ensureCloudinaryConfigured,
 } from "@utils/cloudinary";
-import { getCloudinaryCarsFolder } from "@config/cloudinary";
+import {
+  getCloudinaryApartmentUploadOptions,
+  getCloudinaryBrandUploadOptions,
+} from "@config/cloudinary";
 
+/**
+ * POST /api/order/update/image
+ * form fields:
+ *   image — file
+ *   purpose — optional "hero" | "brand" | "general" → brand folder + returns secure_url
+ *             otherwise apartments folder + returns public_id (legacy)
+ */
 export async function POST(req) {
   try {
     const cfg = ensureCloudinaryConfigured();
@@ -16,8 +26,12 @@ export async function POST(req) {
 
     const formData = await req.formData();
     const file = formData.get("image");
+    const purpose = String(formData.get("purpose") || "")
+      .trim()
+      .toLowerCase();
+    const forBrandFolder =
+      purpose === "hero" || purpose === "brand" || purpose === "general";
 
-    // Check if file is provided
     if (!file) {
       return NextResponse.json(
         { success: false, message: "No file uploaded" },
@@ -25,17 +39,15 @@ export async function POST(req) {
       );
     }
 
-    // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const uploadOptions = forBrandFolder
+      ? getCloudinaryBrandUploadOptions()
+      : getCloudinaryApartmentUploadOptions();
 
-    // Upload image to Cloudinary
     const cloudinaryResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: getCloudinaryCarsFolder(),
-          resource_type: "image",
-        },
+        uploadOptions,
         (error, result) => {
           if (error) {
             reject(error);
@@ -45,19 +57,21 @@ export async function POST(req) {
         }
       );
 
-      // Create a buffer stream and pipe the buffer to the upload stream
       const stream = require("stream");
       const passthrough = new stream.PassThrough();
       passthrough.end(buffer);
       passthrough.pipe(uploadStream);
     });
 
-    console.log("RESULT", cloudinaryResult);
+    // Brand/hero/general: absolute CDN URL. Apartments: public_id for CldImage.
+    const data = forBrandFolder
+      ? cloudinaryResult.secure_url || cloudinaryResult.url
+      : cloudinaryResult.public_id;
 
-    // Cloudinary upload result
     return NextResponse.json({
       success: true,
-      data: cloudinaryResult.public_id,
+      data,
+      publicId: cloudinaryResult.public_id,
       message: "File uploaded successfully to Cloudinary",
     });
   } catch (e) {

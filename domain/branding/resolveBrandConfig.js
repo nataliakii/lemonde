@@ -23,6 +23,7 @@ const DEFAULT_ASSETS = {
   favicon: "/favicon.ico",
   ogImage: "",
   heroImages: [],
+  heroLeadImage: "",
   galleryImages: [],
 };
 
@@ -89,6 +90,7 @@ export function resolveBrandConfig(company, locale = "en") {
     favicon: pickString(company?.assets?.favicon, DEFAULT_ASSETS.favicon),
     ogImage: pickString(company?.assets?.ogImage, ""),
     heroImages: pickStringArray(company?.assets?.heroImages),
+    heroLeadImage: pickString(company?.assets?.heroLeadImage, ""),
     galleryImages: pickStringArray(company?.assets?.galleryImages),
   };
 

@@ -85,6 +85,8 @@ const CompanySchema = new Schema({
     favicon: { type: String, default: "/favicon.ico" },
     ogImage: { type: String, default: "" },
     heroImages: { type: [String], default: [] },
+    /** Optional General gallery URL used as first homepage hero slide. */
+    heroLeadImage: { type: String, default: "" },
     galleryImages: { type: [String], default: [] },
   },
 

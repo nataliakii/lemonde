@@ -6,7 +6,8 @@ import Image from "next/image";
 
 /**
  * Full-bleed landing hero.
- * Brand name / optional hero image come from company (DB) via props.
+ * Brand name / optional hero image from company (DB).
+ * Optional General heroLeadImage takes precedence as the first hero.
  */
 export default function SuitesHero({
   locale = "en",
