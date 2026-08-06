@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Box, useMediaQuery } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import { PickersDay } from "@mui/x-date-pickers/PickersDay";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -13,6 +13,7 @@ import isBetween from "dayjs/plugin/isBetween";
 dayjs.extend(isBetween);
 
 function RangeDay(props) {
+  const theme = useTheme();
   const {
     day,
     outsideCurrentMonth,
@@ -21,6 +22,9 @@ function RangeDay(props) {
     selected,
     ...other
   } = props;
+
+  const primary = theme.palette.primary.main;
+  const contrast = theme.palette.primary.contrastText || "#111";
 
   const isStart =
     rangeStart && day.isSame(rangeStart, "day") && !outsideCurrentMonth;
@@ -40,15 +44,15 @@ function RangeDay(props) {
       sx={{
         ...(inMiddle
           ? {
-              bgcolor: "rgba(201,162,39,0.18) !important",
+              bgcolor: `${alpha(primary, 0.16)} !important`,
               borderRadius: 0,
-              color: "secondary.main",
+              color: "text.primary",
             }
           : null),
         ...(isStart || isEnd
           ? {
-              bgcolor: "#C9A227 !important",
-              color: "#1A1612 !important",
+              bgcolor: `${primary} !important`,
+              color: `${contrast} !important`,
               fontWeight: 700,
             }
           : null),
@@ -62,7 +66,7 @@ function RangeDay(props) {
 }
 
 /**
- * Free (community MUI) check-in/check-out range calendar.
+ * Check-in / check-out on one calendar.
  * First click = check-in, second = check-out.
  */
 export default function StayRangeCalendar({
@@ -82,8 +86,10 @@ export default function StayRangeCalendar({
     ).startOf("month")
   );
 
-  const rangeStart = value?.[0] && dayjs(value[0]).isValid() ? dayjs(value[0]) : null;
-  const rangeEnd = value?.[1] && dayjs(value[1]).isValid() ? dayjs(value[1]) : null;
+  const rangeStart =
+    value?.[0] && dayjs(value[0]).isValid() ? dayjs(value[0]) : null;
+  const rangeEnd =
+    value?.[1] && dayjs(value[1]).isValid() ? dayjs(value[1]) : null;
 
   const handleSelect = (day) => {
     if (!day || !day.isValid()) return;
@@ -104,7 +110,6 @@ export default function StayRangeCalendar({
       return;
     }
 
-    // End-day shouldDisableDate (from parent) already validates the whole stay range
     onChange?.([rangeStart, day.startOf("day")]);
   };
 
@@ -122,8 +127,7 @@ export default function StayRangeCalendar({
           flexWrap: "wrap",
           justifyContent: { xs: "center", md: "flex-start" },
           gap: { xs: 1, md: 0 },
-          border: "1px solid rgba(26,22,18,0.08)",
-          bgcolor: "#FFFCFA",
+          bgcolor: "#FFFFFF",
           overflow: "hidden",
         }}
       >
@@ -156,10 +160,13 @@ export default function StayRangeCalendar({
             sx={{
               maxWidth: 320,
               "& .MuiPickersCalendarHeader-root": {
-                color: "secondary.main",
+                color: "text.primary",
               },
               "& .MuiPickersArrowSwitcher-button": {
                 color: "primary.main",
+              },
+              "& .MuiDayCalendar-weekDayLabel": {
+                color: "text.secondary",
               },
             }}
           />
