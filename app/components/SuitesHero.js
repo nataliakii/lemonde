@@ -271,26 +271,64 @@ export default function SuitesHero({
           <Button
             component={Link}
             href={apartmentsHref}
-            variant="contained"
-            sx={(theme) => ({
-              px: 4,
-              py: 1.4,
-              borderRadius: 1,
-              fontWeight: 600,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              fontSize: "0.85rem",
-              backgroundColor: "primary.main",
-              color: "secondary.main",
-              boxShadow: hasHeroImage
-                ? `0 4px 20px rgba(0,0,0,0.35), 0 0 24px color-mix(in srgb, ${theme.palette.primary.main} 35%, transparent)`
-                : `0 0 24px color-mix(in srgb, ${theme.palette.primary.main} 35%, transparent)`,
-              "&:hover": {
-                backgroundColor: "primary.light",
-                color: "secondary.main",
-                boxShadow: `0 0 32px color-mix(in srgb, ${theme.palette.primary.light} 45%, transparent)`,
-              },
-            })}
+            disableElevation
+            sx={(theme) => {
+              const onPhoto = hasHeroImage;
+              return {
+                position: "relative",
+                overflow: "hidden",
+                px: { xs: 3.5, md: 4.5 },
+                py: { xs: 1.35, md: 1.55 },
+                minWidth: 180,
+                borderRadius: 0,
+                fontFamily: "var(--font-body)",
+                fontWeight: 600,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                fontSize: "0.78rem",
+                lineHeight: 1.2,
+                color: onPhoto ? "#FFFFFF" : theme.palette.secondary.main,
+                backgroundColor: onPhoto
+                  ? "rgba(255,255,255,0.1)"
+                  : theme.palette.primary.main,
+                border: onPhoto
+                  ? "1px solid rgba(255,255,255,0.92)"
+                  : `1px solid ${theme.palette.primary.main}`,
+                backdropFilter: onPhoto ? "blur(10px)" : "none",
+                WebkitBackdropFilter: onPhoto ? "blur(10px)" : "none",
+                boxShadow: onPhoto
+                  ? "0 8px 32px rgba(0,0,0,0.28)"
+                  : `0 8px 28px color-mix(in srgb, ${theme.palette.primary.main} 28%, transparent)`,
+                transition:
+                  "background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease",
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.28) 50%, transparent 70%)",
+                  transform: "translateX(-120%)",
+                  transition: "transform 0.55s ease",
+                  pointerEvents: "none",
+                },
+                "&:hover": {
+                  backgroundColor: onPhoto
+                    ? "#FFFFFF"
+                    : theme.palette.primary.light,
+                  color: theme.palette.secondary.main,
+                  borderColor: onPhoto
+                    ? "#FFFFFF"
+                    : theme.palette.primary.light,
+                  transform: "translateY(-2px)",
+                  boxShadow: onPhoto
+                    ? "0 12px 36px rgba(0,0,0,0.32)"
+                    : `0 12px 32px color-mix(in srgb, ${theme.palette.primary.light} 35%, transparent)`,
+                  "&::after": {
+                    transform: "translateX(120%)",
+                  },
+                },
+              };
+            }}
           >
             {ctaLabel}
           </Button>
