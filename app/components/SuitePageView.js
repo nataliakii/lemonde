@@ -16,6 +16,7 @@ import {
   Container,
   CircularProgress,
 } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Image from "next/image";
@@ -32,6 +33,7 @@ import { getOccupiedNightKeys } from "@utils/suiteBlockedNights";
 import { getApartmentPath } from "@domain/locationSeo/locationSeoService";
 import { calculateTotalPrice } from "@utils/action";
 import { buildBookingPriceSummary } from "@/domain/orders/bookingPriceSummary";
+import { softPageBackground } from "@/domain/branding/brandSurfaces";
 import { useSnackbar } from "notistack";
 import dayjs from "dayjs";
 import { isDirectImageSrc as isHttp } from "@/domain/media/imageSrc";
@@ -68,6 +70,10 @@ export default function SuitePageView({
   relatedSuites = [],
   initialApartment = null,
 }) {
+  const theme = useTheme();
+  const primary = theme.palette.primary.main;
+  const primaryLight = theme.palette.primary.light;
+  const secondary = theme.palette.secondary.main;
   const {
     cars,
     stayCheckIn,
@@ -326,7 +332,7 @@ export default function SuitePageView({
           width: "100%",
           height: { xs: "52vh", md: "68vh" },
           minHeight: { xs: 320, md: 480 },
-          bgcolor: "#1A1612",
+          bgcolor: "secondary.main",
           overflow: "hidden",
         }}
       >
@@ -355,7 +361,7 @@ export default function SuitePageView({
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(180deg, rgba(14,12,10,0.15) 0%, rgba(14,12,10,0.55) 100%)",
+              "linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.5) 100%)",
             pointerEvents: "none",
           }}
         />
@@ -370,9 +376,9 @@ export default function SuitePageView({
                 left: { xs: 8, md: 20 },
                 top: "50%",
                 transform: "translateY(-50%)",
-                bgcolor: "rgba(14,12,10,0.45)",
-                color: "#F5F0E6",
-                "&:hover": { bgcolor: "rgba(14,12,10,0.7)" },
+                bgcolor: "rgba(0,0,0,0.4)",
+                color: "#FFFFFF",
+                "&:hover": { bgcolor: "rgba(0,0,0,0.62)" },
               }}
             >
               <ChevronLeftIcon />
@@ -385,9 +391,9 @@ export default function SuitePageView({
                 right: { xs: 8, md: 20 },
                 top: "50%",
                 transform: "translateY(-50%)",
-                bgcolor: "rgba(14,12,10,0.45)",
-                color: "#F5F0E6",
-                "&:hover": { bgcolor: "rgba(14,12,10,0.7)" },
+                bgcolor: "rgba(0,0,0,0.4)",
+                color: "#FFFFFF",
+                "&:hover": { bgcolor: "rgba(0,0,0,0.62)" },
               }}
             >
               <ChevronRightIcon />
@@ -397,7 +403,7 @@ export default function SuitePageView({
                 position: "absolute",
                 bottom: 16,
                 right: 20,
-                color: "rgba(245,240,230,0.92)",
+                color: "rgba(255,255,255,0.92)",
                 fontSize: "0.85rem",
                 letterSpacing: "0.08em",
               }}
@@ -433,7 +439,7 @@ export default function SuitePageView({
                 outline:
                   i === photoIndex
                     ? "2px solid"
-                    : "1px solid rgba(26,22,18,0.12)",
+                    : `1px solid ${alpha(secondary, 0.14)}`,
                 outlineColor: i === photoIndex ? "primary.main" : undefined,
                 outlineOffset: 1,
                 overflow: "hidden",
@@ -581,9 +587,9 @@ export default function SuitePageView({
                   fontSize: "0.72rem",
                   letterSpacing: "0.08em",
                   textTransform: "uppercase",
-                  border: "1px solid rgba(26,22,18,0.14)",
-                  color: "secondary.light",
-                  bgcolor: "rgba(201,162,39,0.06)",
+                  border: `1px solid ${alpha(secondary, 0.16)}`,
+                  color: secondary,
+                  bgcolor: alpha(primary, 0.08),
                 }}
               >
                 {a}
@@ -599,10 +605,11 @@ export default function SuitePageView({
             mb: 2,
             p: { xs: 2, md: 2.5 },
             maxWidth: { xs: "100%", md: 720 },
-            border: "1px solid rgba(201,162,39,0.35)",
+            border: `1px solid ${alpha(primary, 0.35)}`,
             background:
-              "linear-gradient(160deg, rgba(255,252,250,0.98) 0%, rgba(243,240,234,0.96) 100%)",
-            boxShadow: "0 10px 32px rgba(26,22,18,0.06)",
+              theme.brandSurfaces?.apartmentPanelLight ||
+              `linear-gradient(160deg, ${softPageBackground(primaryLight, 6)} 0%, ${softPageBackground(primaryLight, 16)} 100%)`,
+            boxShadow: `0 10px 32px ${alpha(secondary, 0.08)}`,
           }}
         >
           <Typography
@@ -655,7 +662,7 @@ export default function SuitePageView({
                   width: 10,
                   height: 10,
                   mr: 0.75,
-                  bgcolor: "rgba(26,22,18,0.18)",
+                  bgcolor: alpha(secondary, 0.18),
                   verticalAlign: "middle",
                 }}
               />
@@ -784,12 +791,12 @@ export default function SuitePageView({
                     textDecoration: "none",
                     color: "inherit",
                     display: "block",
-                    border: "1px solid rgba(26,22,18,0.08)",
+                    border: `1px solid ${alpha(secondary, 0.1)}`,
                     overflow: "hidden",
                     transition: "transform 0.3s ease, box-shadow 0.3s ease",
                     "&:hover": {
                       transform: "translateY(-2px)",
-                      boxShadow: "0 12px 28px rgba(26,22,18,0.1)",
+                      boxShadow: `0 12px 28px ${alpha(secondary, 0.12)}`,
                     },
                   }}
                 >
@@ -798,7 +805,7 @@ export default function SuitePageView({
                       position: "relative",
                       width: "100%",
                       aspectRatio: "4/3",
-                      bgcolor: "#1A1612",
+                      bgcolor: "secondary.main",
                     }}
                   >
                     {http ? (
