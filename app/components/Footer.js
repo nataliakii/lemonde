@@ -190,6 +190,12 @@ function Footer() {
           <Box component="span" sx={{ opacity: 0.25 }}>
             ·
           </Box>
+          <LegalLink href={localeLink("/princess-suite")}>
+            Nea Kallikratia
+          </LegalLink>
+          <Box component="span" sx={{ opacity: 0.25 }}>
+            ·
+          </Box>
           <LegalLink href={localeLink("/privacy-policy")}>
             {t("footer.privacyPolicy", { defaultValue: "Privacy" })}
           </LegalLink>

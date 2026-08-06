@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Feed from "@app/components/Feed";
 import SuitesHero from "@app/components/SuitesHero";
 import PropertyGallery from "@app/components/PropertyGallery";
+import PrincessSuiteTeaser from "@app/components/PrincessSuiteTeaser";
 import JsonLdScript from "@app/components/seo/JsonLdScript";
 import {
   getLocationById,
@@ -115,6 +116,7 @@ export default async function LocalizedHomePage({ params }) {
           subtitle={brand.gallerySubtitle}
           brandName={brand.name}
         />
+        <PrincessSuiteTeaser locale={locale} />
       </Feed>
     </>
   );

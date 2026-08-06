@@ -300,7 +300,7 @@ export default function SuitesHero({
                   ? "0 8px 32px rgba(0,0,0,0.28)"
                   : `0 8px 28px color-mix(in srgb, ${theme.palette.primary.main} 28%, transparent)`,
                 transition:
-                  "background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease",
+                  "background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease, backdrop-filter 0.35s ease",
                 "&::after": {
                   content: '""',
                   position: "absolute",
@@ -311,17 +311,20 @@ export default function SuitesHero({
                   transition: "transform 0.55s ease",
                   pointerEvents: "none",
                 },
-                "&:hover": {
+                // Double selector so MUI Button defaults don't win over hover.
+                "&&:hover": {
                   backgroundColor: onPhoto
-                    ? "#FFFFFF"
+                    ? "rgba(255,255,255,0.38)"
                     : theme.palette.primary.light,
-                  color: theme.palette.secondary.main,
+                  color: onPhoto ? "#FFFFFF" : theme.palette.secondary.main,
                   borderColor: onPhoto
                     ? "#FFFFFF"
                     : theme.palette.primary.light,
+                  backdropFilter: onPhoto ? "blur(14px)" : "none",
+                  WebkitBackdropFilter: onPhoto ? "blur(14px)" : "none",
                   transform: "translateY(-2px)",
                   boxShadow: onPhoto
-                    ? "0 12px 36px rgba(0,0,0,0.32)"
+                    ? "0 0 0 1px rgba(255,255,255,0.55), 0 0 28px rgba(255,255,255,0.42), 0 12px 36px rgba(0,0,0,0.3)"
                     : `0 12px 32px color-mix(in srgb, ${theme.palette.primary.light} 35%, transparent)`,
                   "&::after": {
                     transform: "translateX(120%)",

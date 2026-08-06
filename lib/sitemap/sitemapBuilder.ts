@@ -171,6 +171,21 @@ function buildApartmentPropertySitemap(
     });
   }
 
+  const princessAlternates = buildHreflangAlternates(
+    Object.fromEntries(
+      supportedLocales.map((locale) => [locale, `/${locale}/princess-suite`])
+    )
+  );
+  for (const locale of supportedLocales) {
+    entries.push({
+      url: toAbsoluteUrl(`/${locale}/princess-suite`),
+      lastModified: nowIso,
+      changeFrequency: "monthly",
+      priority: locale === defaultLocale ? 0.75 : 0.7,
+      alternates: { languages: princessAlternates },
+    });
+  }
+
   for (const pageKey of SITEMAP_STATIC_PAGES) {
     const alternates = buildLocaleStaticAlternates(pageKey);
     for (const locale of supportedLocales) {
