@@ -91,11 +91,12 @@ export function brandAccentRule(b) {
 }
 
 /**
- * Overlay when a hero photo is set.
+ * Overlay when a hero photo is set — light scrim so the photo stays bright
+ * while text remains readable.
  * @param {{ secondary: string, secondaryDark: string }} b
  */
 export function brandHeroImageOverlay(b) {
-  return `linear-gradient(165deg, ${hexToRgba(b.secondaryDark, 0.72)} 0%, ${hexToRgba(b.secondary, 0.55)} 50%, ${hexToRgba(b.secondaryDark, 0.78)} 100%)`;
+  return `linear-gradient(165deg, ${hexToRgba(b.secondaryDark, 0.38)} 0%, ${hexToRgba(b.secondary, 0.22)} 48%, ${hexToRgba(b.secondaryDark, 0.42)} 100%)`;
 }
 
 /**

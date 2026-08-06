@@ -95,7 +95,7 @@ export default function SuitesHero({
                     fill
                     priority={i === 0}
                     sizes="100vw"
-                    style={{ objectFit: "cover" }}
+                    style={{ objectFit: "cover", filter: "brightness(1.06)" }}
                   />
                 ) : (
                   <CldImage
@@ -105,7 +105,7 @@ export default function SuitesHero({
                     crop="fill"
                     priority={i === 0}
                     sizes="100vw"
-                    style={{ objectFit: "cover" }}
+                    style={{ objectFit: "cover", filter: "brightness(1.06)" }}
                   />
                 )}
               </Box>
@@ -119,7 +119,7 @@ export default function SuitesHero({
               zIndex: 1,
               background:
                 theme.brandSurfaces?.heroImageOverlay ||
-                "linear-gradient(165deg, rgba(5,8,12,0.72) 0%, rgba(11,18,24,0.55) 50%, rgba(5,8,12,0.78) 100%)",
+                "linear-gradient(165deg, rgba(5,8,12,0.38) 0%, rgba(11,18,24,0.22) 48%, rgba(5,8,12,0.42) 100%)",
             })}
           />
         </>
@@ -142,36 +142,36 @@ export default function SuitesHero({
           <IconButton
             aria-label="Previous hero photo"
             onClick={() => go(index - 1)}
-            sx={(theme) => ({
+            sx={{
               position: "absolute",
               left: { xs: 8, md: 20 },
               top: "50%",
               transform: "translateY(-50%)",
               zIndex: 3,
-              bgcolor: "rgba(5,8,12,0.42)",
-              color: theme.brandSurfaces?.onDark || theme.palette.primary.light,
+              bgcolor: "rgba(0,0,0,0.28)",
+              color: "#FFFFFF",
               width: 40,
               height: 40,
-              "&:hover": { bgcolor: "rgba(5,8,12,0.68)" },
-            })}
+              "&:hover": { bgcolor: "rgba(0,0,0,0.48)" },
+            }}
           >
             <ChevronLeftIcon />
           </IconButton>
           <IconButton
             aria-label="Next hero photo"
             onClick={() => go(index + 1)}
-            sx={(theme) => ({
+            sx={{
               position: "absolute",
               right: { xs: 8, md: 20 },
               top: "50%",
               transform: "translateY(-50%)",
               zIndex: 3,
-              bgcolor: "rgba(5,8,12,0.42)",
-              color: theme.brandSurfaces?.onDark || theme.palette.primary.light,
+              bgcolor: "rgba(0,0,0,0.28)",
+              color: "#FFFFFF",
               width: 40,
               height: 40,
-              "&:hover": { bgcolor: "rgba(5,8,12,0.68)" },
-            })}
+              "&:hover": { bgcolor: "rgba(0,0,0,0.48)" },
+            }}
           >
             <ChevronRightIcon />
           </IconButton>
@@ -193,7 +193,7 @@ export default function SuitesHero({
                 type="button"
                 aria-label={`Go to hero photo ${i + 1}`}
                 onClick={() => setIndex(i)}
-                sx={(theme) => ({
+                sx={{
                   width: i === index ? 22 : 8,
                   height: 8,
                   borderRadius: 4,
@@ -201,11 +201,9 @@ export default function SuitesHero({
                   cursor: "pointer",
                   p: 0,
                   bgcolor:
-                    i === index
-                      ? theme.palette.primary.light
-                      : "rgba(230,238,245,0.4)",
+                    i === index ? "#FFFFFF" : "rgba(255,255,255,0.45)",
                   transition: "width 0.25s ease, background-color 0.25s ease",
-                })}
+                }}
               />
             ))}
           </Box>
@@ -225,7 +223,7 @@ export default function SuitesHero({
           component="h1"
           className="brand-wordmark hero-reveal"
           sx={(theme) => ({
-            ...brandWordmarkSx(theme),
+            ...brandWordmarkSx(theme, { bright: hasHeroImage }),
             fontSize: { xs: "clamp(2.8rem, 12vw, 5.5rem)", md: "5.5rem" },
             lineHeight: 1.22,
             mb: 2,
@@ -236,8 +234,8 @@ export default function SuitesHero({
 
         <Typography
           className="hero-reveal-delay"
-          sx={(theme) => ({
-            color: theme.brandSurfaces?.onDarkMuted || theme.palette.primary.light,
+          sx={{
+            color: hasHeroImage ? "#FFFFFF" : "rgba(255,255,255,0.88)",
             fontFamily: "var(--font-body)",
             fontWeight: 400,
             fontSize: { xs: "1.05rem", md: "1.25rem" },
@@ -245,7 +243,10 @@ export default function SuitesHero({
             maxWidth: 480,
             mx: "auto",
             mb: 4,
-          })}
+            textShadow: hasHeroImage
+              ? "0 1px 2px rgba(0,0,0,0.45), 0 4px 24px rgba(0,0,0,0.35)"
+              : "none",
+          }}
         >
           {tagline}
         </Typography>
