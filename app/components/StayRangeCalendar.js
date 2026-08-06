@@ -2,14 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { Box, useMediaQuery } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import { PickersDay } from "@mui/x-date-pickers/PickersDay";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
-import { hexToRgba } from "@/domain/branding/brandSurfaces";
 
 dayjs.extend(isBetween);
 
@@ -25,7 +24,7 @@ function RangeDay(props) {
   } = props;
 
   const primary = theme.palette.primary.main;
-  const secondary = theme.palette.secondary.main;
+  const contrast = theme.palette.primary.contrastText || "#111";
 
   const isStart =
     rangeStart && day.isSame(rangeStart, "day") && !outsideCurrentMonth;
@@ -45,15 +44,15 @@ function RangeDay(props) {
       sx={{
         ...(inMiddle
           ? {
-              bgcolor: `${hexToRgba(primary, 0.18)} !important`,
+              bgcolor: `${alpha(primary, 0.16)} !important`,
               borderRadius: 0,
-              color: secondary,
+              color: "text.primary",
             }
           : null),
         ...(isStart || isEnd
           ? {
               bgcolor: `${primary} !important`,
-              color: `${secondary} !important`,
+              color: `${contrast} !important`,
               fontWeight: 700,
             }
           : null),
@@ -67,7 +66,7 @@ function RangeDay(props) {
 }
 
 /**
- * Free (community MUI) check-in/check-out range calendar.
+ * Check-in / check-out on one calendar.
  * First click = check-in, second = check-out.
  */
 export default function StayRangeCalendar({
@@ -120,9 +119,6 @@ export default function StayRangeCalendar({
     );
   }, [calendarCount, monthLeft]);
 
-  const pageBg =
-    theme.palette.background?.default || theme.palette.background?.paper || "#fff";
-
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box
@@ -131,8 +127,7 @@ export default function StayRangeCalendar({
           flexWrap: "wrap",
           justifyContent: { xs: "center", md: "flex-start" },
           gap: { xs: 1, md: 0 },
-          border: `1px solid ${hexToRgba(theme.palette.secondary.main, 0.08)}`,
-          bgcolor: pageBg,
+          bgcolor: "#FFFFFF",
           overflow: "hidden",
         }}
       >
@@ -165,10 +160,13 @@ export default function StayRangeCalendar({
             sx={{
               maxWidth: 320,
               "& .MuiPickersCalendarHeader-root": {
-                color: "secondary.main",
+                color: "text.primary",
               },
               "& .MuiPickersArrowSwitcher-button": {
                 color: "primary.main",
+              },
+              "& .MuiDayCalendar-weekDayLabel": {
+                color: "text.secondary",
               },
             }}
           />

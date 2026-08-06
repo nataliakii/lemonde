@@ -10,18 +10,19 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import dayjs from "dayjs";
 import { useMainContext } from "@app/Context";
 import StayRangeCalendar from "@app/components/StayRangeCalendar";
-import { hexToRgba } from "@/domain/branding/brandSurfaces";
 
 function isPastDay(date, today) {
   return Boolean(date && date.isValid() && date.isBefore(today, "day"));
 }
 
 /**
- * Booking-style stay search: Check-in + Check-out open one shared range calendar.
- * First click = check-in, second = check-out. Colors follow company theme.
+ * Stay search: one date-range field → one shared calendar
+ * (1st click = check-in, 2nd = check-out).
+ * Neutral dark, readable strip — works on any brand.
  */
 export default function StayDateSearch() {
   const { stayCheckIn, stayCheckOut, setStayDates, clearStayDates } =
@@ -39,31 +40,6 @@ export default function StayDateSearch() {
   });
   const [error, setError] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
-
-  const primary = theme.palette.primary.main;
-  const primaryLight = theme.palette.primary.light;
-  const secondary = theme.palette.secondary.main;
-  const secondaryDark = theme.palette.secondary.dark;
-  const secondaryLight = theme.palette.secondary.light;
-  const onDark =
-    theme.brandSurfaces?.onDark || hexToRgba(primaryLight, 0.94);
-  const onDarkMuted =
-    theme.brandSurfaces?.onDarkMuted || hexToRgba(primaryLight, 0.72);
-
-  const fieldSx = {
-    minWidth: { xs: "100%", sm: 156 },
-    bgcolor: hexToRgba("#ffffff", 0.06),
-    borderRadius: 1,
-    "& .MuiOutlinedInput-root": {
-      color: onDark,
-      cursor: "pointer",
-      "& fieldset": { borderColor: hexToRgba(primary, 0.35) },
-      "&:hover fieldset": { borderColor: hexToRgba(primary, 0.55) },
-      "&.Mui-focused fieldset": { borderColor: hexToRgba(primary, 0.85) },
-    },
-    "& .MuiInputLabel-root": { color: onDarkMuted },
-    "& .MuiInputBase-input": { cursor: "pointer" },
-  };
 
   useEffect(() => {
     const nextIn = stayCheckIn ? dayjs(stayCheckIn) : null;
@@ -125,6 +101,13 @@ export default function StayDateSearch() {
   };
 
   const handleSearch = () => {
+    if (!range[0] || !range[1]) {
+      // Open calendar if dates incomplete
+      const el = document.getElementById("stay-date-range-field");
+      if (el) setAnchorEl(el);
+      setError("Select check-in, then check-out in the calendar.");
+      return;
+    }
     applyDates(range[0], range[1]);
   };
 
@@ -134,19 +117,23 @@ export default function StayDateSearch() {
     clearStayDates();
   };
 
-  const openCalendar = (e) => setAnchorEl(e.currentTarget);
-
   const nightCount =
     stayCheckIn && stayCheckOut
       ? dayjs(stayCheckOut).diff(dayjs(stayCheckIn), "day")
       : 0;
 
-  const checkInLabel = range[0]?.isValid?.()
-    ? range[0].format("DD MMM YYYY")
-    : "";
-  const checkOutLabel = range[1]?.isValid?.()
-    ? range[1].format("DD MMM YYYY")
-    : "";
+  const rangeLabel = (() => {
+    const a = range[0]?.isValid?.() ? range[0].format("DD MMM YYYY") : "";
+    const b = range[1]?.isValid?.() ? range[1].format("DD MMM YYYY") : "";
+    if (a && b) return `${a}  →  ${b}`;
+    if (a) return `${a}  →  check-out`;
+    return "";
+  })();
+
+  const pickingStep =
+    range[0] && !range[1] ? "Now pick check-out" : "First pick check-in";
+
+  const open = Boolean(anchorEl);
 
   return (
     <Box
@@ -156,11 +143,8 @@ export default function StayDateSearch() {
         px: { xs: 2, md: 4 },
         py: { xs: 2.5, md: 3 },
         mb: { xs: 2, md: 3 },
-        background:
-          theme.brandSurfaces?.footer ||
-          `linear-gradient(135deg, ${hexToRgba(secondary, 0.97)} 0%, ${hexToRgba(secondaryLight, 0.95)} 55%, ${hexToRgba(secondaryDark, 0.98)} 100%)`,
-        borderBottom: `1px solid ${hexToRgba(primary, 0.28)}`,
-        boxShadow: `0 12px 40px ${hexToRgba(secondaryDark, 0.18)}`,
+        background: "linear-gradient(180deg, #14181E 0%, #1B2129 100%)",
+        borderBottom: "1px solid rgba(255,255,255,0.1)",
       }}
     >
       <Typography
@@ -169,7 +153,7 @@ export default function StayDateSearch() {
           fontStyle: "italic",
           fontWeight: 500,
           fontSize: { xs: "1.35rem", md: "1.6rem" },
-          color: onDark,
+          color: "#F4F6F8",
           mb: 0.5,
         }}
       >
@@ -177,14 +161,14 @@ export default function StayDateSearch() {
       </Typography>
       <Typography
         sx={{
-          color: onDarkMuted,
+          color: "rgba(244,246,248,0.72)",
           fontSize: "0.92rem",
           mb: 2,
-          maxWidth: 520,
+          maxWidth: 540,
         }}
       >
-        Pick check-in and check-out in one calendar to see free suites and
-        prices. Check-in 15:00 · Check-out 11:00
+        Open the calendar once — tap check-in, then check-out. Check-in 15:00 ·
+        Check-out 11:00
       </Typography>
 
       <Box
@@ -196,20 +180,49 @@ export default function StayDateSearch() {
         }}
       >
         <TextField
+          id="stay-date-range-field"
           size="small"
-          label="Check-in"
-          value={checkInLabel}
-          onClick={openCalendar}
-          inputProps={{ readOnly: true, "aria-haspopup": "dialog" }}
-          sx={fieldSx}
-        />
-        <TextField
-          size="small"
-          label="Check-out"
-          value={checkOutLabel}
-          onClick={openCalendar}
-          inputProps={{ readOnly: true, "aria-haspopup": "dialog" }}
-          sx={fieldSx}
+          label="Stay dates"
+          placeholder="Select check-in → check-out"
+          value={rangeLabel}
+          onClick={(e) => setAnchorEl(e.currentTarget)}
+          InputProps={{
+            readOnly: true,
+            startAdornment: (
+              <CalendarMonthOutlinedIcon
+                sx={{ mr: 1, color: "rgba(244,246,248,0.55)", fontSize: 20 }}
+              />
+            ),
+          }}
+          inputProps={{
+            readOnly: true,
+            "aria-haspopup": "dialog",
+            "aria-expanded": open,
+          }}
+          sx={{
+            minWidth: { xs: "100%", sm: 320 },
+            flex: { sm: "1 1 320px" },
+            maxWidth: 420,
+            bgcolor: "rgba(255,255,255,0.06)",
+            borderRadius: 1,
+            "& .MuiOutlinedInput-root": {
+              color: "#F4F6F8",
+              cursor: "pointer",
+              "& fieldset": { borderColor: "rgba(255,255,255,0.22)" },
+              "&:hover fieldset": { borderColor: "rgba(255,255,255,0.4)" },
+              "&.Mui-focused fieldset": {
+                borderColor: theme.palette.primary.main,
+              },
+            },
+            "& .MuiInputLabel-root": { color: "rgba(244,246,248,0.65)" },
+            "& .MuiInputBase-input": {
+              cursor: "pointer",
+              "&::placeholder": {
+                color: "rgba(244,246,248,0.45)",
+                opacity: 1,
+              },
+            },
+          }}
         />
         <Button
           variant="contained"
@@ -225,7 +238,7 @@ export default function StayDateSearch() {
             boxShadow: "none",
             "&:hover": {
               bgcolor: "primary.light",
-              boxShadow: `0 4px 16px ${hexToRgba(primary, 0.35)}`,
+              boxShadow: "none",
             },
           }}
         >
@@ -237,9 +250,9 @@ export default function StayDateSearch() {
             onClick={handleClear}
             sx={{
               height: 40,
-              color: onDarkMuted,
+              color: "rgba(244,246,248,0.7)",
               textTransform: "none",
-              "&:hover": { color: primaryLight, bgcolor: "transparent" },
+              "&:hover": { color: "#fff", bgcolor: "transparent" },
             }}
           >
             Clear dates
@@ -248,7 +261,7 @@ export default function StayDateSearch() {
       </Box>
 
       <Popover
-        open={Boolean(anchorEl)}
+        open={open}
         anchorEl={anchorEl}
         onClose={() => setAnchorEl(null)}
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
@@ -257,14 +270,32 @@ export default function StayDateSearch() {
           paper: {
             sx: {
               mt: 1,
-              border: `1px solid ${hexToRgba(primary, 0.25)}`,
-              boxShadow: `0 16px 48px ${hexToRgba(secondaryDark, 0.28)}`,
-              overflow: "auto",
+              border: "1px solid rgba(0,0,0,0.08)",
+              boxShadow: "0 16px 48px rgba(0,0,0,0.28)",
+              overflow: "hidden",
               maxWidth: "calc(100vw - 24px)",
+              borderRadius: 1.5,
             },
           },
         }}
       >
+        <Box
+          sx={{
+            px: 2,
+            py: 1.25,
+            borderBottom: "1px solid rgba(0,0,0,0.08)",
+            bgcolor: "#F7F8FA",
+          }}
+        >
+          <Typography
+            sx={{ fontSize: "0.85rem", fontWeight: 600, color: "#1B2129" }}
+          >
+            {pickingStep}
+          </Typography>
+          <Typography sx={{ fontSize: "0.78rem", color: "rgba(27,33,41,0.65)" }}>
+            One calendar for both dates
+          </Typography>
+        </Box>
         <StayRangeCalendar
           value={range}
           onChange={handleRangeChange}
@@ -275,13 +306,7 @@ export default function StayDateSearch() {
       </Popover>
 
       {error ? (
-        <Typography
-          sx={{
-            color: theme.palette.error.main || "#E8A090",
-            mt: 1.5,
-            fontSize: "0.875rem",
-          }}
-        >
+        <Typography sx={{ color: "#FFB4A8", mt: 1.5, fontSize: "0.875rem" }}>
           {error}
         </Typography>
       ) : null}
@@ -290,13 +315,13 @@ export default function StayDateSearch() {
         <Typography
           sx={{
             mt: 1.75,
-            color: onDarkMuted,
+            color: "rgba(244,246,248,0.78)",
             fontSize: "0.9rem",
             letterSpacing: "0.02em",
           }}
         >
           Available suites for{" "}
-          <Box component="span" sx={{ color: primaryLight, fontWeight: 600 }}>
+          <Box component="span" sx={{ color: "#fff", fontWeight: 600 }}>
             {dayjs(stayCheckIn).format("D MMM")} –{" "}
             {dayjs(stayCheckOut).format("D MMM YYYY")}
           </Box>
