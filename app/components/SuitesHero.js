@@ -216,7 +216,16 @@ export default function SuitesHero({
           zIndex: 2,
           textAlign: "center",
           px: { xs: 3, md: 6 },
+          py: { xs: 3, md: 4 },
           maxWidth: 820,
+          // Soft local backdrop: readable type without darkening the whole photo
+          ...(hasHeroImage
+            ? {
+                borderRadius: 2,
+                background:
+                  "radial-gradient(ellipse 85% 75% at 50% 45%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.28) 55%, transparent 78%)",
+              }
+            : null),
         }}
       >
         <Typography
@@ -227,6 +236,12 @@ export default function SuitesHero({
             fontSize: { xs: "clamp(2.8rem, 12vw, 5.5rem)", md: "5.5rem" },
             lineHeight: 1.22,
             mb: 2,
+            ...(hasHeroImage
+              ? {
+                  filter:
+                    "drop-shadow(0 2px 4px rgba(0,0,0,0.55)) drop-shadow(0 8px 28px rgba(0,0,0,0.45))",
+                }
+              : null),
           })}
         >
           {brandName}
@@ -235,17 +250,18 @@ export default function SuitesHero({
         <Typography
           className="hero-reveal-delay"
           sx={{
-            color: hasHeroImage ? "#FFFFFF" : "rgba(255,255,255,0.88)",
+            color: "#FFFFFF",
             fontFamily: "var(--font-body)",
-            fontWeight: 400,
-            fontSize: { xs: "1.05rem", md: "1.25rem" },
-            letterSpacing: "0.04em",
-            maxWidth: 480,
+            fontWeight: 500,
+            fontSize: { xs: "1.08rem", md: "1.28rem" },
+            letterSpacing: "0.03em",
+            lineHeight: 1.45,
+            maxWidth: 520,
             mx: "auto",
             mb: 4,
             textShadow: hasHeroImage
-              ? "0 1px 2px rgba(0,0,0,0.45), 0 4px 24px rgba(0,0,0,0.35)"
-              : "none",
+              ? "0 1px 2px rgba(0,0,0,0.75), 0 2px 8px rgba(0,0,0,0.55), 0 8px 32px rgba(0,0,0,0.4)"
+              : "0 1px 2px rgba(0,0,0,0.35)",
           }}
         >
           {tagline}
@@ -266,7 +282,9 @@ export default function SuitesHero({
               fontSize: "0.85rem",
               backgroundColor: "primary.main",
               color: "secondary.main",
-              boxShadow: `0 0 24px color-mix(in srgb, ${theme.palette.primary.main} 35%, transparent)`,
+              boxShadow: hasHeroImage
+                ? `0 4px 20px rgba(0,0,0,0.35), 0 0 24px color-mix(in srgb, ${theme.palette.primary.main} 35%, transparent)`
+                : `0 0 24px color-mix(in srgb, ${theme.palette.primary.main} 35%, transparent)`,
               "&:hover": {
                 backgroundColor: "primary.light",
                 color: "secondary.main",
