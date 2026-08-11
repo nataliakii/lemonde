@@ -73,9 +73,9 @@ export const seoKeywords = {
     "аренда машины для семьи Греция",
 
     // Бренд
-    "Натали Карс",
+    "CarsNK.gr",
     "CarsNK Халкидики",
-    "прокат авто Натали",
+    "прокат авто CarsNK",
   ],
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -113,7 +113,7 @@ export const seoKeywords = {
     // Marke
     "CarsNK",
     "CarsNK Chalkidiki",
-    "Autovermietung Natali",
+    "Autovermietung CarsNK",
   ],
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -152,7 +152,7 @@ export const seoKeywords = {
     // Brend
     "CarsNK",
     "CarsNK Halkidiki",
-    "rent a car Natali",
+    "rent a car CarsNK",
   ],
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -191,7 +191,7 @@ export const seoKeywords = {
     // Brand
     "CarsNK",
     "CarsNK Halkidiki",
-    "rent a car Natali Grecia",
+    "rent a car CarsNK Grecia",
   ],
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -228,9 +228,9 @@ export const seoKeywords = {
     "семеен рент а кар Гърция",
 
     // Бранд
-    "Натали Карс",
+    "CarsNK.gr",
     "CarsNK Халкидики",
-    "рент а кар Натали",
+    "рент а кар CarsNK",
   ],
 
   // ═══════════════════════════════════════════════════════════════════════════

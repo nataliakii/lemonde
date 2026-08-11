@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Feed from "@app/components/Feed";
 import SuitesHero from "@app/components/SuitesHero";
 import PropertyGallery from "@app/components/PropertyGallery";
+import HorizonMoment from "@app/components/HorizonMoment";
 import PrincessSuiteTeaser from "@app/components/PrincessSuiteTeaser";
 import JsonLdScript from "@app/components/seo/JsonLdScript";
 import {
@@ -116,6 +117,7 @@ export default async function LocalizedHomePage({ params }) {
           subtitle={brand.gallerySubtitle}
           brandName={brand.name}
         />
+        <HorizonMoment locale={locale} />
         <PrincessSuiteTeaser locale={locale} />
       </Feed>
     </>

@@ -41,6 +41,7 @@ import { useSession } from "next-auth/react";
 import { ROLE } from "@/domain/orders/admin-rbac";
 import { SINGLE_PROPERTY_MODE } from "@/config/domain";
 import { CLOUDINARY_PLACEHOLDER_PUBLIC_ID } from "@config/cloudinary";
+import IcalExportField from "../IcalExportField";
 
 /** Stable empty default — inline `companies = []` re-creates a new array every render and loops with useEffect. */
 const EMPTY_COMPANIES = [];
@@ -717,6 +718,12 @@ const EditCarModal = ({
 
           </Grid>
           </Grid>
+
+          {updatedCar?.slug ? (
+            <Grid item xs={12}>
+              <IcalExportField slug={updatedCar.slug} />
+            </Grid>
+          ) : null}
 
           <Grid item xs={12}>
             <PricingTiersTable

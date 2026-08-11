@@ -1194,3 +1194,11 @@ body.hide-navbar-on-landscape-sm
   animation: scrollHint 2.2s ease-in-out infinite;
 }
 
+/* Signature steel cursor — hide system pointer on fine devices only */
+@media (pointer: fine) {
+  html.steel-cursor-on,
+  html.steel-cursor-on * {
+    cursor: none !important;
+  }
+}
+

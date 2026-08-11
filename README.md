@@ -14,6 +14,7 @@ Apartment stays platform built with Next.js — public booking, admin calendar, 
 - Reservation calendar and order table
 - Confirm bookings (admin & superadmin)
 - User authentication via NextAuth
+- Per-suite **iCal export** for cleaning sync (`/api/ical/[slug]?token=…`; set `ICAL_EXPORT_SECRET`)
 
 ## Tech stack
 - **Frontend:** Next.js, React, MUI

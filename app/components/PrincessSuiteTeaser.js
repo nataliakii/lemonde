@@ -77,11 +77,13 @@ export default function PrincessSuiteTeaser({ locale = "en" }) {
           component="h2"
           sx={{
             fontFamily: "var(--font-display)",
+            fontStyle: "italic",
             fontWeight: 500,
             fontSize: { xs: "1.85rem", md: "2.45rem" },
-            lineHeight: 1.1,
-            letterSpacing: "-0.02em",
-            color: "#FFFFFF",
+            lineHeight: 1.15,
+            letterSpacing: "0.02em",
+            color: "#FF4F45",
+            textShadow: "0 1px 2px rgba(0,0,0,0.35), 0 6px 20px rgba(0,0,0,0.28)",
             mb: 1.5,
           }}
         >

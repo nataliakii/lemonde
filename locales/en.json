@@ -335,7 +335,15 @@
     "terrace": "Terrace",
     "seaView": "Sea view",
     "company": "Company",
-    "savePhotosFailed": "Failed to save photos"
+    "savePhotosFailed": "Failed to save photos",
+    "icalExportTitle": "Cleaning sync (iCal)",
+    "icalExportHint": "Paste this URL into Cleaning Actually → Sites → Rental calendar, then Sync now.",
+    "icalLoading": "Loading feed URL…",
+    "icalNeedSlug": "This suite needs a slug before export works",
+    "icalExportUnavailable": "iCal export is not configured (set ICAL_EXPORT_SECRET).",
+    "icalCopy": "Copy URL",
+    "icalCopied": "Copied",
+    "icalCopyFailed": "Could not copy. Select the URL and copy manually."
   },
   "bookMesssages": {
     "bookOK": "Booking request received. Thank you!",

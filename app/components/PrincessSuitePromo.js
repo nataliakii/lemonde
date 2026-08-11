@@ -8,7 +8,6 @@ import {
   Typography,
 } from "@mui/material";
 import {
-  PRINCESS_GALLERY_IMAGES,
   PRINCESS_HERO_IMAGES,
   PRINCESS_ROOMS,
   getPrincessPromoCopy,
@@ -203,17 +202,18 @@ export default function PrincessSuitePromo({ locale = "en" }) {
           </Typography>
 
           <Typography
-            className="brand-wordmark hero-reveal"
+            className="hero-reveal"
             component="h1"
             sx={{
+              display: "inline-block",
               fontFamily: "var(--font-display)",
+              fontStyle: "italic",
               fontWeight: 500,
               fontSize: { xs: "2.35rem", sm: "3.1rem", md: "3.75rem" },
-              lineHeight: 1.05,
-              letterSpacing: "-0.02em",
-              color: "#FFFFFF",
-              textShadow:
-                "0 1px 2px rgba(0,0,0,0.55), 0 8px 28px rgba(0,0,0,0.35)",
+              lineHeight: 1.15,
+              letterSpacing: "0.02em",
+              color: "#FF4F45",
+              textShadow: "0 1px 2px rgba(0,0,0,0.35), 0 6px 20px rgba(0,0,0,0.28)",
               mb: 2,
             }}
           >
@@ -398,145 +398,6 @@ export default function PrincessSuitePromo({ locale = "en" }) {
           <SolidCta href={bookingUrl} external>
             {copy.cta}
           </SolidCta>
-        </Box>
-      </Box>
-
-      {/* Atmosphere gallery — full bleed */}
-      <Box
-        component="section"
-        aria-label={copy.galleryTitle}
-        sx={{
-          position: "relative",
-          left: "50%",
-          right: "50%",
-          marginLeft: "-50vw",
-          marginRight: "-50vw",
-          width: "100vw",
-          py: { xs: 5, md: 7 },
-          bgcolor: "secondary.main",
-          overflow: "hidden",
-        }}
-      >
-        <Typography
-          sx={{
-            textAlign: "center",
-            mb: 3,
-            fontFamily: "var(--font-body)",
-            fontSize: "0.72rem",
-            letterSpacing: "0.28em",
-            textTransform: "uppercase",
-            color: "primary.light",
-            opacity: 0.85,
-          }}
-        >
-          {copy.galleryTitle}
-        </Typography>
-        <Box
-          sx={{
-            display: "flex",
-            gap: 1.5,
-            overflowX: "auto",
-            px: { xs: 2, md: 4 },
-            pb: 1,
-            scrollSnapType: "x mandatory",
-            WebkitOverflowScrolling: "touch",
-            "&::-webkit-scrollbar": { height: 4 },
-            "&::-webkit-scrollbar-thumb": {
-              bgcolor: "primary.main",
-            },
-          }}
-        >
-          {PRINCESS_GALLERY_IMAGES.map((src) => (
-            <Box
-              key={src}
-              sx={{
-                position: "relative",
-                flex: "0 0 auto",
-                width: { xs: "78vw", sm: 360, md: 420 },
-                height: { xs: 240, md: 300 },
-                scrollSnapAlign: "start",
-                overflow: "hidden",
-              }}
-            >
-              <Image
-                src={src}
-                alt=""
-                fill
-                sizes="(max-width: 600px) 78vw, 420px"
-                style={{ objectFit: "cover" }}
-              />
-            </Box>
-          ))}
-        </Box>
-      </Box>
-
-      {/* Location */}
-      <Box
-        component="section"
-        sx={{
-          position: "relative",
-          left: "50%",
-          right: "50%",
-          marginLeft: "-50vw",
-          marginRight: "-50vw",
-          width: "100vw",
-          minHeight: { xs: 360, md: 440 },
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-        }}
-      >
-        <Image
-          src="/images/Gallery/EXTERNAL/PAN_4.jpg"
-          alt=""
-          fill
-          sizes="100vw"
-          style={{ objectFit: "cover" }}
-        />
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(90deg, rgba(11,18,24,0.78) 0%, rgba(11,18,24,0.45) 100%)",
-          }}
-        />
-        <Box
-          sx={{
-            position: "relative",
-            zIndex: 1,
-            maxWidth: 560,
-            px: 3,
-            py: 8,
-            textAlign: "center",
-          }}
-        >
-          <Typography
-            component="h2"
-            sx={{
-              fontFamily: "var(--font-display)",
-              fontSize: { xs: "1.75rem", md: "2.2rem" },
-              color: "#fff",
-              mb: 2,
-            }}
-          >
-            {copy.locationTitle}
-          </Typography>
-          <Typography
-            sx={{
-              fontFamily: "var(--font-body)",
-              fontSize: { xs: "1rem", md: "1.08rem" },
-              lineHeight: 1.55,
-              color: "rgba(255,255,255,0.9)",
-              mb: 4,
-            }}
-          >
-            {copy.locationBody}
-          </Typography>
-          <GlassCta href={bookingUrl} external>
-            {copy.cta}
-          </GlassCta>
         </Box>
       </Box>
     </Box>

@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3026",
+    "dev": "next dev -p 3027",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3027",
     "lint": "next lint",
     "clean": "rm -rf .next",
     "migrate:my-order": "node scripts/migrate_my_order_field.js",

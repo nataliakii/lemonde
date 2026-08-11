@@ -335,7 +335,15 @@
     "terrace": "Терраса",
     "seaView": "Вид на море",
     "company": "Компания",
-    "savePhotosFailed": "Не удалось сохранить фото"
+    "savePhotosFailed": "Не удалось сохранить фото",
+    "icalExportTitle": "Синхронизация уборки (iCal)",
+    "icalExportHint": "Вставьте эту ссылку в Cleaning Actually → Sites → Rental calendar, затем Sync now.",
+    "icalLoading": "Загрузка ссылки…",
+    "icalNeedSlug": "Сначала нужен slug у апартамента",
+    "icalExportUnavailable": "iCal не настроен (добавьте ICAL_EXPORT_SECRET в env).",
+    "icalCopy": "Копировать URL",
+    "icalCopied": "Скопировано",
+    "icalCopyFailed": "Не удалось скопировать. Выделите URL вручную."
   },
   "bookMesssages": {
     "bookOK": "Бронирование получено. Спасибо, что забронировали у нас!",

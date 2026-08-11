@@ -314,7 +314,7 @@ export default async function LocationHierarchyPage({ params }) {
           name: prioritySeo.benefitBlockTitle,
           items: prioritySeo.quickBenefits,
           locale,
-          pageUrl: toAbsoluteUrl(`${pagePath}#airport-why-natali-cars`),
+          pageUrl: toAbsoluteUrl(`${pagePath}#airport-why-carsnk`),
         })
       : null;
 
@@ -500,7 +500,7 @@ export default async function LocationHierarchyPage({ params }) {
           {/* Airport: benefits / why CarsNK — directly before FAQ */}
           {isAirport && prioritySeo?.benefitBlockTitle && prioritySeo?.quickBenefits?.length > 0 && (
             <SeoWhyRentBlock
-              sectionId="airport-why-natali-cars"
+              sectionId="airport-why-carsnk"
               title={prioritySeo.benefitBlockTitle}
               withCheckmarks
               bullets={prioritySeo.quickBenefits.map((b) => (b.startsWith("✔") ? b : `✔ ${b}`))}
