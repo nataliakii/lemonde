@@ -34,8 +34,8 @@ const COPY = {
 };
 
 /**
- * Signature homepage moment — a living horizon line with poetic Kassandra copy.
- * Inspired by editorial hotel storytelling (Homeric Poems energy), in V Luxury voice.
+ * Quiet Kassandra moment on the homepage — photo + three lines + CTA.
+ * Kept simple on purpose (no custom cursor / glow experiments).
  */
 export default function HorizonMoment({
   locale = "en",
@@ -65,7 +65,7 @@ export default function HorizonMoment({
           io.disconnect();
         }
       },
-      { threshold: 0.35 }
+      { threshold: 0.28 }
     );
     io.observe(el);
     return () => io.disconnect();
@@ -78,83 +78,47 @@ export default function HorizonMoment({
       aria-label={copy.lines.join(" ")}
       sx={{
         position: "relative",
-        left: "50%",
-        right: "50%",
-        marginLeft: "-50vw",
-        marginRight: "-50vw",
-        width: "100vw",
-        minHeight: { xs: "72vh", md: "78vh" },
+        minHeight: { xs: "70vh", md: "76vh" },
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         overflow: "hidden",
-        bgcolor: "secondary.dark",
+        bgcolor: "#0B1218",
+        // Full-bleed without breaking the page width
+        ml: "calc(50% - 50vw)",
+        width: "100vw",
+        maxWidth: "100vw",
       }}
     >
-      <Box
-        sx={{
-          position: "absolute",
-          inset: 0,
-          transform: visible ? "scale(1.04)" : "scale(1.12)",
-          transition: "transform 2.4s cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
-      >
-        <Image
-          src={imageSrc}
-          alt=""
-          fill
-          sizes="100vw"
-          style={{ objectFit: "cover", filter: "brightness(0.92) saturate(0.92)" }}
-        />
-      </Box>
+      <Image
+        src={imageSrc}
+        alt=""
+        fill
+        sizes="100vw"
+        priority={false}
+        style={{ objectFit: "cover" }}
+      />
 
       <Box
         sx={{
           position: "absolute",
           inset: 0,
           background:
-            "linear-gradient(180deg, rgba(11,18,24,0.55) 0%, rgba(11,18,24,0.28) 42%, rgba(11,18,24,0.62) 100%)",
+            "linear-gradient(180deg, rgba(11,18,24,0.5) 0%, rgba(11,18,24,0.32) 45%, rgba(11,18,24,0.68) 100%)",
         }}
       />
-
-      {/* Living horizon */}
-      <Box
-        aria-hidden
-        sx={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: { xs: "46%", md: "48%" },
-          height: 1,
-          display: "flex",
-          justifyContent: "center",
-          pointerEvents: "none",
-        }}
-      >
-        <Box
-          sx={{
-            height: 1,
-            width: visible ? "72%" : "0%",
-            maxWidth: 720,
-            background:
-              "linear-gradient(90deg, transparent, rgba(174,192,208,0.15) 12%, rgba(230,238,245,0.95) 50%, rgba(174,192,208,0.15) 88%, transparent)",
-            boxShadow: "0 0 24px rgba(174,192,208,0.35)",
-            transition: "width 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.15s",
-          }}
-        />
-      </Box>
 
       <Box
         sx={{
           position: "relative",
           zIndex: 1,
           width: "100%",
-          maxWidth: 720,
+          maxWidth: 640,
           px: { xs: 2.5, md: 4 },
           textAlign: "center",
         }}
       >
-        <Box sx={{ mb: { xs: 3, md: 3.5 } }}>
+        <Box sx={{ mb: { xs: 2.5, md: 3 } }}>
           {copy.lines.map((line, i) => (
             <Typography
               key={line}
@@ -165,16 +129,15 @@ export default function HorizonMoment({
                 fontStyle: i === 2 ? "italic" : "normal",
                 fontWeight: 500,
                 fontSize: {
-                  xs: i === 2 ? "2.15rem" : "1.65rem",
-                  md: i === 2 ? "3.4rem" : "2.35rem",
+                  xs: i === 2 ? "2.1rem" : "1.55rem",
+                  md: i === 2 ? "3.2rem" : "2.2rem",
                 },
-                lineHeight: 1.15,
+                lineHeight: 1.2,
                 letterSpacing: i === 2 ? "0.02em" : "-0.02em",
-                color: i === 2 ? "#E6EEF5" : "rgba(255,255,255,0.92)",
+                color: "#FFFFFF",
                 opacity: visible ? 1 : 0,
-                transform: visible ? "translateY(0)" : "translateY(22px)",
-                transition: `opacity 0.9s ease ${0.28 + i * 0.18}s, transform 0.9s ease ${0.28 + i * 0.18}s`,
-                textShadow: "0 2px 24px rgba(0,0,0,0.35)",
+                transform: visible ? "translateY(0)" : "translateY(16px)",
+                transition: `opacity 0.7s ease ${0.12 + i * 0.12}s, transform 0.7s ease ${0.12 + i * 0.12}s`,
               }}
             >
               {line}
@@ -185,12 +148,12 @@ export default function HorizonMoment({
         <Typography
           sx={{
             fontFamily: "var(--font-body)",
-            fontSize: { xs: "0.95rem", md: "1.05rem" },
-            letterSpacing: "0.04em",
-            color: "rgba(230,238,245,0.78)",
-            mb: 4,
+            fontSize: { xs: "0.95rem", md: "1.02rem" },
+            lineHeight: 1.5,
+            color: "rgba(255,255,255,0.82)",
+            mb: 3.5,
             opacity: visible ? 1 : 0,
-            transition: "opacity 1s ease 0.95s",
+            transition: "opacity 0.7s ease 0.55s",
           }}
         >
           {copy.whisper}
@@ -199,7 +162,6 @@ export default function HorizonMoment({
         <Box
           component={Link}
           href={`/${locale}/apartments`}
-          className="steel-cursor-target"
           sx={{
             display: "inline-block",
             fontFamily: "var(--font-body)",
@@ -208,12 +170,11 @@ export default function HorizonMoment({
             letterSpacing: "0.16em",
             textTransform: "uppercase",
             textDecoration: "none",
-            color: "rgba(255,255,255,0.9)",
-            borderBottom: "1px solid rgba(255,255,255,0.45)",
+            color: "rgba(255,255,255,0.92)",
+            borderBottom: "1px solid rgba(255,255,255,0.5)",
             pb: 0.5,
             opacity: visible ? 1 : 0,
-            transition:
-              "opacity 0.8s ease 1.1s, color 0.25s ease, border-color 0.25s ease",
+            transition: "opacity 0.7s ease 0.7s, border-color 0.2s ease, color 0.2s ease",
             "&:hover": {
               color: "#fff",
               borderBottomColor: "#fff",

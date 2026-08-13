@@ -13,7 +13,6 @@ import { useCompanyTheme } from "@/domain/branding/createThemeFromCompany";
 
 import dynamic from "next/dynamic";
 import ScrollButton from "@/app/components/ui/buttons/ScrollButton";
-import SteelCursor from "@app/components/SteelCursor";
 
 import Navbar from "@app/components/Navbar";
 
@@ -116,7 +115,6 @@ function Feed({ children, ...props }) {
               </Box>
               {shouldShowFooter && <Footer />}
               <ScrollButton />
-              {!props.isAdmin && props.isMain && <SteelCursor />}
             </Box>
           </MainContextProvider>
         </I18nextProvider>
