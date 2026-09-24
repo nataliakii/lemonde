@@ -229,7 +229,7 @@ function Footer() {
           }}
         />
 
-        {/* <Stack
+        <Stack
           direction={{ xs: "column", sm: "row" }}
           spacing={{ xs: 1, sm: 2 }}
           alignItems="center"
@@ -237,14 +237,14 @@ function Footer() {
           sx={{ mb: 1.5 }}
         >
           <CreditLink
-            href="https://bbqr.site/me"
+            href="https://nataliaki.eu"
             target="_blank"
             rel="noopener noreferrer"
           >
             <CodeIcon sx={{ fontSize: 16 }} />
-            Developed by NataliaKi
+            Made by Nataliaki
           </CreditLink>
-        </Stack> */}
+        </Stack>
 
         <Typography
           sx={{
